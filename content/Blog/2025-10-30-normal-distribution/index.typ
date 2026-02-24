@@ -13,6 +13,8 @@
 
 The normal distribution, often called the Gaussian distribution or bell curve, is one of the most fundamental concepts in statistics and probability theory @degroot2012probability. Its characteristic symmetric, bell-shaped curve appears throughout nature and human activity, from heights and test scores to measurement errors and biological variations.
 
+This is an extra line to show difference. $ e^(i pi) + 1 = 0 $
+
 == Key Properties
 
 The normal distribution is completely defined by two parameters: the mean ($mu$) and standard deviation ($sigma$) @rice2006mathematical. The mean determines the center of the distribution, while the standard deviation controls its spread. Approximately 68% of values fall within one standard deviation of the mean, 95% within two, and 99.7% within three—a rule known as the empirical rule or 68-95-99.7 rule.
