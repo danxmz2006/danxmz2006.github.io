@@ -12,6 +12,7 @@
     "/": "Home",
     "/Docs/": "Docs",
     "/Blog/": "Blog",
+    "/Notes/": "Notes",
     "/CV/": "CV",
   ),
   
@@ -31,12 +32,11 @@
   
   /// 自定义页眉元素列表 (content 数组)。显示在页面顶部。
   header-elements: (
-    [你好 Ciallo～(∠・ω< )⌒☆],
-    [欢迎使用本模板！],
+    [Hello there!],
   ),
   /// 自定义页脚元素列表 (content 数组)，显示在页面底部。
   footer-elements: (
-    "© 2026 Yousa-Mirage",
+    "© by psoet.",
     [Powered by #link("https://github.com/Yousa-Mirage/Tufted-Blog-Template")[Tufted-Blog-Template]],
   ),
 )
