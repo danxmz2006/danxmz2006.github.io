@@ -5,3 +5,7 @@
 )
 
 = Notes
+
+== 2026 Spring
+
+#link("2026-Spring-AlgDesignAndAnalysis/")[算法设计与分析]
