@@ -15,3 +15,5 @@
 #link("2026-Spring-MusicAndMaths/")[音乐与数学]
 
 #link("2026-Spring-InformationTheory/")[信息论]
+
+#link("2026-Spring-toc/")[计算理论导论]
