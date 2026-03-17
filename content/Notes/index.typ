@@ -17,3 +17,5 @@
 #link("2026-Spring-InformationTheory/")[信息论]
 
 #link("2026-Spring-toc/")[计算理论导论]
+
+#link("probability/")[概率论]
