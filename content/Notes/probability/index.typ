@@ -56,5 +56,5 @@ _Notations._ 约定 $inter$-closed, $union$-closed 是在运算下封闭. $sigma
 
 存在很多等价的生成 $cal(B)(RR^n)$ 的方式. 有时需要将开集 $A$ 写成可数个开球/开矩形的并, 可以考虑每个有理点的附近.
 
-*Definition. trace of a class of sets.* $eval(cal(A), A) := {A inter B | B in cal(A)}$. 若 $cal(A)$ 是 $Omega$ 上的 $sigma$-代数(或上述别的种类的集族)则 $eval(cal(A), A)$ 是 $A$ 上的 $sigma$-代数(或别的某某).
+*Definition. trace of a class of sets.* $cal(A)_A := {A inter B | B in cal(A)}$. 若 $cal(A)$ 是 $Omega$ 上的 $sigma$-代数(或上述别的种类的集族)则 $cal(A)_A$ 是 $A$ 上的 $sigma$-代数(或别的某某).
 
