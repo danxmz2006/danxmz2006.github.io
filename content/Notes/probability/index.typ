@@ -34,4 +34,8 @@ _Notations._ 约定 $inter$-closed, $union$-closed 是在运算下封闭. $sigma
 
 这无非是定义的操演.
 
-#image("imgs\fig1-1.png", width: 50%)
+下图表示了常见集族和包含关系.
+
+#image("imgs/fig1-1.png", width: 50%)
+
+*Theorem. Dynkin's $pi-lambda$ theorem.* 
