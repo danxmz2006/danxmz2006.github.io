@@ -32,10 +32,29 @@ _Notations._ 约定 $inter$-closed, $union$-closed 是在运算下封闭. $sigma
 
 *Theorem.* 若 $cal(D)$ 是 $lambda$-system 则其为 $sigma$-algebra 等价于其为 $pi$-system.
 
-这无非是定义的操演.
+这无非是定义的操演. $qed$
 
 下图表示了常见集族和包含关系.
 
 #image("imgs/fig1-1.png", width: 50%)
 
-*Theorem. Dynkin's $pi-lambda$ theorem.* 
+*Theorem. Dynkin's $pi-lambda$ theorem.* 对于 $pi$-system $cal(E)$, $sigma(cal(E)) = delta(cal(E))$.
+
+"$supset$" 方向是显然的. "$subset$" 要求证明 $delta(cal(E))$ 是 $sigma$-代数, 进而由上述结论只用证明它是 $pi$-system.
+
+设 $B in delta(cal(E))$, 我们要证明 $forall A in delta(cal(E)), A inter B in delta(cal(E))$. 如果证明 ${A | A inter B in delta(cal(E))}$ 构成 $lambda$-system 即可证明所有 $delta(cal(E))$ 都满足这个条件.
+
+1. $Omega inter B = B in delta(cal(E))$.
+
+2. 若 $C, D in delta(cal(E)), C inter B in delta(cal(E)), D inter B in delta(cal(E))$, 我们有 $(C backslash D) inter B = (C inter B) backslash (D inter B) in delta(cal(E))$.
+
+3. 若 $A_i inter B in delta(cal(E)), A_i inter A_j = emptyset$, 则 $(union.plus.big A_i) inter B = union.plus.big (A_i inter B) in delta(cal(E))$. $qed$
+
+*Definition. Topology.* 定义 $Omega$ 上的拓扑 $tau$ 为包含 $emptyset$ 和 $Omega$, 在*有限*交和*可数*并下封闭的集族. $tau$ 中元素称为开集; $tau$ 中元素的补称为闭集. 闭集可数并和开集可数交被称为 $F_sigma$ 集和 $G_delta$ 集. 一个典型的拓扑为可数个开球的并构成的开集.
+
+*Definition. Borel $sigma$-algebra.* $cal(B)(Omega) := cal(B)(Omega, tau) := sigma(tau)$, $tau$ 是 $Omega$ 上的拓扑.
+
+存在很多等价的生成 $cal(B)(RR^n)$ 的方式. 有时需要将开集 $A$ 写成可数个开球/开矩形的并, 可以考虑每个有理点的附近.
+
+*Definition. trace of a class of sets.* $eval(cal(A), A) := {A inter B | B in cal(A)}$. 若 $cal(A)$ 是 $Omega$ 上的 $sigma$-代数(或上述别的种类的集族)则 $eval(cal(A), A)$ 是 $A$ 上的 $sigma$-代数(或别的某某).
+
