@@ -70,3 +70,35 @@ _Pumping Lemma_. 如果 $A$ 是正则语言, 那么存在 $p$ 使得如果 $s in
 Theorem. context-free language $<=>$ 存在 PDA.
 
 先证明 context-free 能推出 PDA. 考虑从左往右读的时候维护一个由 $V \/ Sigma$ 构成的栈, 其中栈顶对应当前串的最左边, 栈底对应最右边. 如果栈顶是一个变量, 尝试将其替换为一个串, 将串整个推入栈顶; 否则要求栈顶和当前输入的最左边字符相同, 弹栈并读下一个字符. 
+
+假设语言 $L$ 能被 PDA 识别. 可以假设读完整个串后将栈清空.  
+
+令 $V = {[q X q^prime]}$, 表示当前栈顶为 $X$, 读入一个字符串后状态从 $q$ 转移到 $q^prime$, 然后弹出了 $X$. 转移 $delta(q, X, a) = (p, Y)$ 导出替换 $[q X q^prime] -> a [p Y q^prime]$. 特别地, 如果 $Y = epsilon$ 导出替换 $[q X p] -> a$. 如果 $X = epsilon$, 导出替换 $[q Z q^prime] -> a [p Y r] [r Z q^prime]$, $Z$ 是任何的字符. 令 $a = epsilon$ 可以添加 $epsilon$ 边. 初始 $S -> [q_0 perp q_F].$ 验证的过程挺麻烦. $qed$
+
+=== Boundary for CFL
+
+_Pumping Lemma for CFL._ 若 $A$ 是 CFL, 则存在 $p > 0$, 若 $s in A, |s| >= p$, 有 $s = u v x y z$, 使得 $u v^i x y^i z in A, |v y| > 0, |v x y| <= p$.
+
+设 $G$ 是 $A$ 的 CFL. 设 $b$ 是推导规则右侧长度的上界. 从 $S$ 开始经过 $h$ 次推导后, 得到字符串的长度最多是 $b^h$. 如果 $h >= |V| + 1$, 那么必然经过重复变量. 总之, 若 $|s| >= b^(|V|+1) = p$, 那么某个变量至少经过两次. 设这个变量是 `X`, 即从 `X` 出发, 推了一段时间后推出包含 `X` 的串. 可以假设这个重复发生在最后 $|V|+1$ 次推导过程中. 设此时串形如 `...[...[..]...]...`, 这里 `[]` 内的部分由 `X` 替换而来. 可以取 `u[v[x]y]z`. 那么第一个条件自然满足(可以反复进行 `X` 的替换, 或者不进行第二次替换), 第三个条件由前述性质满足. 为了保证 $|v y| > 0$ 我们令替换的过程是极短的, 第二次 `X` 替换不平凡保证了这一点. $qed$
+
+e.g. $L = {a^n b^n c^n}$. 取 $n >= p$. 循环节至多含有两种字母.
+
+e.g. $L = {a^i b^j c^k | i <= j <= k}$. 取 $i = j = k = p$. 如果 $v x y$ 只包含 $b, c$ 需要删去部分.
+
+== Ch04 Turing Machine
+
+这里给出的定义是 $k$ 带确定性 TM.
+
+定义一个语言是 *Turing-recognizable* 如果某个 TM 接受它.
+
+一个 *decider* 是一个不会进入死循环的 TM. 一个语言是 *Turing-decidable* 的如果一个 decider TM 判定它. Turing-recognizable 情况中我们不要求对于 $x in.not L$, TM 一定停机.
+
+TM 也可以执行长输出, 输出在一个纸带上. $M$ 在 $T(n)$ 时间运行如果运行步数 $<= T(|x|)$, 对于输入 $x$. 若 $T(n)$ 能在 $O(T(n))$ 时间内计算称 $T$ 是 *time-constructible* 的.
+
+=== Variants of TM
+
+改变字母表的大小. 使用字符集 $Gamma$ 在时间 $T(n)$ 内计算 $f: {0, 1}^ast -> {0, 1}$ 的 TM, 总是可以在 $O(T(n) log |Gamma|)$ 内计算, 只使用字符集 ${0, 1, gt.tri, ␣}$.
+
+$k$ 个纸带转 1 个纸带. 可以 $O(k T(n)^2)$ 模拟.
+
+Church-Turing Thesis. 合理计算模型计算能力和 TM 相同.
