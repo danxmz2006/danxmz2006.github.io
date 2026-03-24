@@ -65,7 +65,7 @@ Schwartz-Zippel 引理. 设 $X_i$ 在有限集 $S$ 中随机取值 $deg(f) = d$,
 
 === 素数判定
 
-仅仅用 Fermat 小定理是不够的, 存在 Carmichael 数: 所有和合数 $n$ 互素的数 $a$ 都满足 $a^(n-1) equiv 1 (mod n)$. 假设某个合数不是 Carmichael 数，那么满足 $a^(n-1) equiv 1$ 的数不会很多: 这样的数构成简化剩余系的**真**子群, 因此至多只有一半.
+仅仅用 Fermat 小定理是不够的, 存在 Carmichael 数: 所有和合数 $n$ 互素的数 $a$ 都满足 $a^(n-1) equiv 1 (mod n)$. 假设某个合数不是 Carmichael 数，那么满足 $a^(n-1) equiv 1$ 的数不会很多: 这样的数构成简化剩余系的*真*子群, 因此至多只有一半.
 
 素数满足 $a^2 equiv 1 => a equiv plus.minus 1$. 随机找一个 $a in [n-1]$, 从 $a^((n-1) / 2^m)$ 开始每次平方, 遇到 $x equiv.not plus.minus 1, x^2 equiv 1$ 的时候返回假. 这里 $n - 1 = 2^m dot (2t + 1)$. 可以发现通过当且仅当 $a^(2t+1) equiv 1 (mod n)$ 或 $a^(2^k (2t+1)) equiv -1 (mod n)$. 
 
@@ -171,4 +171,4 @@ e.g. 假设算法在 $x in L$ 的时候以 $1/2$ 概率输出 Yes, 在 $x in.not
 
 取 $T = Theta((sigma / mu)^2 (1 / epsilon^2) log(1/delta))$, 用二阶矩方法可以推出 $Pr[|overline(h)(X) - mu| >= epsilon mu] = O(1 / log(1/delta))$.
 
-考虑 $2k+1$ 个小组, 每个小组取平均再对这些小组求中位数. 假设一个小组以至少 $3/4$ 的概率落在 $[mu - simga, mu + sigma]$ 内, 每个小组的大小是 $O(sigma^2 / (epsilon^2 mu^2))$. 令 $k = Theta(log (1 / delta))$ 可以保证出问题的概率 $< delta$.
+考虑 $2k+1$ 个小组, 每个小组取平均再对这些小组求中位数. 假设一个小组以至少 $3/4$ 的概率落在 $[mu - sigma, mu + sigma]$ 内, 每个小组的大小是 $O(sigma^2 / (epsilon^2 mu^2))$. 令 $k = Theta(log (1 / delta))$ 可以保证出问题的概率 $< delta$.

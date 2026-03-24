@@ -17,7 +17,7 @@
 
 $log$ 的底数一般不重要, 视上下文而定. 这里不应将 $H$ 视为随机变量 $X$ 的函数. 也可以对 $X ~ D$ 写作 $H[D] = H[X]$. 令 $h(p) = p log(1/p) + (1-p) log(1/(1-p))$. 根据 Jensen 不等式, $0 <= H[X] <= log(|Omega|)$, $Omega$ 为 $X$ 的 support.
 
-#let Unif = math.op(text: "Unif", limits: false)
+#let Unif = math.op("Unif", limits: false)
 
 $H$ 在一些程度上和对"信息"的直觉有平行关系. 例如, 对于均匀分布 $X_n ~ Unif(n)$, 我们有 $H[X_n] = log(n) arrow.t$. 再如, 如果随机试验可以分成两部分, 在第一次结果的基础上再进行划分, 最终得到可能的熵等于两部分的和: $ H[p_1, p_2, dots.c p_n] = H[p_1 + p_2, p_3, dots.c, p_n] + (p_1 + p_2)H[p_1 / (p_1+p_2), p_2 / (p_1+p_2)]. $
 
