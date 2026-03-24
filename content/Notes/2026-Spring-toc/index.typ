@@ -73,7 +73,13 @@ Theorem. context-free language $<=>$ 存在 PDA.
 
 假设语言 $L$ 能被 PDA 识别. 可以假设读完整个串后将栈清空.  
 
-令 $V = {[q X q^prime]}$, 表示当前栈顶为 $X$, 读入一个字符串后状态从 $q$ 转移到 $q^prime$, 然后弹出了 $X$. 转移 $delta(q, X, a) = (p, Y)$ 导出替换 $[q X q^prime] -> a [p Y q^prime]$. 特别地, 如果 $Y = epsilon$ 导出替换 $[q X p] -> a$. 如果 $X = epsilon$, 导出替换 $[q Z q^prime] -> a [p Y r] [r Z q^prime]$, $Z$ 是任何的字符. 令 $a = epsilon$ 可以添加 $epsilon$ 边. 初始 $S -> [q_0 perp q_F].$ 验证的过程挺麻烦. $qed$
+令 $V = {[q X q^prime]}$, 表示当前栈顶为 $X$, 读入一个字符串后状态从 $q$ 转移到 $q^prime$, 最后弹出了 $X$ (中途未弹出 $X$). 转移 $delta(q, X, a) = (p, Y)$ 导出替换 $[q X q^prime] -> a [p Y q^prime]$. 特别地, 如果 $Y = epsilon$ 导出替换 $[q X p] -> a$. 如果 $X = epsilon$, 导出替换 $[q Z q^prime] -> a [p Y r] [r Z q^prime]$, $Z$ 是任何的字符. 如果 $X = Y = epsilon$, 替换 $[q Z q^prime] -> a [p Z q^prime]$. 令 $a = epsilon$ 可以添加 $epsilon$ 边. 初始 $S -> [q_0 perp q_F].$ 
+
+需要说明 $[q Z q^prime]$ 包含且仅包含那些 "存在 $q --> q^prime$ 的接受路径, 栈的状态从仅包含 $Z$ 到最终删空的字符串".
+
+假设 $x$ 可以被按照如此方式接受. 那么存在路径 $(p_0 = epsilon, q_0 = q, s_0)->(p_1, q_1, s_1)->(p_2, q_2, s_2)->dots.c->(p_k = x, q_k=q^prime, s_k)$, 其中 $s_i$ 为栈的状态, $p_i$ 为已接受部分构成的前缀. 对 $k$ 归纳. 如果栈自始至终都保持不变则每一步的推导规则都给出了. 否则考虑第一次压栈的位置和第一次弹出这个位置, 可以用一次推导规则后针对两个 $[dots]$ 用归纳假设.
+
+反过来, 需要证明 $[q Z q^prime]$ 只能推出被接受的 $x$. 我们对替换次数归纳并讨论第一次替换所使用的规则, 在新产生的变量上用归纳假设. $qed$
 
 === Boundary for CFL
 
