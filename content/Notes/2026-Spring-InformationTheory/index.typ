@@ -13,13 +13,13 @@
 
 == Ch01 Discrete Entropy, Mutual Information, KL Divergence, and several properties
 
-*信息熵 (Entropy)* $H[X]$ 是定义在一个离散变量分布列 $p(x)$ 上的函数, $ H[X] = sum_x p(x) log(1/p(x)). $
+*信息熵 (Entropy)* $H[X]$ 是定义在一个离散变量分布列 $p(x)$ 上的函数, $ H[X] = sum_x p(x) log 1/p(x). $
 
-$log$ 的底数一般不重要, 视上下文而定. 这里不应将 $H$ 视为随机变量 $X$ 的函数. 也可以对 $X ~ D$ 写作 $H[D] = H[X]$. 令 $h(p) = p log(1/p) + (1-p) log(1/(1-p))$. 根据 Jensen 不等式, $0 <= H[X] <= log(|Omega|)$, $Omega$ 为 $X$ 的 support.
+$log$ 的底数一般不重要, 视上下文而定. 这里不应将 $H$ 视为随机变量 $X$ 的函数. 也可以对 $X ~ D$ 写作 $H[D] = H[X]$. 令 $h(p) = p log 1/p + (1-p) log 1/(1-p)$. 根据 Jensen 不等式, $0 <= H[X] <= log |Omega|$, $Omega$ 为 $X$ 的 support.
 
 #let Unif = math.op("Unif", limits: false)
 
-$H$ 在一些程度上和对"信息"的直觉有平行关系. 例如, 对于均匀分布 $X_n ~ Unif(n)$, 我们有 $H[X_n] = log(n) arrow.t$. 再如, 如果随机试验可以分成两部分, 在第一次结果的基础上再进行划分, 最终得到可能的熵等于两部分的和: $ H[p_1, p_2, dots.c p_n] = H[p_1 + p_2, p_3, dots.c, p_n] + (p_1 + p_2)H[p_1 / (p_1+p_2), p_2 / (p_1+p_2)]. $
+$H$ 在一些程度上和对"信息"的直觉有平行关系. 例如, 对于均匀分布 $X_n ~ Unif(n)$, 我们有 $H[X_n] = log n arrow.t$. 再如, 如果随机试验可以分成两部分, 在第一次结果的基础上再进行划分, 最终得到可能的熵等于两部分的和: $ H[p_1, p_2, dots.c p_n] = H[p_1 + p_2, p_3, dots.c, p_n] + (p_1 + p_2)H[p_1 / (p_1+p_2), p_2 / (p_1+p_2)]. $
 
 由这两点加上连续性假设实际上可以确定 $H$.
 
@@ -28,7 +28,7 @@ $H$ 在一些程度上和对"信息"的直觉有平行关系. 例如, 对于均�
 *Theorem. (Kraft's Inequality.)* 存在一组可唯一解码的方案, 当且仅当 $sum_(i=1)^n 2^(-l_i) <= 1$.
 
 *Proof.* 令 $S = sum_(i=1)^n 2^(-l_i).$ 假设 $S > 1$, 对任何 $m > 0$ 有 $ S^m <= sum_x 2^(-|x|). $
-这里 $x$ 取遍所有长度不超过 $m max l_i$ 的二进制串. 由于可唯一解码, 每个 $x$ 对展开后的和至多贡献一次, 所以总和不超过 $sum_(k <= m max l_i) 2^k dot.c 2^(-k) = m max l_i + 1.$ 然而 $S^m(S > 1)$ 是指数级的! 矛盾.
+这里 $x$ 取遍所有长度不超过 $m max l_i$ 的二进制串. 由于可唯一解码, 每个 $x$ 对展开后的和至多贡献一次, 所以总和不超过 $sum_(k <= m max l_i) 2^k dot.c 2^(-k) = m max l_i + 1.$ 然而 $S^m (S > 1)$ 是指数级的! 矛盾.
 
 假设 $S <= 1$, 我们实际上可以构造出*前缀码*: 任意两个码字没有前缀关系. 我们可以假设 $S = 1$. 考虑那些达到了最大码长的 $l_i$, 可以发现其一定出现了偶数次, 因此可以将它们两两配对, 并合并为一个长 $l - 1$ 的码字. 不断归纳直到只剩一个点, 我们可以恢复完整的二叉树. 这被称为 Huffman 树. $qed$
 
@@ -40,19 +40,19 @@ $H$ 在一些程度上和对"信息"的直觉有平行关系. 例如, 对于均�
 
 假设不限定 $l_i$ 是整数, 我们可以直接给出最优 $l_i = -log_2 p_i$. 这源于一个将反复出现的不等式:
 
-*Proposition.* $p, q$ 是分布列, 则 $sum_(i=1)^n p_i log(p_i / q_i) >= 0$. 该和被称为 *KL Divergence* $D(p || q).$
+*Proposition.* $p, q$ 是分布列, 则 $sum_(i=1)^n p_i log p_i / q_i >= 0$. 该和被称为 *KL Divergence* $D(p || q).$
 
-*Proof.* 对上凸函数 $f(x) = x log x$ 用 Jensen 不等式, 注意到 $p_i log(p_i / q_i) = q_i dot.c (p_i / q_i) log(p_i / q_i).$ $qed$
+*Proof.* 对上凸函数 $f(x) = x log x$ 用 Jensen 不等式, 注意到 $p_i log p_i / q_i = q_i dot.c p_i / q_i log p_i / q_i.$ $qed$
 
 $H$ 是定义在分布列上的, 因此将其推广到多元变量没有任何障碍(称为 Joint Entropy). 然而暂且考虑两个变量的推广.
 
 我们有自然的*条件熵* $H[X | A]$: 考虑 $X$ 在事件 $A$ 条件下的分布的 entropy. *条件熵* 定义如下: $ H[Y | X] = sum_x Pr[X = x] H[Y | X = x]. $
 
-即对不同的 $X$ 加权平均. 存在如下关系: $ H[Y | X] = sum_(x, y) Pr[X = x] dot.c (Pr[X = x, Y = y] / Pr[X = x]) log(Pr[X = x] / Pr[X = x, Y = y]) = H[X, Y] - H[X]. $
+即对不同的 $X$ 加权平均. 存在如下关系: $ H[Y | X] = sum_(x, y) Pr[X = x] dot.c Pr[X = x, Y = y] / Pr[X = x] log Pr[X = x] / Pr[X = x, Y = y] = H[X, Y] - H[X]. $
 
 $H[X, Y]$ 是关于 $X, Y$ 对称的, 因而 $H[X, Y] = H[X] + H[Y | X] = H[Y] + H[X | Y]$
 
-定义*互信息 (Mutual Information)* $I[X;Y] = H[X] - H[X | Y] = H[X] + H[Y] - H[X, Y]$. 直观上, $I[X ; Y] >= 0$, 因为在知道 $Y$ 的信息情况下 $X$ 的不确定性不会增加. 事实确实如此: $ I[X;Y] = sum_(x,y) P_(X Y)(x, y) log (P_(X Y)(x, y) / P_X (x) P_Y (y)) = D(P_(X Y) || P_X P_Y) >= 0. $
+定义*互信息 (Mutual Information)* $I[X;Y] = H[X] - H[X | Y] = H[X] + H[Y] - H[X, Y]$. 直观上, $I[X ; Y] >= 0$, 因为在知道 $Y$ 的信息情况下 $X$ 的不确定性不会增加. 事实确实如此: $ I[X;Y] = sum_(x,y) P_(X Y)(x, y) log (P_(X Y)(x, y)) / (P_X (x) P_Y (y)) = D(P_(X Y) || P_X P_Y) >= 0. $
 
 $I$ 不能推广到三个变量间的情况(即强行用容斥原理的式子计算), 因为得到的东西可正可负.
 

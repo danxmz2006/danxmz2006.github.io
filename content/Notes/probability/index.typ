@@ -74,7 +74,7 @@ _Notations._ 约定 $inter$-closed, $union$-closed 是在运算下封闭. $sigma
 
 下半连续和 $sigma$-additive 的等价性是不难验证的; 上半连续和 $emptyset$-连续的等价性也显然(直接和极限做差). 然而只能由下半连续推出 $emptyset$-连续等, 而不能反过来.
 
-*Definition.* 称 $mu < infinity$ 为有限的; 若 $Omega = union.big Omega_n, mu(Omega_n) < infinity$ 称 $mu$ 为 $sigma$-有限的.
+*Definition.* 称 $mu < infinity$ 为有限的; 若 $Omega = union.big Omega_n, mu(Omega_n) < infinity$ 称 $mu$ 为 $sigma$-有限的. #footnote[测度的信息可由全体 $mu(dot.c inter Omega_n)$ 给出, 所以 $sigma$-有限基本就是有限.]
 
 === The Measure Extension Theorem
 
@@ -86,11 +86,8 @@ _Notations._ 约定 $inter$-closed, $union$-closed 是在运算下封闭. $sigma
 
 容易验证 $cal(A)^prime$ 在交并补下都是封闭的, 并且 $Omega in cal(A)^prime$, 所以 $cal(A)^prime$ 是 algebra.
 
-能否直接如法炮制令 $mu^(prime prime)(union.plus.big_(i=1)^infinity A_i) = sum_(i=1)^infinity mu^prime (A_i)$?
+给出代数 $cal(A)$ 中的有限可加测度 $mu_0$, 能否直接如法炮制令 $mu(union.plus.big_(i=1)^infinity A_i) = sum_(i=1)^infinity mu_0 (A_i)$?
 
-这个时候, 我们证明良定义性就会遇到困难: 至少需要保证 $mu^(prime prime)|_(cal(A)^prime) = mu^prime$, 而这依赖于 $mu^prime$ 的可数可加性, 而我们目前只有有限可加性. 事实上, 从有限可加测度延拓至预测度必须引入额外的假设. #footnote[考虑 $mu(A) := cases(0 "if" |A| < infinity, infinity "if" |A| = infinity).$]
+这个时候, 我们证明良定义性就会遇到困难: 至少需要保证 $mu|_(cal(A)) = mu_0$, 而这依赖于 $mu_0$ 的可数可加性, 而我们目前只有有限可加性. 事实上, 从有限可加测度延拓至预测度必须引入额外的假设. #footnote[考虑 $mu(A) := cases(0 "if" |A| < infinity, infinity "if" |A| = infinity).$]
 
-假设 $mu^prime$ 是预测度. 另一个困难在于, 代数中元素的可数并未必构成 $sigma$-代数(取补不封闭, 可数并的补集是可数交).
-
-且慢, 我们所做的事情无非是对一列上升集合 $A_n$ 加入它们的极限 $A$, 这是一个完备化的过程. 限制 $A_n$ 上升看上去自缚手足. 完备化的起点是一个度量. 令 $d(A_1, A_2) = mu^prime (A_1 backslash A_2) + mu^prime (A_2 backslash A_1)$. #footnote[这其实是一个 pseudo-metric, 因为可能有 $d(A, emptyset) = 0$ 但 $A eq.not emptyset$, 但这并不会造成太大的困难. 这样的 $A$ 被称为零测集. 实际上可以商去零测集.]
-
+在证明测度扩张的存在性之前, 先说明对于 $sigma$-有限的预测度 $mu_0$, 所有可能的扩张限制在 $sigma(cal(A))$ 上是唯一的. 这依赖于

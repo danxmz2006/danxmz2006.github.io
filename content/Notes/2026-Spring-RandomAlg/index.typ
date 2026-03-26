@@ -172,3 +172,39 @@ e.g. 假设算法在 $x in L$ 的时候以 $1/2$ 概率输出 Yes, 在 $x in.not
 取 $T = Theta((sigma / mu)^2 (1 / epsilon^2) log(1/delta))$, 用二阶矩方法可以推出 $Pr[|overline(h)(X) - mu| >= epsilon mu] = O(1 / log(1/delta))$.
 
 考虑 $2k+1$ 个小组, 每个小组取平均再对这些小组求中位数. 假设一个小组以至少 $3/4$ 的概率落在 $[mu - sigma, mu + sigma]$ 内, 每个小组的大小是 $O(sigma^2 / (epsilon^2 mu^2))$. 令 $k = Theta(log (1 / delta))$ 可以保证出问题的概率 $< delta$.
+
+== lec08
+
+=== Counting DNF
+
+这里 DNF 指的是满足 $(X_1 and X_2 and dots.c and X_k) or (Y_1 and Y_2 and dots.c ) or dots.c$ 的 赋值. 设各个 clause 的满足集合是 $A_i$.
+
+一个 naive 的想法是直接在所有赋值里抽样, 但是这个误差系数乘在了 $2^n$ 上, 而 $|union.big A_i|$ 可能远小于这个值.
+
+我们有 $|union.big_i A_i| = sum_i |A_i inter (inter.big_(j < i) overline(A_j))|$. 如此一来误差系数乘在了 $|A_i|$ 上, 而这不超过真实的答案.
+
+一个类似的描述是: 先正比于 $|A_k|$ 的概率抽 $A_k$, 再在 $A_k$ 中抽一个元素 $x$ 看是否 $x in.not A_j(j < k)$.
+
+注意 counting CNF 是不可做的 (SAT 是 \#P-complete 的).
+
+=== Network Reliability
+
+连通图 $G = (V, E)$ 每条边以 $p$ 的概率断开. 求 $G$ 不连通的概率. 需要复杂度是 $p o l y(n, 1/epsilon)$.
+
+朴素 Monte-Carlo 算法有什么问题? 假设最小割 $c$ 很小, 这样做并没有什么问题, 此时 $p_("fail") >= p^c >= 1 / (n^4)$.
+
+假设 $p$ 充分小. 类似 counting DNF, 我们将所有 cut 排成一列. 所有割可以看成全体 $(V^prime, V backslash V^prime)$ 之间的割取并集.
+
+然而这里的问题是割很多. 我们有一个非常聪明的想法: 一个大割 fail 的概率很小; 小割的数量不多.
+
+*Lemma.* 最小割的数量不超过 $binom(n, 2)$. 更一般地, 最多有 $(2n)^(2 alpha)$ 个大小 $< alpha c$ 的割.
+
+*Proof.* 考虑如下随机过程: 每次选一条没选过的边, 将其连接的两个点合并. 剩下 2 个点的时候输出其间的所有重边. 容易看出这确实构成原图的割. #footnote[注意 $G$ 是连通的, 因此缩边之后依然连通. 我们实际上只用考虑删去后恰好剩下两个连通块的割. 对于这些割而言, 一旦上述过程中割内的边被保留下来, 则一定只有这些边被保留, 否则删去这些边后图依然是连通的.]
+
+已知最小割为大小 $c$, 固定一个大小为 $c$ 的割, 输出它的概率如何? 首先注意到, 考虑某一时刻(缩点后)一个点的度数, 其有下界 $c$, 因此此时非自环的边数不低于 $(|V^prime| c) / 2$. 因此一个大小不超过 $c$ 的割内的边自始至终未被选的概率有下界
+$ product_(2 < k <= n) (1 - (2 c) / (k c)) = 2 / (n (n-1)). $
+
+$alpha > 1$ 的情况怎么处理? 此时, 我们不能缩到 2 个点, 因为 $(2 alpha) / k$ 可能比 1 大. 令 $t = ceil(2 alpha)$. 我们缩到恰好剩下 $t$ 个点, 再在不超过 $2^(t-1)$ 个割中随机抽一个. 一个大小不超过 $alpha c$ 的割最终被抽到的概率有下界
+$ 1 / (2^(t-1) binom(n, t)). $ 因此, 大小为 $alpha c$ 的割的数量有上界 $2^(2 alpha - 1) n^(2 alpha)$ (我们只用到 $alpha in ZZ$ 的情况.)
+
+因此, 固定一个参数 $alpha$, 我们可以用上述做法随机抽样, 知道抽出所有的小割; 大割 fail 的概率不超过 $ sum_(k >= alpha) (4n^2 p^c)^k < epsilon p^c <= epsilon p_("fail"). $ 计算可知 $n^alpha = p o l y(1 / epsilon)$ 所以这个算法是 $p o l y(n, 1 / epsilon)$ 的.
