@@ -43,7 +43,7 @@ NFA 可以转为 DFA, DFA 中的一个状态对应 NFA 可能的状态集合.
 
 定义 $R$ 是*正则表达式*如果 $ R = a in Sigma | epsilon | emptyset | R_1 union R_2 | R_1 smallcirc R_2 | R_1^ast. $
 
-Theorem. 正则语言 $<=>$ 存在正则表达式.
+*Theorem.* 正则语言 $<=>$ 存在正则表达式.
 
 从右到左即为上次的结论.
 
@@ -67,7 +67,7 @@ _Pumping Lemma_. 如果 $A$ 是正则语言, 那么存在 $p$ 使得如果 $s in
 
 下面寻找对应的计算模型. 一个*下推自动机*为在 NFA 基础上加入一个栈. 每次转移需要看栈顶的字符, 并压入/弹出一个字符.
 
-Theorem. context-free language $<=>$ 存在 PDA.
+*Theorem.* context-free language $<=>$ 存在 PDA.
 
 先证明 context-free 能推出 PDA. 考虑从左往右读的时候维护一个由 $V \/ Sigma$ 构成的栈, 其中栈顶对应当前串的最左边, 栈底对应最右边. 如果栈顶是一个变量, 尝试将其替换为一个串, 将串整个推入栈顶; 否则要求栈顶和当前输入的最左边字符相同, 弹栈并读下一个字符. 
 
@@ -79,7 +79,7 @@ Theorem. context-free language $<=>$ 存在 PDA.
 
 假设 $x$ 可以被按照如此方式接受. 那么存在路径 $(p_0 = epsilon, q_0 = q, s_0)->(p_1, q_1, s_1)->(p_2, q_2, s_2)->dots.c->(p_k = x, q_k=q^prime, s_k)$, 其中 $s_i$ 为栈的状态, $p_i$ 为已接受部分构成的前缀. 对 $k$ 归纳. 如果栈自始至终都保持不变则每一步的推导规则都给出了. 否则考虑第一次压栈的位置和第一次弹出这个位置, 可以用一次推导规则后针对两个 $[dots]$ 用归纳假设.
 
-反过来, 需要证明 $[q Z q^prime]$ 只能推出被接受的 $x$. 我们对替换次数归纳并讨论第一次替换所使用的规则, 在新产生的变量上用归纳假设. $qed$
+反过来, 需要证明 $[q Z q^prime]$ 只能推出被接受的 $x$. 我们对替换次数归纳并讨论第一次替换所使用的规则, 在新产生的变量上用归纳假设. $qed$ #footnote[和正则语言的情况不同的是, 下推自动机基本上并没有什么好的性质. 多数结论都是用 CFG 本身推出来的.]
 
 === Boundary for CFL
 
@@ -91,15 +91,17 @@ e.g. $L = {a^n b^n c^n}$. 取 $n >= p$. 循环节至多含有两种字母.
 
 e.g. $L = {a^i b^j c^k | i <= j <= k}$. 取 $i = j = k = p$. 如果 $v x y$ 只包含 $b, c$ 需要删去部分.
 
+CFL 的一个好处在于它很适合表达那些 "某个局部性质被破坏" 的语言. 例如, 它可以表达所有发生错误的 TM 计算过程.
+
 == Ch04 Turing Machine
 
 这里给出的定义是 $k$ 带确定性 TM.
 
-定义一个语言是 *Turing-recognizable* 如果某个 TM 接受它.
+定义一个语言是 *Turing-recognizable* 如果存在 M, 当且仅当输入该语言时, M 停机并接受.
 
 一个 *decider* 是一个不会进入死循环的 TM. 一个语言是 *Turing-decidable* 的如果一个 decider TM 判定它. Turing-recognizable 情况中我们不要求对于 $x in.not L$, TM 一定停机.
 
-TM 也可以执行长输出, 输出在一个纸带上. $M$ 在 $T(n)$ 时间运行如果运行步数 $<= T(|x|)$, 对于输入 $x$. 若 $T(n)$ 能在 $O(T(n))$ 时间内计算称 $T$ 是 *time-constructible* 的.
+TM 也可以执行长输出, 输出在一个纸带上. $M$ 在 $T(n)$ 时间运行如果运行步数 $<= T(|x|)$, 对于输入 $x$. 若 $T(n) >= n$ 的二进制表示能在 $T(n)$ 时间内计算称 $T$ 是 *time-constructible* 的.
 
 === Variants of TM
 
@@ -108,3 +110,39 @@ TM 也可以执行长输出, 输出在一个纸带上. $M$ 在 $T(n)$ 时间运�
 $k$ 个纸带转 1 个纸带. 可以 $O(k T(n)^2)$ 模拟.
 
 Church-Turing Thesis. 合理计算模型计算能力和 TM 相同.
+
+=== Universal TM
+
+存在图灵机 $U$, 输入任何 $alpha, x in {0, 1}^*$, $U(x, alpha) = M_alpha(x)$. $alpha$ 给出一个图灵机的描述. 设 $M_alpha$ 停机时间是 $T(n)$, 则 $U(x, alpha)$ 运行时间是 $O(T(n) log T(n))$.
+
+$O(T(n)^2)$ 的构造相对平凡, 而 $O(T(n) log T(n))$ 的构造非常智慧 (大致是将纸带分为大小为 2 的幂的块之后定时重构). 这个 UTM 可以是 oblivious 的. 
+
+== Ch05 Computability
+
+本讲针对 recognize-decide 之间差别对问题/语言进行分类.
+
+由于 TM 是可数的, ${0, 1}^* -> {0, 1}$ 是不可数的, 显然存在不可被识别的语言. 将图灵机排成一列, 具体构造就是对角线构造 $"UC"(x) = not M_x (x)$.
+
+定义 $sans("HALT") = {chevron.l M, alpha chevron.r | M "halts on" alpha}$. 我们说明 $sans("HALT")$ 不可判定.
+
+设矩阵 $chevron.l M, alpha chevron.r$ 的位置为是否停机, 依然用对角线法, 假设可以判定, 可以构造一个不在矩阵中的行. $qed$
+
+另一种证法是假设存在一个 $M_("HALT")$, 把它作为 oracle 我们可以构造一个 $M_("UC")$. 这种做法称为*归约*.
+
+#show sym.lt.eq: math.scripts
+
+Mapping reduction: $A <=_m B$ 当且仅当存在可计算函数 $f$, $forall w, w in A <-> f(w) in B$.
+
+e.g. 证明 $E_(T M) = {M | M "accepts" emptyset}$ 是 undecidable 的.
+
+我们说明 $A_(T M) = {chevron.l M, alpha chevron.r | M "accepts" alpha} <=_m overline(E_(T M))$. 令 $f(chevron.l M, alpha chevron.r) = M^prime$, 这里 $M^prime$ accepts 当且仅当输入为 $alpha$ 且 $M$ 接受 $alpha$.
+
+e.g. 证明 $E Q_(T M) = {chevron.l, M_1, M_2, chevron.r | M_1 "and" M_2 "are TMs and have the same language"}$ undecidable.
+
+取 $L(M_2) = emptyset$, 有 $E_(T M) <=_m E Q_(T M)$.
+
+可以发现, $sans("HALT")$ 和 $A_(T M)$ 都是 recognizable 且 undecidable 的.
+
+*Theorem.* $A$ 是 decidable 的当且仅当 $A, overline(A)$ 是 recognizable 的.
+
+从左到右是显然的. 假设 $A$ 和 $overline(A)$ 都 recognizable 的, 我们可以同步运行 recognize $A$ 和 $overline(A)$ 的 TM (每次运行一步), 最终一定停机.
