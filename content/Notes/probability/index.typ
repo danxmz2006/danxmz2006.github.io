@@ -224,7 +224,7 @@ $<==$ 方向显然. 对 $==>$ 方向若 $g >= 0$ 设 $g = sum_(n=1)^infinity alp
 
 对可测映射 $f : (Omega, cal(A)) -> (Omega', cal(A)')$, $Omega$ 上的测度 $mu$ 可以对 $f^(-1)$ 做拉回到 $Omega'$ 上的测度. 则会被称为 $mu$ 在 $f$ 下的像测度.
 
-*Theorem. (Lusin)* 设 $f : RR -> RR$ Borel 可测. $forall epsilon > 0$, 存在闭集 $C subset R$ 使得 $lambda(RR backslash C) < epsilon$ 使得 $f stretch(|, size: #150)_C$ 在 $C$ 上连续.
+*Theorem. (Lusin)* 设 $f : RR -> RR$ Borel 可测. $forall epsilon > 0$, 存在闭集 $C subset R$ 使得 $lambda(RR backslash C) < epsilon$ 使得 $f stretch(|, size: #150%)_C$ 在 $C$ 上连续.
 
 对于 $f = chi_A$, 由内正则性可以取 $C subset A, lambda(A backslash C) < epsilon$.
 
