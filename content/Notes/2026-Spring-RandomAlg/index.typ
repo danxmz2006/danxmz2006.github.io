@@ -197,7 +197,7 @@ e.g. 假设算法在 $x in L$ 的时候以 $1/2$ 概率输出 Yes, 在 $x in.not
 
 然而这里的问题是割很多. 我们有一个非常聪明的想法: 一个大割 fail 的概率很小; 小割的数量不多.
 
-*Lemma.* 最小割的数量不超过 $binom(n, 2)$. 更一般地, 最多有 $(2n)^(2 alpha)$ 个大小 $< alpha c$ 的割.
+*Lemma.* 最小割的数量不超过 $binom(n, 2)$. 更一般地, 最多有 $n^(2 alpha)$ 个大小 $< alpha c$ 的割.
 
 *Proof.* 考虑如下随机过程: 每次选一条没选过的边, 将其连接的两个点合并. 剩下 2 个点的时候输出其间的所有重边. 容易看出这确实构成原图的割. #footnote[注意 $G$ 是连通的, 因此缩边之后依然连通. 我们实际上只用考虑删去后恰好剩下两个连通块的割. 对于这些割而言, 一旦上述过程中割内的边被保留下来, 则一定只有这些边被保留, 否则删去这些边后图依然是连通的.]
 
@@ -205,6 +205,35 @@ e.g. 假设算法在 $x in L$ 的时候以 $1/2$ 概率输出 Yes, 在 $x in.not
 $ product_(2 < k <= n) (1 - (2 c) / (k c)) = 2 / (n (n-1)). $
 
 $alpha > 1$ 的情况怎么处理? 此时, 我们不能缩到 2 个点, 因为 $(2 alpha) / k$ 可能比 1 大. 令 $t = ceil(2 alpha)$. 我们缩到恰好剩下 $t$ 个点, 再在不超过 $2^(t-1)$ 个割中随机抽一个. 一个大小不超过 $alpha c$ 的割最终被抽到的概率有下界
-$ 1 / (2^(t-1) binom(n, t)). $ 因此, 大小为 $alpha c$ 的割的数量有上界 $2^(2 alpha - 1) n^(2 alpha)$ (我们只用到 $alpha in ZZ$ 的情况.)
+$ 1 / (2^(t-1) binom(n, t)). $ 因此, 大小为 $alpha c$ 的割的数量有上界 $n^(2 alpha)$ (我们只用到 $alpha in ZZ$ 的情况.)
 
-因此, 固定一个参数 $alpha$, 我们可以用上述做法随机抽样, 知道抽出所有的小割; 大割 fail 的概率不超过 $ sum_(k >= alpha) (4n^2 p^c)^k < epsilon p^c <= epsilon p_("fail"). $ 计算可知 $n^alpha = p o l y(1 / epsilon)$ 所以这个算法是 $p o l y(n, 1 / epsilon)$ 的.
+因此, 固定一个参数 $alpha$, 我们可以用上述做法随机抽样, 知道抽出所有的小割; 大割 fail 的概率不超过 $ sum_(k >= alpha) (n^2 p^c)^k < epsilon p^c <= epsilon p_("fail"). $ 计算可知 $n^alpha = p o l y(1 / epsilon)$ 所以这个算法是 $p o l y(n, 1 / epsilon)$ 的.
+
+== lec09
+
+=== Chernoff Bound
+
+互相独立条件可以放宽成 $k$-wise 独立, 求和可以放宽成 Lipschitz 连续的多元函数, 有界是必要的.
+
+加性的结论称为 Hoeffding 不等式. 设 $X_1, X_2, dots.c, X_n$ 为独立的 01 变量, $X_i ~ "Bern"(p_i), X = sum_i X_i$, $p = 1/n sum p_i$. 有 $Pr[X >= EE[X] + n epsilon] <= exp(-n D(p + epsilon || p)) <= exp(-2n epsilon^2).$
+
+我们还有乘性的结论, 这被称作 Multiplicative Chernoff Bound. 此时 $Pr[e^(t X) > e^(t(1+delta)mu)] <= E[e^(t X)] / e^(t(1+delta)mu)$. 利用不等式 $1 + (e^t - 1)p <= e^((e^t - 1)p)$ 我们可以说明上式小于 $e^((e^t - 1)mu) / e^(t(1+delta)mu) = (e^delta / ((1+delta)^(1+delta)))^mu$, 取适当的 $t$.
+
+=== Randomized Routing
+
+设 $pi$ 是超立方体 ${0, 1}^n$ 上的排列. 对某个 $i$ 需要将数据从 $i$ 运到 $pi(i)$. 同时刻不能占据同一条边. 最小化运输所有数据需要的时间.
+
+考虑对所有 $i$ 抽一个中点, 将路径拆成 $i arrow.r.squiggly delta(i) arrow.r.squiggly pi(i)$. 每次翻一个和目标不同的位, 有冲突就先翻优先的 $i$. 我们说明期望总花费时间是 $O(n)$ 的.
+
+考虑所有的路径 $P_i = i arrow.r.squiggly delta(i)$. 设 $S_i = {j | P_i inter P_j eq.not emptyset, j > i}$. 注意 $P_i inter P_j$ 一定是一条路径. 设 $D_i$ 为 $i$ 堵塞的时刻集合. 我们证明对每个 $i$, 存在单射 $phi_i : D_i arrow.r.hook S_i$.
+
+考虑如下过程. 维护一些赋值 $c_x, x in S_i$. 每当 $i$ 和 $x$ 相遇, 取最大的 $x$, 令 $c_x <- c_x + 1$. 假设某 $x < y$ 在 $P_i$ 上相遇, 令 $c_y <- c_y + c_x, c_x <- 0.$
+
+我们说明任何时刻 $c_x <= 1$. 考虑追踪一个 1 的流动, 我们发现它永远不会停滞. 另一方面, 当一个新的 1 产生的时候, 原本路径上的 1 一定移动至路径上后面的位置, 因此不同的 1 一定不会同时到达同一个点.
+
+最终, ${x | c_x = 1}$ 构成了 $phi_i$ 的像集.
+
+设 $I_(i j) = [P_i inter P_j != emptyset].$ 注意固定 $i$, 不同 $I_(i j)$ 是互相独立的, 因为它们只取决于 $delta(j)$ 的取值.
+
+估计 $EE[sum_j I_(i j)]$, 对每条有向边计算贡献, 贡献为出现在路径中的概率 $times$ 期望有多少 $j -> delta(j)$ 经过该有向边. 然而根据对称性, 后者是一个定值. 对所有边出现在路径中的概率求和即路径长度期望, 即 $n / 2$. 因此, $ EE[sum_j I_(i j)] <= n / 2 (2^n n/2) / (2^n n) = n / 4$. 以高概率 $sum_j I_(i j) <= O(n)$ #footnote[Multiplicative Chernoff bound.], 之后用 union bound. 
+这里有个小问题是我们有 $Pr[|S_i| >= (1 + beta) mu] <= exp(-Omega(beta^2)mu)$, $mu$ 可能比较小. 但是固定 $(1 + beta) mu$ 之后, 上述界在 $mu$ 最大的时候是最优的.

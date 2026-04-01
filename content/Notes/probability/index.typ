@@ -127,7 +127,7 @@ $ mu^ast (lim dot.c) = lim mu^ast (dot.c) $
 
 我不认为测度扩张的问题已经完全解决. 我们将 $2^Omega$ 分解为被 $sigma$-有限集覆盖的"刚性部分"和其余的"半自由"部分, 后者是否可以进一步地分拆, 从而完全确定一个集合是否是自由的? 上述构造能否给出一个比 $sigma(cal(A))$ 更大的 $sigma$-代数? Carathéodory 奇怪的构造在上述刻画下如何表现? 但我们已经知道了需要知道的一切, 故而到此为止.
 
-=== Some concrete measures
+=== Some Concrete Measures
 
 上述扩张定理要求 $mu_0$ 在代数上是预测度. 然而代数往往是由某个半环扩张而来的, 半环比代数好操作很多. 
 
@@ -162,7 +162,7 @@ $B_n$ 是一些 $C_1, C_2, dots.c, C_m in cal(A)$ 的无交并. 因此存在某�
 
 记 $(sum_(e in E) p_e delta_e)^(times.circle NN) := mu$.
 
-=== Approximation theorem for measures
+=== Approximation Theorem for Measures
 
 *Theorem.* 设 $cal(A)$ 是半环, $mu$ 是 $sigma(cal(A))$ 上的 $sigma$-有限测度. 
 
@@ -182,4 +182,56 @@ $B_n$ 是一些 $C_1, C_2, dots.c, C_m in cal(A)$ 的无交并. 因此存在某�
 
 后者可能稍费功夫: 设 $lambda^n (A) < infinity$, 存在一列基 $B_k, A subset union.big B_k, sum_k lambda^n (B_k) < lambda^n (A) + epsilon / 2$. 设 $sum_(k > N) lambda^n (B_k) < epsilon / 2$, 用充分大的 $[-M, M]^n$ 覆盖 $union.big_(k <= N) B_k$, 有 $lambda^n (A) - lambda^n (A inter [-M, M]^n) < epsilon / 2$. 存在一个开集 $U supset (A inter [-M, M]^n)^complement, lambda^n (U backslash (A inter [-M, M]^n)^complement) < epsilon / 2$, 于是 $[-M, M]^n backslash U$ 即为所求. $qed$
 
-*Definition. * $(Omega, cal(A), mu)$ 是完备的若零测集 $cal(N)_mu subset cal(A)$.
+*Definition.* $(Omega, cal(A), mu)$ 是完备的若零测集 $cal(N)_mu subset cal(A)$.
+
+=== Measurable Maps
+
+*Definition.* 使得可测集的原像仍为可测集的映射称为*可测映射*.
+
+*Definition.* 考虑映射 $f : Omega -> Omega'$, $(Omega', cal(A)')$ 为一测度空间. 则 $f^(-1)(cal(A)) := {f^(-1)(A') | A' in cal(A)'}$ 为最小的 $sigma$-代数使得 $f$ 可测. 这被称为由 $f$ *生成*的 $sigma$-代数. #footnote[$f^-1$ 是集合运算下的一个性质很好的同态.]
+
+假设想验证 $f$ 是不是可测的. 这里的问题在于像集中的 $sigma$ 代数可能很大. 我们更希望只验证生成该 $sigma$ 代数的集族.
+
+*Theorem. Measurability on a generator.* 设 $cal(E)' subset cal(A)'$ 是一族 $cal(A)'$-可测集. 则 $sigma(f^(-1)(cal(E)')) = f^(-1)(sigma(cal(E)'))$. 进而 $f$ 是 $cal(A)-sigma(cal(E)')$-可测的当且仅当 $f^(-1)(E') in cal(A)$, 对于所有 $E' in cal(E)'$. 特别地, $sigma(cal(E)') = cal(A)'$ 时 $f$ 是 $cal(A)-cal(A)'$ 可测的当且仅当 $X^(-1)(cal(E)') subset cal(A)$.
+
+鉴于右式是 $sigma$ 代数, $subset$ 方向是容易的. 为了验证 $supset$ 方向, 令 $cal(A)'_0 = {A' in sigma(cal(E)') | f^(-1)(A') in sigma(f^(-1)(cal(E)'))}$, 只需验证其是 $sigma$ 代数即可.
+
+取 $f : A arrow.r.hook Omega$ 为平凡的嵌入. 我们得到 $sigma(cal(E)) stretch(|, size: #150%)_A = sigma(cal(E) stretch(|, size: #150%)_A)$.
+
+另一个推论是连续映射是 Borel 可测的.
+
+*Theorem.* 设 $(Omega, cal(A))$ 可测, $f_1, f_2, dots.c, f_n : Omega -> RR$. 设 $f := (f_1, f_2, dots.c, f_n) : Omega -> RR^n$, 则 $f$ 可测当且仅当 $f_i$ 可测.
+
+假设 $f_i$ 均可测, 考察所有 $RR^n$ 中 $(-infinity, b)$ 的原像即可得到 $f$ 可测. 对于另一个方向, 注意到坐标投影是连续的. $qed$
+
+从而, 能推出常见四则运算作用在可测函数上都是可测的.
+
+*Theorem.* $inf, sup, liminf, limsup$ 作用在一列可测函数上是可测的. 需要考虑扩充的实数集 $overline(RR)$.
+
+考虑 $(inf_n f_n)^(-1) ([-infinity, a)) = union_n f_n^(-1) ([-infinity, a))$ 等等. $qed$
+
+*Definition. 简单函数.* $(Omega, cal(A))$ 上的简单函数形如 $f = sum_(i=1)^n alpha_i chi_(A_i), A_i in cal(A)$.
+
+注意到我们可以进行调整使得 $A_i inter A_j = emptyset$.
+
+*Theorem.* 设 $f : Omega -> [0, +infinity]$ 可测. (i) 存在一列简单函数 $f_n arrow.t f$. (ii) $f$ 可以写成 $sum_(n=1)^infinity alpha_n chi_(A_i)$.
+
+(i) 取 $f_n = min{n, 2^(-n) floor(2^n f)}$. (ii) $f_n - f_(n-1)$ 总是简单函数, $f$ 可以写成这些简单函数的和. $f$ 有界的情况下可以一致逼近. $qed$
+
+*Corallary. Factorization Lemma.* 设 $(Omega', cal(A)')$ 可测, $Omega != emptyset, f : Omega -> Omega'$. $g : Omega -> overline(RR)$ 是 $sigma(f)-cal(B)(overline(R))$-可测的当且仅当存在可测 $phi : (Omega', cal(A)') -> (overline(R), cal(B)(cal(R)))$ 使得 $g = phi compose f$.
+
+$<==$ 方向显然. 对 $==>$ 方向若 $g >= 0$ 设 $g = sum_(n=1)^infinity alpha_n xi_(A_n), A_n in sigma(f).$ 根据 $sigma(f)$ 的定义存在 $B_n in cal(A)', f^(-1)(B_n) = A_n$. 于是 $phi = sum_(n=1)^infinity alpha_n xi_(B_n)$ 满足条件. 一般情况可以拆成 $g = g^+ - g^-$.
+
+对可测映射 $f : (Omega, cal(A)) -> (Omega', cal(A)')$, $Omega$ 上的测度 $mu$ 可以对 $f^(-1)$ 做拉回到 $Omega'$ 上的测度. 则会被称为 $mu$ 在 $f$ 下的像测度.
+
+*Theorem. (Lusin)* 设 $f : RR -> RR$ Borel 可测. $forall epsilon > 0$, 存在闭集 $C subset R$ 使得 $lambda(RR backslash C) < epsilon$ 使得 $f stretch(|, size: #150)_C$ 在 $C$ 上连续.
+
+对于 $f = chi_A$, 由内正则性可以取 $C subset A, lambda(A backslash C) < epsilon$.
+
+对于简单函数 $f = sum_i alpha_i chi_(A_i)$, $A_i$ 两两无交, 可以如法炮制, 利用闭集的有限并还是闭集.
+
+有界的 $f$ 可以由简单函数 $phi_n$ 一致逼近. 设 $C_n$ 为 $phi_n$ 得到的闭集, $lambda(RR backslash C_n) < epsilon 2^(-n)$. 则 $C = inter_n C_n$ 仍为闭集满足 $lambda(RR backslash C) < epsilon$. 一致收敛的连续函数收敛到连续函数.
+
+对于未必有界的 $f$, 首先将定义域 $RR$ 分成 ${[n, n+1] | n in ZZ}$. 我们构造 $C_n subset S_n = [n + epsilon 2^(-abs(n) - 2), n + 1 - epsilon 2^(-abs(n) - 3)]$. 具体的, 由于 $S_n = union.big_(k > 0) f^(-1)((-infinity, k]) inter S_n$, 测度的连续性使得我们可以取充分大的 $k$, 差集的测度至多为 $epsilon 2^(-abs(n) - 3)$. 之后再用内正则性即可得到 $C_n$.
+
+一般而言闭集的可数并未必是闭集, 但这里我们特殊分离性质保证了这一点. $qed$

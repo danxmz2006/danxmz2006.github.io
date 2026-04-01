@@ -75,3 +75,19 @@ $I$ 不能推广到三个变量间的情况(即强行用容斥原理的式子计
 
 + $H[lambda P + (1 - lambda) Q] >= lambda H[P] + (1 - lambda)H[Q].$ (归结为 $f(x) = -x log x$ 的下凸性)
 + $D(lambda P_1 + (1 - lambda)P_2 || lambda Q_1 + (1 - lambda)Q_2) <= lambda D(P_1 || Q_1) + (1 - lambda) D(P_2 || Q_2). $ 这源于 $f(x, y) = x log (x / y)$ 是上凸的, 其 Hessian 半正定. 或者考虑一个拓展的不等式 $sum a_i log(a_i / b_i) >= (sum a_i) log((sum a_i) / (sum b_i))$.
+
+*Theorem. Chain rule.* $H[X_1, X_2, dots.c, X_n] = H[X_1] + H[X_2 | X_1] + H[X_3 | X_1, X_2] + dots.c + H[X_n | X_1, X_2, dots.c, X_(n-1)]$.
+
+*Proposition.* $D(P || Q) >= 1/2 log_e norm(P - Q)_1^2$.
+
+*Proof.* 两点分布是导数练习题. 一般情况可以映为 $p_i < q_i$ 和 $p_i > q_i$ 两种情况, 然后用 Data processing 不等式. $qed$
+
+*Definition. Differential Entropy.* 
+
+== Ch02 Source Coding
+
+根据 Huffman Coding, 可以构造码长 $l$ 使得 $EE[l(X)] <= H[X] + 1$.
+
+这个 1 并不是本质的. 考虑将 $X_1, X_2, dots.c, X_T$ (独立服从 $X$) 统一编码, 有 $1/T EE[l(X_1, X_2, dots.c, X_T)] <= H[X] + 1/T$. 因此 $H[X]$ 是平均码长的下确界.
+
+*Definition. Entropy rate.* 对随机过程 $cal(X) = (X_t)$, 若 $lim_(T -> infinity) 1/T H[X_1, X_2, dots.c, X_T]$ 存在, 定义其为 $cal(X)$ 的 *entropy rate*, 记为 $cal(H)(cal(X))$.
