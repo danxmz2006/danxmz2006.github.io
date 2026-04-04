@@ -7,6 +7,8 @@
   lang: "zh",
 )
 
+#set math.equation(numbering: none)
+
 = 算法设计与分析
 
 == Ch01 导论
@@ -149,28 +151,74 @@ DPLL 和 CDCL.
 
 形如
 #align(center)[
-  $ min y = c^T x, \ "s.t." A x <= b, x >= 0, x in RR^n $
+  $ min y = c^top x, \ "s.t." A x <= b, x >= 0, x in RR^n $
 ]
 的问题. 可行解的集合构成*可行域*. 有限个半空间的交集称为*多面体 (polyhedron)*. 使得目标函数取得最值的解称为*最优解*.
 
+=== Simplex Method
+
 通过添加松弛变量, 换元的方法, 可以转化为*标准型*
 #align(center)[
-  $ min y = c^T x, \ "s.t." A x = b >= 0, x >= 0. $
+  $ min y = c^top x, \ "s.t." A x = b >= 0, x >= 0. $
 ]
 
-可行域 $cal(D)$ 可以分为几种情况: $cal(D) = emptyset$ (不可行), 目标函数可以任意小(无界), 有界的情况. 如果有界则存在超平面 $H^* : c^T x  = z^*$, 满足 $H^* inter cal(D) != emptyset$ 且 $cal(D)$ 包含于 ${x : c^T x >= z^*}$. $H^* inter cal(D)$ 构成多面体, 维数在 $0 ~ n-1$ 内.
+可行域 $cal(D)$ 可以分为几种情况: $cal(D) = emptyset$ (不可行), 目标函数可以任意小(无界), 有界的情况. 如果有界则存在超平面 $H^* : c^top x  = z^*$, 满足 $H^* inter cal(D) != emptyset$ 且 $cal(D)$ 包含于 ${x : c^top x >= z^*}$. $H^* inter cal(D)$ 构成多面体, 维数在 $0 ~ n-1$ 内.
 
-*基本可行解* 为满足一些性质的可行解. 设 $A$ 的秩是 $m$, $A$ 的 $m$ 个线性无关的列向量被称为标准型的 *基*. 这些列向量对应的变量被称为*基变量*. 满足非基变量全为 0 的解称为*基本可行解*.
+不妨设 $A_(m times n)$ 的秩是 $m$. $A$ 的 $m$ 个线性无关的列向量被称为标准型的 *基*. 这些列向量对应的变量被称为*基变量*.
 
-设 $B$ 为一组基,
+设 $B$ 为一组基, $A_B$ 为 $A$ 中 $B$ 的部分, $A_N$ 为剩余的部分. $x_B$ 可由 $x_N$ 表示:
+$ x_B = A_B^(-1)b - A_B^(-1)A_N x_N. $
+
+令 $x_N = 0$, 得到 $x = (x_B, x_N) = (A_B^(-1)b, 0)$ 为*基本可行解*.
+
+一次*转轴*是将一个旧的基变量换成一个新的基变量, 同时目标函数的值得到改进.
+
+设 $c = (c_B, c_N)$, 有 $c^top x = c_B^top x_B + c_N^top x_n = c_B^top A_B^(-1) b + (c_N^top - c_B^top A_B^(-1) A_N) x_N$.
+
+$c_B^top A_B^(-1)b$ 即为基本可行解处的价值 $z$. 对 $x_N$ 求导得到 $tilde(c_N) = c_N - A_N^top (A_B^(-1))^top c_B$. 注意将 $N$ 全部替换为 $B$ 后得到 $0$. 设*约化成本* $tilde(c) = c - A^top (A_B^(-1))^top c_B$. $tilde(c)_i < 0$ 说明增加 $x_i$ 可以改进目标函数. $i in N$, 因此我们将它加入基变量中. 现在不断提升 $x_i$, 由于代价函数线性, 提升 $x_i$ 始终是最优的, 直到某个基变量 $x_j$ 下降到 $0$. 由于 $x_B = A_B^(-1) b - A_B^(-1) A_i x_i$, $x_i$ 的最大增量为
+
+$ theta = min{(A_B^(-1)b)_j / (A_B^(-1)A_i)_j : (A_B^(-1)A_i)_j > 0}. $
+
+取到最小值的变量 $x_(B_j)$ 为本次 pivot 的*出基变量*. 确定 $j$ 的过程称为*最小比值检验*.
+
+考虑边界情况. 假设 $tilde(c) >= 0,$ 解无法改进. 可以用互补松弛条件证明此时的解是最优的. 假设 $A_B^(-1) A_i <= 0$, $x_i$ 的值可以不断增加, 此时线性规划是无界的.
 
 === 对偶问题
 
-一开始的线性规划问题的对偶问题是
+标准的线性规划问题的对偶问题是
 #align(center)[
-  $ max b^T y, \ "s.t." A^top y >= c, y >= 0. $
+  $ max b^top y, \ "s.t." A^top y <= c. $
 ]
-这和一般的凸优化对偶是一致的.
+$y$ 为 Lagrange 乘子. 我们有*弱对偶定理*: 对偶问题的最大值始终小于等于原问题的最小值, 这基于 $max min <= min max$. 作为一个推论, 假设 $x^*, y^*$ 分别为原问题和对偶问题的可行解, 并且 $c^top x^* = b^top y^*$, 则 $x^*, y^*$ 均为最优解, 因为彼此互为上下界.
+
+下面逐步证明*强对偶定理*: 若原始问题可行且有界, 则对偶问题也可行且有界, 且最优解相等.
+
+*Lemma. Projection Lemma.* 设 $X$ 是闭凸集, $y in.not X$. 存在 $x^* in X$ 使得 $norm(x - y)$ 取到最小值. 对于任何 $x in X, (y - x^*)^top (x - x^*) <= 0$.
+
+$x^*$ 的存在性缘于距离函数的连续性. 根据定义, $norm(y - x^*)^2 <= norm(y - x)^2$. 根据凸性, $forall 0 < epsilon < 1, x^* + epsilon(x - x^*) in X$, 从而 $norm(y - x^*)^2 <= norm(y - x^* - epsilon(x - x^*))^2 = norm(y - x^*)^2 + epsilon^2 norm(x - x^*)^2 - 2 epsilon (y - x^*)^top (x - x^*).$ 令 $epsilon -> 0$ 得到结论. $qed$
+
+*Corallary. Separating Hyperplane Theorem.* 存在超平面 $(a^top, alpha in RR)$ 分离上述 $X, y$.
+
+取 $a^top = (x^* - y)^top, alpha = a^top x^*$. $qed$
+
+*Theorem. Farkas' Lemma.* 设 $A in RR^(m times n), b in RR^m$, 下述条件恰好有一个满足: (1) $exists x in RR^n, A x = b, x >= 0$; (2) $exists y in RR^m, A^top y >= 0, y^top b < 0$.
+
+如果同时满足, 考虑 $y^top A x = y^top b$ 即可推出矛盾.
+
+假设 (1) 不可行. 设 $S = {A x | x >= 0}$, 则 $S$ 是闭的凸集, $b in.not S$. 存在半平面 $y in RR^m, a in R$ 将 $b, S$ 分离: $y^top b < alpha, y^top s >= alpha, forall s in S$. 由于 $0 in S$, $alpha <= 0, y^top b < 0$. $forall x >= 0, y^top A x >= alpha => y^top A >= 0$ 由于 $x$ 可以任意放大 $y^top A$ 中的负项. $qed$
+
+*Corallary.* 对 (1) $exists x in RR^n, A x <= b, x >= 0$; (2) $exists y in RR^m, A^top y >= 0, y^top b < 0, y >= 0$ 依然成立.
+
+考虑加入松弛变量 $A x + I s = b, s >= 0$. $qed$
+
+
+
+我们还有更强的结论. 假设 (P), (D) 均存在可行解, 即 $-infinity < max b^top y^* <= min c^top x^* < +infinity$. 我们考虑如下线性规划问题 (Q): $ max{0 : c^top x <= b^top y, A x = b, x >= 0, A^top y <= c}, $
+只需判定其是否有解. 假设有解, 则 $c^top x^* = b^top y^*$.
+
+如果 (Q) 不可行, 考虑其对偶问题 (Q'): $ min{c^top mu - b^top lambda : c t - A^top lambda >= 0, -b t + A mu = 0, t >= 0, mu >= 0}. $
+
+注意到 $(t, mu, lambda) = (0, 0, 0)$ 是一组解, 故 $Q'$ 可行. 
 
 == Ch08 均摊分析
 
