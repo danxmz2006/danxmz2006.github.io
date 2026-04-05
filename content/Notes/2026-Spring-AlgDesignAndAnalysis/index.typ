@@ -149,18 +149,13 @@ DPLL 和 CDCL.
 
 == Ch07 线性规划
 
-形如
-#align(center)[
-  $ min y = c^top x, \ "s.t." A x <= b, x >= 0, x in RR^n $
-]
+形如 $ min y = c^top x, \ "s.t." A x <= b, x >= 0, x in RR^n $
 的问题. 可行解的集合构成*可行域*. 有限个半空间的交集称为*多面体 (polyhedron)*. 使得目标函数取得最值的解称为*最优解*.
 
 === Simplex Method
 
-通过添加松弛变量, 换元的方法, 可以转化为*标准型*
-#align(center)[
-  $ min y = c^top x, \ "s.t." A x = b >= 0, x >= 0. $
-]
+通过添加松弛变量, 换元的方法, 可以转化为*标准型* 
+$ min y = c^top x, \ "s.t." A x = b >= 0, x >= 0. $
 
 可行域 $cal(D)$ 可以分为几种情况: $cal(D) = emptyset$ (不可行), 目标函数可以任意小(无界), 有界的情况. 如果有界则存在超平面 $H^* : c^top x  = z^*$, 满足 $H^* inter cal(D) != emptyset$ 且 $cal(D)$ 包含于 ${x : c^top x >= z^*}$. $H^* inter cal(D)$ 构成多面体, 维数在 $0 ~ n-1$ 内.
 
@@ -186,9 +181,8 @@ $ theta = min{(A_B^(-1)b)_j / (A_B^(-1)A_i)_j : (A_B^(-1)A_i)_j > 0}. $
 === 对偶问题
 
 标准的线性规划问题的对偶问题是
-#align(center)[
-  $ max b^top y, \ "s.t." A^top y <= c. $
-]
+$ max b^top y, \ "s.t." A^top y <= c. $
+
 $y$ 为 Lagrange 乘子. 我们有*弱对偶定理*: 对偶问题的最大值始终小于等于原问题的最小值, 这基于 $max min <= min max$. 作为一个推论, 假设 $x^*, y^*$ 分别为原问题和对偶问题的可行解, 并且 $c^top x^* = b^top y^*$, 则 $x^*, y^*$ 均为最优解, 因为彼此互为上下界.
 
 下面逐步证明*强对偶定理*: 若原始问题可行且有界, 则对偶问题也可行且有界, 且最优解相等.
@@ -211,14 +205,10 @@ $x^*$ 的存在性缘于距离函数的连续性. 根据定义, $norm(y - x^*)^2
 
 考虑加入松弛变量 $A x + I s = b, s >= 0$. $qed$
 
+*Theorem.* 若 (P) 可行且有界, 则 (D) 可行且两者最优解相等.
 
-
-我们还有更强的结论. 假设 (P), (D) 均存在可行解, 即 $-infinity < max b^top y^* <= min c^top x^* < +infinity$. 我们考虑如下线性规划问题 (Q): $ max{0 : c^top x <= b^top y, A x = b, x >= 0, A^top y <= c}, $
-只需判定其是否有解. 假设有解, 则 $c^top x^* = b^top y^*$.
-
-如果 (Q) 不可行, 考虑其对偶问题 (Q'): $ min{c^top mu - b^top lambda : c t - A^top lambda >= 0, -b t + A mu = 0, t >= 0, mu >= 0}. $
-
-注意到 $(t, mu, lambda) = (0, 0, 0)$ 是一组解, 故 $Q'$ 可行. 
+设标准型 (P) 可行且 $c^top x > alpha$. 我们有 $A x = b, c^top x + bold(1)^top s = alpha, x,s >= 0$ 不可行, 因而根据 Farkas lemma, 存在 $y in RR^m, w in RR$, $- A^top y + c w >= 0, w >= 0, - b^top y + gamma w < 0$. 假设 $w = 0$, 对剩下的东西反着用 Farkas lemma 得到 (P) 不可行, 矛盾. 因此令 $w = 1$ 缩放得到 $A^top y <= c, b^top y > alpha$.
+这不仅表明 (D) 可行, 同时指出 (D) 的最优解大于 $alpha$. 因此 (P) (D) 最优解相等. $qed$
 
 == Ch08 均摊分析
 
