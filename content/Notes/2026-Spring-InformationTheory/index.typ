@@ -11,7 +11,7 @@
 
 = 信息论
 
-== Ch01 Discrete Entropy, Mutual Information, KL Divergence, and several properties
+== Discrete Entropy, Mutual Information, KL Divergence, and several properties
 
 *信息熵 (Entropy)* $H[X]$ 是定义在一个离散变量分布列 $p(x)$ 上的函数, $ H[X] = sum_x p(x) log 1/p(x). $
 
@@ -40,7 +40,7 @@ $H$ 在一些程度上和对"信息"的直觉有平行关系. 例如, 对于均�
 
 假设不限定 $l_i$ 是整数, 我们可以直接给出最优 $l_i = -log_2 p_i$. 这源于一个将反复出现的不等式:
 
-*Proposition.* $p, q$ 是分布列, 则 $sum_(i=1)^n p_i log p_i / q_i >= 0$. 该和被称为 *KL Divergence* $D(p || q).$
+*Proposition.* $p, q$ 是分布列, 则 $sum_(i=1)^n p_i log p_i / q_i >= 0$. 该和被称为 *KL Divergence* $D(p || q).$ 这可以视为对概率的估计偏差带来的编码的额外开销.
 
 *Proof.* 对上凸函数 $f(x) = x log x$ 用 Jensen 不等式, 注意到 $p_i log p_i / q_i = q_i dot.c p_i / q_i log p_i / q_i.$ $qed$
 
@@ -76,18 +76,51 @@ $I$ 不能推广到三个变量间的情况(即强行用容斥原理的式子计
 + $H[lambda P + (1 - lambda) Q] >= lambda H[P] + (1 - lambda)H[Q].$ (归结为 $f(x) = -x log x$ 的下凸性)
 + $D(lambda P_1 + (1 - lambda)P_2 || lambda Q_1 + (1 - lambda)Q_2) <= lambda D(P_1 || Q_1) + (1 - lambda) D(P_2 || Q_2). $ 这源于 $f(x, y) = x log (x / y)$ 是上凸的, 其 Hessian 半正定. 或者考虑一个拓展的不等式 $sum a_i log(a_i / b_i) >= (sum a_i) log((sum a_i) / (sum b_i))$.
 
-*Theorem. Chain rule.* $H[X_1, X_2, dots.c, X_n] = H[X_1] + H[X_2 | X_1] + H[X_3 | X_1, X_2] + dots.c + H[X_n | X_1, X_2, dots.c, X_(n-1)]$.
+*Theorem. Chain Rule.* $H[X_1, X_2, dots.c, X_n] = H[X_1] + H[X_2 | X_1] + H[X_3 | X_1, X_2] + dots.c + H[X_n | X_1, X_2, dots.c, X_(n-1)]$.
+
+我们同样有关于互信息的 Chain rule: $ I[X_1, X_2, dots.c, X_n ; Y] = sum_(i=1)^n I[X_i;Y | X_1, X_2, dots.c, X_(i-1)]. $ 这可以由 $I[X_1, X_2, dots.c, X_n ; Y] = H[X_1, dots.c, X_n] - H[X_1, dots.c, X_n | Y]$ 推出.
+
+*Theorem. Data Processing.* 对 Markov Chain $X -> Y -> Z$, 有 $I[X;Y] >= I[X;Z]$.
+
+*Proof.* $I[X;Y,Z] = I[X;Y] + I[X;Z | Y] = I[X;Z] + I[X;Y | Z]$. 由于 $X,Z$ 在 $dot.c | Y$ 下是独立的, $I[X;Z | Y] = 0$, 从而 $I[X;Y] >= I[X;Z]. qed$
+
+*Theorem. Data Processing of Divergence.* 设 $P_Y = P_(Y | X) P_X, Q_Y = P_(Y | X) Q_X$, 则 $D(P_Y || Q_Y) <= D(P_X || Q_X)$.
+
+*Proof.* $ D(P_Y || Q_Y) <= D(P_(X Y) || Q_(X Y)) = D(P_X || Q_X) + D(P_(Y | X) || Q_(Y | X)) = D(P_X || Q_X). $
 
 *Proposition.* $D(P || Q) >= 1/2 log_e norm(P - Q)_1^2$.
 
 *Proof.* 两点分布是导数练习题. 一般情况可以映为 $p_i < q_i$ 和 $p_i > q_i$ 两种情况, 然后用 Data processing 不等式. $qed$
 
-*Definition. Differential Entropy.* 
 
-== Ch02 Source Coding
+== Source Coding
+
+=== Asymptotic Equipartition Property (AEP) and Typical Set
+
+AEP: 根据 Law of Large Numbers, 我们有若 $X_1, X_2, dots.c ~ p(x)$ (i.i.d.), 则 $-1/n log p(X_1, X_2, dots.c, X_n) limits(-->)^p H[X]$. 
+
+*Definition.* 一个 *typical set* $A_epsilon^((n))$ 包含 $(x_1, x_2, dots.c, x_n) in cal(X)^n$, 使得 $exp(-n (H[X] + epsilon)) <= p(x_1, x_2, dots.c, x_n) <= exp(-n (H[X] - epsilon))$.
+
+*Theorem.* (i) 对充分大的 $n$, $Pr[A_epsilon^((n))] >= 1 - epsilon$. (ii) $(1-epsilon)exp(n(H[X] - epsilon)) <= |A_epsilon^(n)| <= exp(n(H[X] + epsilon)).$
+
+*Proof.* (i) 这缘于 AEP. (ii) 根据 $1 - epsilon <= Pr[A_epsilon^((n))] <= 1.$ $qed$
 
 根据 Huffman Coding, 可以构造码长 $l$ 使得 $EE[l(X)] <= H[X] + 1$.
 
 这个 1 并不是本质的. 考虑将 $X_1, X_2, dots.c, X_T$ (独立服从 $X$) 统一编码, 有 $1/T EE[l(X_1, X_2, dots.c, X_T)] <= H[X] + 1/T$. 因此 $H[X]$ 是平均码长的下确界.
 
 *Definition. Entropy rate.* 对随机过程 $cal(X) = (X_t)$, 若 $lim_(T -> infinity) 1/T H[X_1, X_2, dots.c, X_T]$ 存在, 定义其为 $cal(X)$ 的 *entropy rate*, 记为 $cal(H)(cal(X))$.
+
+我们也可以定义 $cal(H')(cal(X)) = lim_(T -> infinity) H[X_T | X_1, X_2, dots.c, X_(T-1)]$. 假设该极限存在, 则 $cal(H)$ 极限也存在, 且它们相等.
+
+对于*稳态分布* $p(X_1 = x_1, X_2 = x_2, dots.c, X_n = x_n) = p(X_2 = x_1, X_3 = x_2, dots.c, X_(n+1) = x_n)$ 而言, $cal(H')$ 中的数列是单调下降的, 故其极限必然存在.
+
+对于 Markov Chain 而言, 上述极限即为 $H[mu P | mu]$, 其中 $mu$ 为稳态分布, 有 $H[mu P | mu] = -sum_(i j) mu_i P_(i j) log P_(i j)$.
+
+== Differential Entropy
+
+考虑连续变量 $X$, 我们可以无障碍地定义 $ H[X] = - integral_Omega p(x) log p(x) dif x. $ 但这不能被视为离散熵的平凡推广, 因为测量连续变量时我们只能精确到一定的精度. 
+
+具体地, 假设将 $Omega$ 分为 $Delta_1, Delta_2, dots.c$, $abs(Delta_i) = Delta$, $p_i = integral_(Delta_i) p(x) dif x = p(x_i) Delta$, 我们有 $sum_i -p_i log p_i = -sum_i p(x_i) log p(x_i) Delta - sum_i p(x_i) log Delta = -sum_i p(x_i) log p(x_i) Delta - log Delta$. 注意根据 Riemann 积分的定义第一项会趋于 $H[X]$, 而第二项会趋于 $+infinity$.
+
+微分熵可正可负. 注意我们可以取分划使得每个部分概率小于 $epsilon$, 于是 $sum_i -p_i log p_i -> +infinity$, 这个结论即使 $H[X] = -infinity$ 的时候还是对的.

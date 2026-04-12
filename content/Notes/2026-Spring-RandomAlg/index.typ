@@ -75,13 +75,13 @@ Schwartz-Zippel 引理. 设 $X_i$ 在有限集 $S$ 中随机取值 $deg(f) = d$,
 
 e.g. $R(k, k) > 2^(k/2)$.
 
-e.g. 最大割 $>= |E|/2$.
+e.g. 最大割 $>= (|E|)/2$.
 
 e.g. 最大独立集 $>= sum_v 1/(deg_v + 1)$.
 
 == lec04
 
-=== Alternation
+=== Alteration
 
 e.g. 定义 $c(G)$ 为图 $G = (V, E)$ 的最小交叉边数. 已知 $c(G) >= |E| - 3|V|.$ 改进 $c$ 的估计.
 
@@ -268,3 +268,15 @@ $ Pr[X <= (1 - beta) mu] <= exp(-n D(1 - p + beta p || 1 - p)) <= exp(- (mu beta
 + 假设 $abs(N(x)) >= 24 ln n$. 注意到 $abs(O L D(x))$ 被 $B(4 (n - 1) ln (n - 1), 1 / (n - 1))$ 控制, 其期望 $mu = 4 ln (n - 1)$, 同理可证 $Pr[abs(O L D(x)) >= 24 ln n] = Pr[abs(O L D(x)) >= (1 + 5) mu] <= 1 / n^2$.
 
 最后用 union bound 即可.
+
+== lec11
+
+=== Balls and Bins
+
+将 $m$ 个球放入 $n$ 个桶, 分析最大负载量.
+
+*Stochastic Dominance.* 若 $forall c in RR, Pr[X <= c] <= Pr[Y <= c]$, 记 $X succ.eq_1 Y$. 若 $X succ.eq_1 Y, X' succ.eq_1 Y'$, $X,X'$ 独立, $Y,Y'$ 独立, 则 $X + X' succ.eq_1 Y + Y'$.
+
+*Lemma.* 设 $Y_i ~ "Pois"(m / n)$ 独立, 则 $Pr[X_1 = c_1, X_2 = c_2, dots.c] = Pr[Y_1 = c_1, Y_2 = c_2, dots.c | sum_i Y_i = m]$.
+
+下面证明 $Pr[forall i, X_i <= c] <= 4 Pr[forall i, Y_i <= c]$
