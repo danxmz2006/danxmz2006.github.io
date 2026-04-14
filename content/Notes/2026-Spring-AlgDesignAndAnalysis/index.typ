@@ -191,7 +191,7 @@ $y$ 为 Lagrange 乘子. 我们有*弱对偶定理*: 对偶问题的最大值始
 
 $x^*$ 的存在性缘于距离函数的连续性. 根据定义, $norm(y - x^*)^2 <= norm(y - x)^2$. 根据凸性, $forall 0 < epsilon < 1, x^* + epsilon(x - x^*) in X$, 从而 $norm(y - x^*)^2 <= norm(y - x^* - epsilon(x - x^*))^2 = norm(y - x^*)^2 + epsilon^2 norm(x - x^*)^2 - 2 epsilon (y - x^*)^top (x - x^*).$ 令 $epsilon -> 0$ 得到结论. $qed$
 
-*Corallary. Separating Hyperplane Theorem.* 存在超平面 $(a^top, alpha in RR)$ 分离上述 $X, y$.
+*Corollary. Separating Hyperplane Theorem.* 存在超平面 $(a^top, alpha in RR)$ 分离上述 $X, y$.
 
 取 $a^top = (x^* - y)^top, alpha = a^top x^*$. $qed$
 
@@ -201,7 +201,7 @@ $x^*$ 的存在性缘于距离函数的连续性. 根据定义, $norm(y - x^*)^2
 
 假设 (1) 不可行. 设 $S = {A x | x >= 0}$, 则 $S$ 是闭的凸集, $b in.not S$. 存在半平面 $y in RR^m, a in R$ 将 $b, S$ 分离: $y^top b < alpha, y^top s >= alpha, forall s in S$. 由于 $0 in S$, $alpha <= 0, y^top b < 0$. $forall x >= 0, y^top A x >= alpha => y^top A >= 0$ 由于 $x$ 可以任意放大 $y^top A$ 中的负项. $qed$
 
-*Corallary.* 对 (1) $exists x in RR^n, A x <= b, x >= 0$; (2) $exists y in RR^m, A^top y >= 0, y^top b < 0, y >= 0$ 依然成立.
+*Corollary.* 对 (1) $exists x in RR^n, A x <= b, x >= 0$; (2) $exists y in RR^m, A^top y >= 0, y^top b < 0, y >= 0$ 依然成立.
 
 考虑加入松弛变量 $A x + I s = b, s >= 0$. $qed$
 
@@ -238,3 +238,5 @@ e.g. MTF 链表. 设访问链表中的第 $j$ 个元素需要 $j$ 的代价, 交
 $ a <= c + 4j - 2k - 2 + s = 4j - 3 + 2s <= 4(j + s). $
 
 OPT 的实际代价为 $j + s$, 故而 MTF 的代价不超过 OPT 的 4 倍.
+
+== Ch09 

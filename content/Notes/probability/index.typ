@@ -100,7 +100,7 @@ $sigma$ 代数要满足的条件强于单调类, 故而只需证明 $cal(M)(cal(
 
 对于二元运算可以如法炮制: 以 $union$ 为例, 先固定一个 $A in cal(A)$, 令 $M = {X | A union X in cal(M)(cal(A))}$, 可以说明对任意 $A in cal(A), X in cal(M)(cal(A)), A union X in cal(M)(cal(A))$; 再固定 $X in cal(M)(cal(A))$, 利用 $M^prime = {Y | X union Y in cal(M)(cal(A))}$ 得到最终的结论. $inter$ 类似. $qed$
 
-*Corallary.* 有限测度 $mu_0$ 在 $sigma(cal(A))$ 上的扩展是唯一的. 这容易扩展到 $sigma$ 有限的情况.
+*Corollary.* 有限测度 $mu_0$ 在 $sigma(cal(A))$ 上的扩展是唯一的. 这容易扩展到 $sigma$ 有限的情况.
 
 对于不同测度 $mu, nu$, 考虑它们取值相等的部分, 根据上下半连续性(由于是有限测度)这构成一个单调类. $qed$
 
@@ -178,7 +178,7 @@ $B_n$ 是一些 $C_1, C_2, dots.c, C_m in cal(A)$ 的无交并. 因此存在某�
 
 (iii) 依然归约到有限测度. 利用 (ii), 我们可以同时从上方和下方逼近. 然后只需注意到 $mu*(A_+ backslash A_-) = mu^*(A_+ backslash A) + mu^*(A backslash A_-).$ $qed$
 
-*Corallary.* $cal(B)(RR^n)$ 中, 对任何 $A, epsilon > 0$, 存在开集 $U$ 使得 $lambda^n (U backslash A) < epsilon$, 此性质被称为*外正则性*. 类似地, 若 $lambda^n (A) < infinity$, 可以由紧集从内任意逼近, 此性质被称为*内正则性*.
+*Corollary.* $cal(B)(RR^n)$ 中, 对任何 $A, epsilon > 0$, 存在开集 $U$ 使得 $lambda^n (U backslash A) < epsilon$, 此性质被称为*外正则性*. 类似地, 若 $lambda^n (A) < infinity$, 可以由紧集从内任意逼近, 此性质被称为*内正则性*.
 
 后者可能稍费功夫: 设 $lambda^n (A) < infinity$, 存在一列基 $B_k, A subset union.big B_k, sum_k lambda^n (B_k) < lambda^n (A) + epsilon / 2$. 设 $sum_(k > N) lambda^n (B_k) < epsilon / 2$, 用充分大的 $[-M, M]^n$ 覆盖 $union.big_(k <= N) B_k$, 有 $lambda^n (A) - lambda^n (A inter [-M, M]^n) < epsilon / 2$. 存在一个开集 $U supset (A inter [-M, M]^n)^complement, lambda^n (U backslash (A inter [-M, M]^n)^complement) < epsilon / 2$, 于是 $[-M, M]^n backslash U$ 即为所求. $qed$
 
@@ -218,7 +218,7 @@ $B_n$ 是一些 $C_1, C_2, dots.c, C_m in cal(A)$ 的无交并. 因此存在某�
 
 (i) 取 $f_n = min{n, 2^(-n) floor(2^n f)}$. (ii) $f_n - f_(n-1)$ 总是简单函数, $f$ 可以写成这些简单函数的和. $f$ 有界的情况下可以一致逼近. $qed$
 
-*Corallary. Factorization Lemma.* 设 $(Omega', cal(A)')$ 可测, $Omega != emptyset, f : Omega -> Omega'$. $g : Omega -> overline(RR)$ 是 $sigma(f)-cal(B)(overline(R))$-可测的当且仅当存在可测 $phi : (Omega', cal(A)') -> (overline(R), cal(B)(cal(R)))$ 使得 $g = phi compose f$.
+*Corollary. Factorization Lemma.* 设 $(Omega', cal(A)')$ 可测, $Omega != emptyset, f : Omega -> Omega'$. $g : Omega -> overline(RR)$ 是 $sigma(f)-cal(B)(overline(R))$-可测的当且仅当存在可测 $phi : (Omega', cal(A)') -> (overline(R), cal(B)(cal(R)))$ 使得 $g = phi compose f$.
 
 $<==$ 方向显然. 对 $==>$ 方向若 $g >= 0$ 设 $g = sum_(n=1)^infinity alpha_n xi_(A_n), A_n in sigma(f).$ 根据 $sigma(f)$ 的定义存在 $B_n in cal(A)', f^(-1)(B_n) = A_n$. 于是 $phi = sum_(n=1)^infinity alpha_n xi_(B_n)$ 满足条件. 一般情况可以拆成 $g = g^+ - g^-$.
 

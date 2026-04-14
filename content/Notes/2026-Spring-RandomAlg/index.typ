@@ -275,8 +275,53 @@ $ Pr[X <= (1 - beta) mu] <= exp(-n D(1 - p + beta p || 1 - p)) <= exp(- (mu beta
 
 将 $m$ 个球放入 $n$ 个桶, 分析最大负载量.
 
-*Stochastic Dominance.* 若 $forall c in RR, Pr[X <= c] <= Pr[Y <= c]$, 记 $X succ.eq_1 Y$. 若 $X succ.eq_1 Y, X' succ.eq_1 Y'$, $X,X'$ 独立, $Y,Y'$ 独立, 则 $X + X' succ.eq_1 Y + Y'$.
+相对困难的一个方向是控制最大负载量的下界.
+
+*Stochastic Dominance.* 若 $forall c in RR, Pr[X >= c] >= Pr[Y >= c]$, 记 $X succ.eq_1 Y$. 若 $X succ.eq_1 Y, X' succ.eq_1 Y'$, $X,X'$ 独立, $Y,Y'$ 独立, 则 $X + X' succ.eq_1 Y + X' succ.eq_1 Y + Y'$. 
 
 *Lemma.* 设 $Y_i ~ "Pois"(m / n)$ 独立, 则 $Pr[X_1 = c_1, X_2 = c_2, dots.c] = Pr[Y_1 = c_1, Y_2 = c_2, dots.c | sum_i Y_i = m]$.
 
-下面证明 $Pr[forall i, X_i <= c] <= 4 Pr[forall i, Y_i <= c]$
+下面证明 $Pr[forall i, X_i <= c] <= O(1) dot.c Pr[forall i, Y_i <= c]$
+
+$ Pr[forall i, Y_i <= c] &= sum_k Pr[forall i, Y_i <= c | sum_i Y_i = k] \
+  & >= sum_(k <= m) Pr[forall i, Y_i <= c | sum_i Y_i = k] Pr[sum_i Y_i = k] \
+  & >= Pr[forall i, Y_i <= c | sum_i Y_i = k] Pr[sum_i Y_i <= m] = O(1) Pr[forall i, X_i <= c]. $
+
+=== Power of Two Choices
+
+$m$ 个球, $n$ 个桶, 每次扔球的时候随机选两个桶将球放入较少的桶内. 证明 $m = n$ 时最大负载量高概率不超过 $(ln ln n) / (ln 2) + Theta(1).$
+
+设 $B_i$ 表示最终装了至少 $i$ 个球的桶的数量. 我们归纳地证明以高概率 $B_i <= beta_i$.
+
+#tufted.margin-note[ 这里的想法是一个新的球丢入 $>= i$ 桶的概率不超过 $(beta_i / n)^2$. 粗略地看, $B_(i+1) prec.eq_1 B(n, (beta_i / n)^2)$, 因此我们可以有 $beta_(i+1) = c beta_i^2 / n$. 当 $i approx (ln ln n) / (ln 2)$ 时 $beta_i < 1$. ]
+
+我们先稍稍推广 Stochastic Dominance. 对于非负序列 $f,g$, 定义 $f prec.eq_1 g$ 当且仅当 $forall n, sum_(k >= n) f_k <= sum_(k >= n) g_k$. 我们将每个序列与一个形式幂级数对应, 那么已经证明了若 $f_1 prec.eq_1 f_2, g_1 prec.eq_1 g_2$, 则 $f_1 + g_1 prec.eq_1 f_2 + g_2, f_1 g_1 prec.eq_1 f_2 g_2.$
+
+设 $P_k (X) = sum_j Pr[B_i^((k)) <= beta_i and B_(i+1)^((k)) = j] X^j.$ 这里 $P_k$ 并非 PGF, 因为所有系数加起来可能小于 1. 设 $P_(k,l) (l <= beta_i)$ 表示将其中的 $<= beta_i$ 换成 $= l$ 后的结果, 那么 $P_k (X) = sum_(l <= beta_i) P_(k,l) (X)$. 从而
+
+$ P_(k+1) prec.eq_1 sum_(l <= beta_i) P_(k,l) [(j / n)^2 X + 1 - (j / n)^2] prec.eq_1 sum_(l <= beta_i) P_(k,l) [(beta_i / n)^2 X + 1 - (beta_i / n)^2] = P_k [(beta_i / n)^2 X + 1 - (beta_i / n)^2]. $
+
+然而 $[(beta_i / n)^2 X + 1 - (beta_i / n)]^n$ 恰为 $B(n, (beta_i / n)^2)$ 的 PGF, 因此有 $B_(i+1) prec.eq_1 B(n, (beta_i / n)^2)$. 
+
+由于 $n / 6 < n / (2e)$, $B_6 <= n / (2e) := beta_6$. 取 $beta_(i+1) = (e beta_i^2) / n$. 根据 Multiplicative Chernoff bound $Pr[X >= e mu] <= e^(-mu)$. 基于上述结论 $Pr[overline(E_(i+1))] <= Pr[E_i] Pr[overline(E_(i+1)) | E_i] + Pr[overline(E_i)] <= e^(-beta_i^2 \/ n) / Pr[E_i] <= (1 \/ n^2) / Pr[E_i] Pr[E_i] + Pr[overline(E_i)]$, 若 $beta_i^2 >= 2 n ln n$. 从而 $Pr[overline(E_i)] <= i / n^2 <= 1 / n$ 若 $beta_i^2 >= 2 n ln n$. 最小的 $i$ 使得 $beta_i^2 < 2n ln n$ 是 $i^* = (ln ln n) / (ln 2) + O(1)$.
+
+落入装了 $>= i^* + 1$ 的球的个数期望以高概率不超过 $(sqrt(2n ln n))^2 / n = 2 ln n$. 进一步地, $Pr[B_(i^* + 2) >= 1] = O(log^2 / n).$
+
+== lec12
+
+=== Branching Process
+
+设 $X$ 是非负整数值的随机变量. 
+
+考虑一棵树. 时间 0 产生一个节点. 时间 $t$ 的时候时间 $t-1$ 产生的节点独立生成 $~ X$ 的子节点. 设 $Z_t$ 表示时间 $t$ 产生的节点数. 我们证明当 $EE[X] <= 1$ 的时候 $lim_(n -> infinity) Pr[Z_n = 0] = 1$, 当 $EE[X] > 1$ 的时候 $lim_(n -> infinity) Pr[Z_n = 0] = p^* < 1$.
+
+设 $Pr[Z_n = 0] = q_n$. 枚举时间 $1$ 产生的节点数, $q_n = sum_(k >= 0) Pr[X = k]q_(n-1)^k$. 考虑函数 $f(q) = sum_(k >= 0) Pr[X = k] q^k$, $q_n = f^((n))(0)$. $f$ 是单增且凸的. 研究 $lim q_n$ 只需考虑 $f^prime (1).$
+
+=== Giant Component
+
+考虑 $G(n,p), p = c / n$ 中最大连通分支的大小.
+
+当 $c < 1$ 时, 设随机变量 $X_k$ 表示从某个点开始进行 $k$ 次扩展 (BFS) 后的总感染数. 注意我们并不要求扩展次数至少是 $k$. 如果 BFS 已经结束了, 让 $X_(k+1) = X_k$ 即可. 如果 $X_k < k + 1$, 这说明当前连通块大小不超过 $k$.
+
+我们有 $X_k prec.eq_1 1 + sum_(i=1)^k B(n, p)$. 根据 Chernoff bound, $Pr[sum_(i=1)^k Y_i >= k-1] (Y_i ~ B(n, c/n)) = Pr[sum_(i=1)^k Y_i - c k >= (1 - c) k - 1] <= exp(- (1-c)^2 k / 2)$, 最后用 Union bound 即可.
+

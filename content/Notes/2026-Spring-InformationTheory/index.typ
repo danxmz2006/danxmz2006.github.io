@@ -124,3 +124,15 @@ AEP: 根据 Law of Large Numbers, 我们有若 $X_1, X_2, dots.c ~ p(x)$ (i.i.d.
 具体地, 假设将 $Omega$ 分为 $Delta_1, Delta_2, dots.c$, $abs(Delta_i) = Delta$, $p_i = integral_(Delta_i) p(x) dif x = p(x_i) Delta$, 我们有 $sum_i -p_i log p_i = -sum_i p(x_i) log p(x_i) Delta - sum_i p(x_i) log Delta = -sum_i p(x_i) log p(x_i) Delta - log Delta$. 注意根据 Riemann 积分的定义第一项会趋于 $H[X]$, 而第二项会趋于 $+infinity$.
 
 微分熵可正可负. 注意我们可以取分划使得每个部分概率小于 $epsilon$, 于是 $sum_i -p_i log p_i -> +infinity$, 这个结论即使 $H[X] = -infinity$ 的时候还是对的.
+
+我们可以类似地定义 KL 散度和互信息.
+
+$ D(P || Q) = integral_Omega p(x) log p(x) / q(x), I[X;Y] = D(P_(X Y) || P_X P_Y). $
+
+注意到这里 $log$ 内的部分是齐次的, 这意味着划分带来的 $log Delta$ 刚好可以抵消. 所以这样定义出来的和离散化后的极限是一致的.
+
+== Kolmogorov Complexity
+
+给出通用 TM $U$, 定义 $x in {0, 1}^*$ 的 Kolmogorov Complexity 是 $K_U (x) = min_(U(p) = x) abs(p).$
+
+设 $A$ 为任何 TM, 存在和 $x$ 无关的 $c_A$ 使得 $K_U (x) <= K_A (x) + c_A$, 理由是可以写下 $A$ 的描述.
