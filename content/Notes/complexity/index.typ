@@ -13,6 +13,10 @@
 
 == Variants of TM
 
+=== Crossing Sequence
+
+
+
 == Diagonalization and Separation
 
 == NP Completeness

@@ -136,3 +136,7 @@ $ D(P || Q) = integral_Omega p(x) log p(x) / q(x), I[X;Y] = D(P_(X Y) || P_X P_Y
 给出通用 TM $U$, 定义 $x in {0, 1}^*$ 的 Kolmogorov Complexity 是 $K_U (x) = min_(U(p) = x) abs(p).$
 
 设 $A$ 为任何 TM, 存在和 $x$ 无关的 $c_A$ 使得 $K_U (x) <= K_A (x) + c_A$, 理由是可以写下 $A$ 的描述.
+
+固定 $U$, $K_U (x)$ 是不可计算的. 反证, 假设存在一个 TM $p$ 使得 $p(x) equiv K_U(x)$. 固定一个常数 $M$, 我们可以找到(将所有输入排成一列后)第一个 $x_0 : K_U(x_0) > M$. 这件事情可以用一个长度为 $O(log M) << M$ 的事情完成, 然而这和 $x_0$ 的定义矛盾.
+
+== Channel Coding

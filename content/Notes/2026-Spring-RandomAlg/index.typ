@@ -277,6 +277,11 @@ $ Pr[X <= (1 - beta) mu] <= exp(-n D(1 - p + beta p || 1 - p)) <= exp(- (mu beta
 
 相对困难的一个方向是控制最大负载量的下界.
 
+#show sym.prec.eq: math.scripts
+#show sym.succ.eq: math.scripts
+#show sym.prec: math.scripts
+#show sym.succ: math.scripts
+
 *Stochastic Dominance.* 若 $forall c in RR, Pr[X >= c] >= Pr[Y >= c]$, 记 $X succ.eq_1 Y$. 若 $X succ.eq_1 Y, X' succ.eq_1 Y'$, $X,X'$ 独立, $Y,Y'$ 独立, 则 $X + X' succ.eq_1 Y + X' succ.eq_1 Y + Y'$. 
 
 *Lemma.* 设 $Y_i ~ "Pois"(m / n)$ 独立, 则 $Pr[X_1 = c_1, X_2 = c_2, dots.c] = Pr[Y_1 = c_1, Y_2 = c_2, dots.c | sum_i Y_i = m]$.
@@ -295,13 +300,13 @@ $m$ 个球, $n$ 个桶, 每次扔球的时候随机选两个桶将球放入较�
 
 #tufted.margin-note[ 这里的想法是一个新的球丢入 $>= i$ 桶的概率不超过 $(beta_i / n)^2$. 粗略地看, $B_(i+1) prec.eq_1 B(n, (beta_i / n)^2)$, 因此我们可以有 $beta_(i+1) = c beta_i^2 / n$. 当 $i approx (ln ln n) / (ln 2)$ 时 $beta_i < 1$. ]
 
-我们先稍稍推广 Stochastic Dominance. 对于非负序列 $f,g$, 定义 $f prec.eq_1 g$ 当且仅当 $forall n, sum_(k >= n) f_k <= sum_(k >= n) g_k$. 我们将每个序列与一个形式幂级数对应, 那么已经证明了若 $f_1 prec.eq_1 f_2, g_1 prec.eq_1 g_2$, 则 $f_1 + g_1 prec.eq_1 f_2 + g_2, f_1 g_1 prec.eq_1 f_2 g_2.$
+我们先稍稍推广 Stochastic Dominance. 对于非负序列 $f,g$, 定义 $f prec.eq_R g$ 当且仅当 $forall n, sum_(k >= n) f_k <= sum_(k >= n) g_k$. 我们将每个序列与一个形式幂级数对应, 那么已经证明了若 $f_1 prec.eq_R f_2, g_1 prec.eq_R g_2$, 则 $f_1 + g_1 prec.eq_R f_2 + g_2, f_1 g_1 prec.eq_R f_2 g_2.$ 定义 $f prec.eq_L g$ 当且仅当 $forall n, sum_(k <= n) f_k >= sum_(k <= n) g_k$, 其同样在加法, 乘法下封闭.
 
 设 $P_k (X) = sum_j Pr[B_i^((k)) <= beta_i and B_(i+1)^((k)) = j] X^j.$ 这里 $P_k$ 并非 PGF, 因为所有系数加起来可能小于 1. 设 $P_(k,l) (l <= beta_i)$ 表示将其中的 $<= beta_i$ 换成 $= l$ 后的结果, 那么 $P_k (X) = sum_(l <= beta_i) P_(k,l) (X)$. 从而
 
-$ P_(k+1) prec.eq_1 sum_(l <= beta_i) P_(k,l) [(j / n)^2 X + 1 - (j / n)^2] prec.eq_1 sum_(l <= beta_i) P_(k,l) [(beta_i / n)^2 X + 1 - (beta_i / n)^2] = P_k [(beta_i / n)^2 X + 1 - (beta_i / n)^2]. $
+$ P_(k+1) prec.eq_R sum_(l <= beta_i) P_(k,l) [(l / n)^2 X + 1 - (l / n)^2] prec.eq_R sum_(l <= beta_i) P_(k,l) [(beta_i / n)^2 X + 1 - (beta_i / n)^2] = P_k [(beta_i / n)^2 X + 1 - (beta_i / n)^2]. $
 
-然而 $[(beta_i / n)^2 X + 1 - (beta_i / n)]^n$ 恰为 $B(n, (beta_i / n)^2)$ 的 PGF, 因此有 $B_(i+1) prec.eq_1 B(n, (beta_i / n)^2)$. 
+然而 $[(beta_i / n)^2 X + 1 - (beta_i / n)]^n$ 恰为 $B(n, (beta_i / n)^2)$ 的 PGF, 因此有 $B_(i+1) prec.eq_R B(n, (beta_i / n)^2)$. 
 
 由于 $n / 6 < n / (2e)$, $B_6 <= n / (2e) := beta_6$. 取 $beta_(i+1) = (e beta_i^2) / n$. 根据 Multiplicative Chernoff bound $Pr[X >= e mu] <= e^(-mu)$. 基于上述结论 $Pr[overline(E_(i+1))] <= Pr[E_i] Pr[overline(E_(i+1)) | E_i] + Pr[overline(E_i)] <= e^(-beta_i^2 \/ n) / Pr[E_i] <= (1 \/ n^2) / Pr[E_i] Pr[E_i] + Pr[overline(E_i)]$, 若 $beta_i^2 >= 2 n ln n$. 从而 $Pr[overline(E_i)] <= i / n^2 <= 1 / n$ 若 $beta_i^2 >= 2 n ln n$. 最小的 $i$ 使得 $beta_i^2 < 2n ln n$ 是 $i^* = (ln ln n) / (ln 2) + O(1)$.
 
@@ -323,5 +328,22 @@ $ P_(k+1) prec.eq_1 sum_(l <= beta_i) P_(k,l) [(j / n)^2 X + 1 - (j / n)^2] prec
 
 当 $c < 1$ 时, 设随机变量 $X_k$ 表示从某个点开始进行 $k$ 次扩展 (BFS) 后的总感染数. 注意我们并不要求扩展次数至少是 $k$. 如果 BFS 已经结束了, 让 $X_(k+1) = X_k$ 即可. 如果 $X_k < k + 1$, 这说明当前连通块大小不超过 $k$.
 
-我们有 $X_k prec.eq_1 1 + sum_(i=1)^k B(n, p)$. 根据 Chernoff bound, $Pr[sum_(i=1)^k Y_i >= k-1] (Y_i ~ B(n, c/n)) = Pr[sum_(i=1)^k Y_i - c k >= (1 - c) k - 1] <= exp(- (1-c)^2 k / 2)$, 最后用 Union bound 即可.
+我们有 $X_k prec.eq_R 1 + sum_(i=1)^k B(n, p)$. 根据 Chernoff bound, $Pr[sum_(i=1)^k Y_i >= k-1] (Y_i ~ B(n, c/n)) = Pr[sum_(i=1)^k Y_i - c k >= (1 - c) k - 1] <= exp(- (1-c)^2 k / 2)$, 最后用 Union bound 即可.
 
+假设 $c > 1$. 我们证明 a.a.s. 最大连通分支大小为 $(1 + o(1)) beta n$, $beta$ 为 $beta + e^(-beta c)$ 的解. 
+
+*Lemma.* 取 $k^- = O(ln n), k^+ = n^(2 / 3)$. 对于任何 $v$, a.a.s. (i) 从 $v$ 开始的分支过程在 $k^-$ 步后终止或 (ii) $forall k^- <= k <= k^+$, 从 $v$ 开始的分支过程在 $k$ 步之后队列内剩余至少 $(c - 1) k \/ 2$ 个点.
+
+*Proof.* 对于 $k^- <= k <= k^+$, 称一个节点 $v$ 是 $k$-bad 的若从 $v$ 开始的分支过程 $k$ 步之后已经结束, 或者已经遍历过少于 $((c+1)k) / 2$ 个点. 设 $Y_i ~ B(n - ((c+1)k^+)/2, c/n)$, 则 $X_k succ.eq_L sum_(i=1)^k Y_i$. 从而 $Pr[v "is" k"-bad"] <= Pr[sum_(i=1)^k Y_i <= c k - (c - 1) k \/ 2] <= exp(-((c-1)^2 k) / (8c)).$ 对 $k$ 求和得到 $Pr[v "is bad"] <= n^(2/3) exp(-((c-1)^2 k^-) / (8c)) <= n^(-4/3)$, 这里取 $k^- = (16 c ln n) / (c - 1)^2$, 对 $v$ 求和得到 $<= n^(-1/3)$. $qed$
+
+下面说明高概率*存在唯一*的至少大小为 $k^+$ 的连通块. 对 $u,v$, 设 $U(u),U(v)$ 为 $k^+$ 步后队列剩余的点集, 以高概率 $abs(U(dot.c)) >= (c-1)/2 k^+$. 若 $U(u) inter U(v) = emptyset$, 两者间不存在连边的概率 $<= (1-p)^(((c-1)/2 k^+)^2) = o(n^(-2))$, 对 $(u,v)$ 求和后为 $o(1)$.
+
+为了说明高概率存在大连通块, 我们说明 "小点" (分支过程在 $k^-$ 步内结束) 的数量是 $(1+o(1))(1-beta)n$.
+
+有如下不等式
+
+$ Pr["b.p. with " B(n, c/n) "from" v "dies in" k^-] <= Pr[v "is small"] <= Pr["b.p. with " B(n - k^-, c/n) "from" v "dies out"]. $
+
+根据引理的证明过程, 实际上左式的概率不会比 $B(n,c/n)$ 灭绝的概率低很多 (至多差 $o(1)$). 设灭绝概率 $d(n, c/n)$, 则 $d(n, c/n) + o(1) <= Pr[v "is small"] <= d(n - k^-, c/n)$. 
+
+设 $f(x)$ 为 $"Pois"(c)$ 的 PGF, $f_n (x)$ 为 $B(n, c/n)$ 的 PGF, 有 $f(x) = e^(c(x-1))$ 且 $f_n$ 一致收敛于 $f$. 注意到 $1 - beta$ 是 $f$ 的不动点. 因而, $d(n, c/n) -> 1 - beta$. 又因为 $k^- << n$, 同样 $d(n - k^-, c/n) -> 1 - beta$. 从而 $E[\# "small" v] -> (1 + o(1)) beta n$. 余下的工作是一些二阶矩法, 重点是 $u,v$ 属于不同连通块时, $Pr[u "is small" | v "is small"] = Pr[u "is small in" G backslash {"component of" v}] ~ d(n - k^-, c/n)$.
