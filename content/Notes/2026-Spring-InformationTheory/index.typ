@@ -140,3 +140,13 @@ $ D(P || Q) = integral_Omega p(x) log p(x) / q(x), I[X;Y] = D(P_(X Y) || P_X P_Y
 固定 $U$, $K_U (x)$ 是不可计算的. 反证, 假设存在一个 TM $p$ 使得 $p(x) equiv K_U(x)$. 固定一个常数 $M$, 我们可以找到(将所有输入排成一列后)第一个 $x_0 : K_U(x_0) > M$. 这件事情可以用一个长度为 $O(log M) << M$ 的事情完成, 然而这和 $x_0$ 的定义矛盾.
 
 == Channel Coding
+
+设信息 $x in {0, 1}^m$, 需要构造 $f : {0, 1}^m -> {0, 1}^n$, 使得 Hamming 距离 $d_H (f(x), f(x')) >= d$, 则可以纠正至多 $floor((d-1)/2)$ 位错误.
+
+设 $A(n,d)$ 为在 ${0,1}^n$ 中至多能选多少个元素, 使得两两 Hamming 距离至少为 $d$, 则有显然的上界 $A(n,d) <= 2^n / (sum_(i=0)^floor((d-1)/2) binom(n,i))$.
+
+== Maximum Entropy Principle
+
+假设给出一个分布的期望 $mu$ 和方差 $sigma^2$. 设其密度函数 $f(x)$, 那么一般 $f$ 不是唯一确定的. 
+
+我们寻求一个分布使得 $H[X] = integral f(x) log (1 / f(x)) dif x$ 最大. 令正态分布 $Y ~ N(mu, sigma^2)$, 有 $D(X || Y) = integral f(x) log f(x) dif x - integral f(x) (-(x - mu)^2 / (2 sigma^2) - log sqrt(2 pi)) dif x.$ 这表明正态分布是最大熵分布.

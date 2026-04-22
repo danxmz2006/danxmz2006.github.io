@@ -239,4 +239,58 @@ $ a <= c + 4j - 2k - 2 + s = 4j - 3 + 2s <= 4(j + s). $
 
 OPT 的实际代价为 $j + s$, 故而 MTF 的代价不超过 OPT 的 4 倍.
 
-== Ch09 
+== Ch09 网络流 (I)
+
+设流量为 $f(i,j)$, 容量为非负实数 $c(i,j)$, 源,汇为 $s,t$. 五元组 $chevron.l V,E,c,s,t chevron.r$ 称为*容量网络*. 可行流 $v(f) = sum_((s,j) in E) f(s,j) - sum_((j,s) in E) f(j,s)$.
+
+设 $A subset V$ 使得 $s in A, t in overline(A)$, $(A,overline(A)) = {(i, j) | (i, j) in E and i in A, j in overline(A)}$ 为一个*割集*. $c(A,overline(A)) = sum_(e in (A, overline(A))) c(e)$ 为割集的容量. 给出一个可行流和割, 可以发现 $v(f) = f(A,overline(A)) - f(overline(A),A) <= c(A,overline(A))$. 因此假设存在 $f,A$ 使得 $v(f) = c(A,overline(A))$, 则 $f$ 为最大流, $(A,overline(A))$ 为最小割.
+
+定义 *$i-j$ 增广路* 为从 $i$ 到 $j$ 的一条边不重复路径, 使得正向边都不满流, 反向边的流都不是 $0$. 假设存在 $s-t$ 增广路, 我们可以增大流量. 
+
+另一方面, 假设不存在 $s-t$ 增广路, 考虑 $A = {v : exists s-v "augment path"}$. 则 $s in A, t in overline(A)$. 设 $x in A, y in overline(A)$. 假设 $f(x,y) < c(x,y)$ 或 $f(y,x) > 0$, 则增广路 $s-x$ 可拓展到 $y$. 从而 $v(f) = c(A,overline(A))$.
+
+=== Ford-Fulkerson 算法
+
+不断地找增广路, 更新流量. 每次更新的过程可以 BFS 并记录前驱.
+
+整数容量情况下复杂度是 $O((n+m) f)$. 如果容量是实数可以构造出算法不在有限步结束的例子.
+
+=== Baseball Elimination Problem
+
+$n$ 个人打循环赛, 已知目前每个人赢了多少场 $w_i$ 以及 $x,y$ 间还需打多少场比赛 $g_(x y)$, 判断一个人 $z$ 有没有可能不垫底.
+
+$x,z$ 之间的比赛让 $z$ 获胜最优. 我们需要将 $g_(x y)$ 分配给 $x,y$, 使得 $w_x$ 算上增量后不超过最终 $z$ 获胜场次的上界.
+
+建立二分图, $S$ 向 $(x,y)$ 连边, 容量 $g_(x y)$; $(x,y)$ 向 $x,y$ 连边; $x$ 向 $T$ 连边, 容量为允许的最大增量. 则 $z$ 可能不垫底当且仅当 $S$ 满流.
+
+=== 余量网络
+
+即原始的网络加上反向边. 形式化地说, 是一个五元组 $N(f) = chevron.l V(f), a c, s, t chevron.r$, 其中 $E(f) = E^+ (f) union E^- (f) = {(i, j) in E | f(i, j) < c(i, j)} union {(j, i) | (i, j) in E, f(i, j) > 0}$, $a c(i, j) = cases(c(i, j) - f(i, j) "if" (i, j) in E^+ (f), f(j, i) "if" (i, j) in E^- (f)).$ 则 $s-t$ 增广路径等价于 $N(f)$ 中 $s-t$ 有向路径.
+
+观察到 $a c(A, overline(A)) = sum_((i, j) in (A, overline(A))) (c(i, j) - f(i, j)) + sum_((i, j) in (overline(A), A)) f(i, j) = c(A, overline(A)) - v(f)$. 这意味着原始网络的最大流比余量网络多 $v(f)$. 
+
+原始网络上的可行流 $f$ 可以和余量网络上的可行流叠加 $f'(i, j) = f(i, j) + g(i, j) - g(j, i)$, 得到的 $f + g$ 为原网络的可行流.
+
+=== Dinic 算法
+
+设 $d(i)$ 为 $N(f)$ 中 $i$ 到 $t$ 的最短距离. 若 $(u, v) in N(f)$, 则 $d(u) <= d(v) + 1$. 只保留 $d(u) = d(v) + 1$ 的边后得到*分层网络* $N_L (f)$.
+
+考虑 $N_L (f)$ 上的一个极大流 $g$. $g$ 可以用 DFS 求出. 每次 DFS 要么找出一条增广路径并使得 $N_L (f)$ 上的一条边满流, 要么终止于某个容量为 $0$ 的边. 为了满足第二种情况不会重复出现, 需要使用*当前弧优化*. 于是这个过程至多找到 $abs(E)$ 条路径, 每次代价为 $O(abs(V))$, 时间 $O(abs(V) abs(E))$.
+
+下面说明每阶段后 $s,t$ 最短距离严格增加. 设增广后新的距离是 $d'(i)$, 假设 $(u,v)$ 在新的 $N(f')$ 中. 如果 $(u,v) in N(f)$, 有 $d(u) <= d(v) + 1$; 否则 $(v,u)$ 在 $N(f)$ 中被增广后加入了反向边 $(u,v)$, 这说明 $d(u) = d(v) - 1 < d(v) + 1$. 因此, 对任何 $u$, 都有 $d(u) <= d'(u)$. 
+
+假设 $d(s) = d'(s)$, 这说明有一条路径 $v_0 = s, v_1, v_2, dots.c, v_(d(s)) = t, d(v_i) = d(v_(i+1)) + 1$. 不可能有 $forall i, (v_i, v_(i+1)) in N(f)$, 否则找到了一条增广路. 假设 $(v_i, v_(i+1)) in.not N(f)$, 则 $d(v_i) < d(v_(i+1)) + 1$, 矛盾.
+
+这说明增广轮数不超过 $abs(V)$, 总复杂度是 $O(abs(V)^2 abs(E))$.
+
+=== MPM (Malhotra, Pramodh-Kumar and Maheshwari) 算法
+
+依然考虑分层网络 $N_L (f)$, 但是寻找极大流的过程有所不同.
+
+令 $p(u) = min{sum_((u, v) in N_L (f)) (c(u, v) - f(u, v)), sum_((v, u) in N_L(f)) (c(v, u) - f(v, u))},$ 即经过 $u$ 最多的流量. 令 $v = argmin p(v)$.
+
+我们总是可以将流量增加 $p(v)$. 考虑 $v -> t$ 的过程 ($s -> v$ 是一样的). 从 $v$ 开始按拓扑序向后枚举, 依次考虑所有出边. 设该点剩余流量为 $r$, 若 $r >= c$ 则该边满流, 令 $r <- r - c$; 否则 $c <- c - r$ 并退出. 于是一个点的流量可以传递给后面的点. 执行完了之后, 删去 $v$ 以及所有满流的边.
+
+对于 $N_L (f)$, 我们最多只会删 $abs(V)$ 个点, 每次推流的过程中每个点被枚举一遍, 而一条边只会满流一次. 因此找极大流的复杂度是 $O(abs(V)^2 + abs(E))$.
+
+和 Dinic 处一样, 增广轮数不超过 $abs(V)$.
