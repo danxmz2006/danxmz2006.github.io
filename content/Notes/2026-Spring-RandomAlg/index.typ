@@ -284,7 +284,7 @@ $ Pr[X <= (1 - beta) mu] <= exp(-n D(1 - p + beta p || 1 - p)) <= exp(- (mu beta
 
 *Stochastic Dominance.* 若 $forall c in RR, Pr[X >= c] >= Pr[Y >= c]$, 记 $X succ.eq_1 Y$. 若 $X succ.eq_1 Y, X' succ.eq_1 Y'$, $X,X'$ 独立, $Y,Y'$ 独立, 则 $X + X' succ.eq_1 Y + X' succ.eq_1 Y + Y'$. 
 
-*Lemma.* 设 $Y_i ~ "Pois"(m / n)$ 独立, 则 $Pr[X_1 = c_1, X_2 = c_2, dots.c] = Pr[Y_1 = c_1, Y_2 = c_2, dots.c | sum_i Y_i = m]$.
+*Lemma.* 设 $Y_i ~ pi(m / n)$ 独立, 则 $Pr[X_1 = c_1, X_2 = c_2, dots.c] = Pr[Y_1 = c_1, Y_2 = c_2, dots.c | sum_i Y_i = m]$.
 
 下面证明 $Pr[forall i, X_i <= c] <= O(1) dot.c Pr[forall i, Y_i <= c]$
 
@@ -346,4 +346,35 @@ $ Pr["b.p. with " B(n, c/n) "from" v "dies in" k^-] <= Pr[v "is small"] <= Pr["b
 
 根据引理的证明过程, 实际上左式的概率不会比 $B(n,c/n)$ 灭绝的概率低很多 (至多差 $o(1)$). 设灭绝概率 $d(n, c/n)$, 则 $d(n, c/n) + o(1) <= Pr[v "is small"] <= d(n - k^-, c/n)$. 
 
-设 $f(x)$ 为 $"Pois"(c)$ 的 PGF, $f_n (x)$ 为 $B(n, c/n)$ 的 PGF, 有 $f(x) = e^(c(x-1))$ 且 $f_n$ 一致收敛于 $f$. 注意到 $1 - beta$ 是 $f$ 的不动点. 因而, $d(n, c/n) -> 1 - beta$. 又因为 $k^- << n$, 同样 $d(n - k^-, c/n) -> 1 - beta$. 从而 $E[\# "small" v] -> (1 + o(1)) beta n$. 余下的工作是一些二阶矩法, 重点是 $u,v$ 属于不同连通块时, $Pr[u "is small" | v "is small"] = Pr[u "is small in" G backslash {"component of" v}] ~ d(n - k^-, c/n)$.
+设 $f(x)$ 为 $pi(c)$ 的 PGF, $f_n (x)$ 为 $B(n, c/n)$ 的 PGF, 有 $f(x) = e^(c(x-1))$ 且 $f_n$ 一致收敛于 $f$. 注意到 $1 - beta$ 是 $f$ 的不动点. 因而, $d(n, c/n) -> 1 - beta$. 又因为 $k^- << n$, 同样 $d(n - k^-, c/n) -> 1 - beta$. 从而 $E[\# "small" v] -> (1 + o(1)) beta n$. 余下的工作是一些二阶矩法, 重点是 $u,v$ 属于不同连通块时, $Pr[u "is small" | v "is small"] = Pr[u "is small in" G backslash {"component of" v}] ~ d(n - k^-, c/n)$.
+
+== lec13
+
+=== 保距嵌入
+
+给出度量空间 $(X, d)$, 给出 $phi, d'$ 使得 $d'(phi(u), phi(v)) approx d(u, v)$.
+
+=== JL Lemma
+
+$X$ 为 $RR^d$ 中的 $n$ 个点, $forall epsilon in (0, 1), k > (24 ln n) / epsilon^2$, 存在线性映射 $phi : RR^d -> RR^k$, 使得 $forall u, v, norm(phi(u) - phi(v))_2 in norm(u - v)_2 (1 plus.minus epsilon)$.
+
+假设固定一个正交坐标系后让单位向量 $u$ 在 $SS^(d-1)$ 内随机旋转, 我们取 $phi$ 为 $u$ 的前 $k$ 个坐标.
+
+设 $X_1, X_2, dots.c, X_d ~ N(0, 1)$. 我们有 w.h.p. $sum_(i=1)^k X_i^2 in (1 plus.minus epsilon) k/d sum_(i=1)^d X_i^2.$ 这可以用类似 Chernoff Bound 的方法 ($X ~ N(0, 1)$ 情况下 $EE[e^(t X^2)]$ 等可以直接写出来).
+
+=== 一般度量的嵌入
+ 
+有限度量空间可以被嵌入到一个 $O(log^2 n)$ 维的 $cal(l)_p$ 空间, 以 $O(log n)$ 的误差. 这被称为 *Bourgain 嵌入定理*. 下文先考虑 $p = 1$.
+
+对于一个集合 $S$, 定义 $d(x, S) = min_(y in S) {d(x, y)}$. 一个 *Fréchet 嵌入* 指的是给定集合 $S_1, dots.c, S_r, f(x) = (d(x, S_i))_(1 <= i <= r)$. 根据三角不等式, $norm(f(x) - f(y))_1 <= r d(x, y)$. 下文中 $S$ 将会以某个 $p$ 概率独立采样, 即 $Pr[x in S] = p$.
+
+设 $B(u, rho) = {x in X : d(u, x)}$. 我们考虑一种极端情况: 假设所有点分散于 $B(x, epsilon) union.plus B(y, epsilon)$ 之中, 两者大小相近, 那么我们取 $p approx 1 / abs(B(x, epsilon))$ 可以保证以至少常数概率 $S(p) inter B(x, epsilon) = emptyset and S(p) inter B(y, epsilon) != emptyset$, 此时 $d(x, S) - d(y, S) >= d(x, y) - 2 epsilon$.
+
+一般的情况下, 我们需要考虑固定 $abs(B(dot.c, rho))$ 下的 $rho$. 设 $rho_k = min {rho : B(x, rho), B(y, rho) >= 2^k}$. 令 $B^o (u, rho) = {v : d(u, v) < rho}$. 取一个充分大的 $t$ 使得 $rho_(t-1) < rho_t < d(x,y) / 4$ (进行"截断"), 我们可以令 $B(x, dot.c) inter B(y, dot.c) = emptyset$.
+
+WLOG, 我们有 $abs(B^o (y, rho_j)) < 2^j$ 和 $abs(B(x, rho_(j-1))) >= 2^(j-1)$, 从而
+$ Pr[S(2^(-j)) inter B^o (y, rho_j) != emptyset and S(2^(-j)) inter B(x, rho_j) = emptyset] >= (1 - (1 - 2^(-j))^(2^(j-1)))(1 - 2^(-j))^(2^j) >= 1 / 12. $
+
+取 $m = O(log n)$, 独立采样 $m$ 个 $S(2^(-j))$, 则以高概率上述事件至少发生 $m / 24$ 次, 取均值后贡献 $"Const" dot.c (rho_j - rho_(j-1))$. 对所有 $j$ 加总取均值得到以高概率贡献至少 $"Const" dot.c d(x, y) / log n$. 坐标总量 $O(log^2 n)$.
+
+以上为 $cal(l)_1$ 的情况. 对于 $cal(l)_p$ 的情况依然采取上述构造. 设 $k$ 为总共的坐标数, 首先有 $norm(f(x) - f(y))_p <= k^(1 / p) d(x, y)$, 根据 Hölder 不等式 $norm(f(x) - f(y))_p k^(1 - 1/p) >= norm(f(x) - f(y))_1 >= Theta(log n) d(x, y)$. 结合两者即可得到偏移量是 $O(log n)$.

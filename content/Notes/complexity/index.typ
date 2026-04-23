@@ -26,9 +26,13 @@ e.g. 单带 TM 回文串判定时间是 $Omega(n^2)$. 考虑形如 $x^R \# \# do
 
 e.g. 若 $L in DSPACE(o(log log n))$ 或 $L in DTIME(o(n log n))$, 则 $L$ 是正则语言.
 
-=== Construction of an $O(T(n) log T(n))$ Oblivious UTM
+=== Construction of an $O(k T(n) log T(n))$ Oblivious UTM
 
+一个 $O(k T(n)^2)$ UTM 的构造是先用一个单独的纸带记录 TM 的信息 (纸带数量 $k$, 转移函数等), 再用一个纸带存储所有需要用到的纸带. 这需要将存储空间划分为长度为 $k$ 的段. 为了处理 $k > 1$ 的情况, 我们不移动读写头, 而是平移整个纸带.
 
+$O(k T(n) log T(n))$ 的构造在于优化"移动纸带"的过程. 想象我们在纸带之中加入空隙, 这样可能就不需要移动整个纸带. 我们将 $ZZ$ 分为长度为 $2$ 的幂的段, 具体地, 令 $S_(n > 0) = [2^n - 1, 2^(n+1) - 2], S_(n < 0) = [-2^(-n + 1) + 2, -2^(-n) + 1], S_0 = {0}$. 操作 $"clear"(n)$ 表示将 $S_1, dots.c, S_n, S_(-1), dots.c, S_(-n)$ 变为*半满*的, 同时调整 $S_(n+1), S_(-n-1)$ 使得光标的位置正确. 可以发现 $"clear"(n)$ 在 $Omega(2^n)$ 步内才会执行一次, 于是总操作次数为 $O(k T(n) log T(n))$.
+
+在第 $i$ 次操作时, 先进行平移再 $"clear"(n_i)$, 而 $n_i$ 的大小只和 $i$ 有关, 不取决于输入.
 
 == Diagonalization and Separation
 
