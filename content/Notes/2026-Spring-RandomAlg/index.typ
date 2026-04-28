@@ -378,3 +378,22 @@ $ Pr[S(2^(-j)) inter B^o (y, rho_j) != emptyset and S(2^(-j)) inter B(x, rho_j) 
 取 $m = O(log n)$, 独立采样 $m$ 个 $S(2^(-j))$, 则以高概率上述事件至少发生 $m / 24$ 次, 取均值后贡献 $"Const" dot.c (rho_j - rho_(j-1))$. 对所有 $j$ 加总取均值得到以高概率贡献至少 $"Const" dot.c d(x, y) / log n$. 坐标总量 $O(log^2 n)$.
 
 以上为 $cal(l)_1$ 的情况. 对于 $cal(l)_p$ 的情况依然采取上述构造. 设 $k$ 为总共的坐标数, 首先有 $norm(f(x) - f(y))_p <= k^(1 / p) d(x, y)$, 根据 Hölder 不等式 $norm(f(x) - f(y))_p k^(1 - 1/p) >= norm(f(x) - f(y))_1 >= Theta(log n) d(x, y)$. 结合两者即可得到偏移量是 $O(log n)$.
+
+== lec14
+
+=== 鞅
+
+设 $X_t (t in NN)$ 是随机过程, $cal(F)_t$ 为一列递增的 $sigma$-代数, 若 $EE[X_(t+1) | cal(F)_t] = X_t$, 则称 $(X_t)$ 为一个*鞅 (Martingale)*.
+
+假设随机过程有 $T$ 步, $A$ 是 $cal(F)_T$ 上的函数, 那么 $EE[A | cal(F)_t]$ 是一个鞅 (被称为 Doob 鞅).
+
+=== Azuma Inequality
+
+设 $(X_t)$ 是关于 filter $(cal(F)_t)$ 的鞅, $Y_t = X_t - X_(t - 1)$ 满足存在 $(c_t), abs(Y_t) <= c_t$, 那么有 $Pr[X_n >= (<=) X_0 + lambda] <= e^(-lambda^2 / (2 sum_(i=1)^n c_i^2))$. 这是 Hoeffding 的推广.
+
+$ EE[e^(t(X_n - X_0))] &= EE_(cal(F)_(n-1))[EE_[e^(t(X_n - X_0)) | cal(F)_(n-1)]] \
+  &= EE_(cal(F)_(n-1))[EE_[e^(t Y_n) | cal(F)_(n-1)] e^(t(X_(n-1) - X_0))] \
+  &<= (e^(t c_i) + e^(-t c_i)) / 2 EE[e^(t(X_(n-1) - X_0))] <= dots.c \
+  &<= e^(t/2 sum_(i=1)^n c_i^2). $
+
+剩余部分的分析和 Hoeffding 是一样的.

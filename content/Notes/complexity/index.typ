@@ -63,6 +63,8 @@ $O(k T(n) log T(n))$ 的构造在于优化"移动纸带"的过程. 想象我们�
 
 同理有空间上的版本.
 
+=== NP-Intermediate Problem
+
 === 
 
 == NP Completeness

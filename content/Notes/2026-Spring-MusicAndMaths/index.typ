@@ -130,7 +130,7 @@ $ T((partial u) / (partial x)) stretch(|, size: #150%)_(x_0)^(x_0 + Delta x) = r
 
 边值条件是 $u(0, t) = u(x, t) = 0$. 分离变量法给出 $ u(x, t) = sum_(n >= 1) u_n (x, t) = sum_(n = 1)^infinity (a_n cos (n pi c) / L t + b_n sin (n pi c) / L t) sin(n pi x / L). $
 
-经过换元有 $ u_n(x, t) = sqrt(a_n^2 + b_n^2) sin(omega_n t + theta_n) sin(n pi / L x). $
+经过换元有 $ u_n (x, t) = sqrt(a_n^2 + b_n^2) sin(omega_n t + theta_n) sin(n pi / L x). $
 
 === 振动模态和泛音
 
@@ -150,7 +150,11 @@ $(f_n)_(n >= 1)$ 被称为弦的*固有频率*, $f_1$ 被称为*基频*, $f_2, f
 
 拨弦振动. 此时 $ phi(x) = cases((h x) / x_0 "if" 0 <= x <= x_0, h(x - L) / (x_0 - L) "if" x_0 <= x <= L), psi(x) = 0. $
 
-可以将 $phi$ 延拓成奇周期函数, 根据 Fourier 级数可以得到 $a_n, b_n$.
+可以将 $phi$ 延拓成奇周期函数, 根据 Fourier 级数可以得到 $a_n, b_n$. 
+
+我们有 $ phi(x) = sum_(n = 1)^infinity a_n sin((n pi) / L x) => a_n = (1 / L) integral_(-L)^L phi(x) sin (n pi) / L x dif x. $
+
+当 $x_0 = L / 2, h = 1$ 时, $a_n = 8 / (n^2 pi^2) sin (n pi) / 2.$ 只有 $2 divides.not n$ 会产生贡献.
 
 == 管乐器
 
@@ -172,9 +176,7 @@ $(f_n)_(n >= 1)$ 被称为弦的*固有频率*, $f_1$ 被称为*基频*, $f_2, f
 
 考虑确定一个八度内 12 个音名对应的音高. 已知八度音程对应频率比 $1 : 2$.
 
-=== 三分损益
-
-#footnote[来自中国古代.]
+=== 三分损益 #footnote[来自中国古代.]
 
 理想的纯五度,纯四度分别对应频率比 $3/2$ 和 $4/3$.
 
@@ -188,9 +190,7 @@ $(f_n)_(n >= 1)$ 被称为弦的*固有频率*, $f_1$ 被称为*基频*, $f_2, f
 
 对 $sharp E$ 做三分损一得到上方纯五度 $sharp B$, 对应数值 $2^18 / 3^8 approx 0.49327 times 81 < 1/2 times 81$. 这比 "清宫" $C'$ 略高, 这被称为*旋宫不归*.
 
-=== 五度相生
-
-#footnote[来自 Pythagoras 学派.]
+=== 五度相生 #footnote[来自 Pythagoras 学派.]
 
 从相对频率 $C := 1$ 出发, 每次乘 $3/2$, 如果超过了 $2$ 就除 $2$. 依次得到了 $C -> G -> D -> A -> E -> B -> sharp F -> sharp C -> sharp G -> sharp D -> sharp A -> sharp E$. $sharp E$ 的相对频率是 $3^11 / 2^17$.
 
