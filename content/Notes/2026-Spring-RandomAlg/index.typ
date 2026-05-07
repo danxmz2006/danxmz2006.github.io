@@ -346,7 +346,7 @@ $ Pr["b.p. with " B(n, c/n) "from" v "dies in" k^-] <= Pr[v "is small"] <= Pr["b
 
 根据引理的证明过程, 实际上左式的概率不会比 $B(n,c/n)$ 灭绝的概率低很多 (至多差 $o(1)$). 设灭绝概率 $d(n, c/n)$, 则 $d(n, c/n) + o(1) <= Pr[v "is small"] <= d(n - k^-, c/n)$. 
 
-设 $f(x)$ 为 $pi(c)$ 的 PGF, $f_n (x)$ 为 $B(n, c/n)$ 的 PGF, 有 $f(x) = e^(c(x-1))$ 且 $f_n$ 一致收敛于 $f$. 注意到 $1 - beta$ 是 $f$ 的不动点. 因而, $d(n, c/n) -> 1 - beta$. 又因为 $k^- << n$, 同样 $d(n - k^-, c/n) -> 1 - beta$. 从而 $E[\# "small" v] -> (1 + o(1)) beta n$. 余下的工作是一些二阶矩法, 重点是 $u,v$ 属于不同连通块时, $Pr[u "is small" | v "is small"] = Pr[u "is small in" G backslash {"component of" v}] ~ d(n - k^-, c/n)$.
+设 $f(x)$ 为 $pi(c)$ 的 PGF, $f_n (x)$ 为 $B(n, c/n)$ 的 PGF, 有 $f(x) = e^(c(x-1))$ 且 $f_n$ 一致收敛于 $f$. 注意到 $1 - beta$ 是 $f$ 的不动点. 因而, $d(n, c/n) -> 1 - beta$. 又因为 $k^- << n$, 同样 $d(n - k^-, c/n) -> 1 - beta$. 从而 $E[\# "small" v] -> (1 + o(1)) beta n$. 余下的工作是一些二阶矩法, 重点是 $u,v$ 属于不同连通块时, $ sum_u Pr[u "is small" | v "is small"] <= k^- + n Pr[u "is small in" G backslash {"component of" v}] <= k^- + n d(n - k^-, c/n). $
 
 == lec13
 
@@ -391,9 +391,56 @@ $ Pr[S(2^(-j)) inter B^o (y, rho_j) != emptyset and S(2^(-j)) inter B(x, rho_j) 
 
 设 $(X_t)$ 是关于 filter $(cal(F)_t)$ 的鞅, $Y_t = X_t - X_(t - 1)$ 满足存在 $(c_t), abs(Y_t) <= c_t$, 那么有 $Pr[X_n >= (<=) X_0 + lambda] <= e^(-lambda^2 / (2 sum_(i=1)^n c_i^2))$. 这是 Hoeffding 的推广.
 
-$ EE[e^(t(X_n - X_0))] &= EE_(cal(F)_(n-1))[EE_[e^(t(X_n - X_0)) | cal(F)_(n-1)]] \
-  &= EE_(cal(F)_(n-1))[EE_[e^(t Y_n) | cal(F)_(n-1)] e^(t(X_(n-1) - X_0))] \
+$ EE[e^(t(X_n - X_0))] &= EE_(cal(F)_(n-1))[EE [e^(t(X_n - X_0)) | cal(F)_(n-1)]] \
+  &= EE_(cal(F)_(n-1))[EE [e^(t Y_n) | cal(F)_(n-1)] e^(t(X_(n-1) - X_0))] \
   &<= (e^(t c_i) + e^(-t c_i)) / 2 EE[e^(t(X_(n-1) - X_0))] <= dots.c \
   &<= e^(t/2 sum_(i=1)^n c_i^2). $
 
 剩余部分的分析和 Hoeffding 是一样的.
+
+== lec15
+
+=== Azuma Inequality 的应用
+
+考虑分析 Balls and Bins 空桶的个数. 设 $X_i$ 表示扔了 $i$ 个球后期望空桶的数量, 则 $abs(X_i - X_(i-1)) <= 1$, 因此有 concentration bound.
+
+考虑 $G(n, 1/2)$ 的点染色数, 这个东西的期望并不好算. 令 $X_i$ 表示给前 $i$ 个点导出子图内的点染色数, 这是 $1-$Lipschitz 的.
+
+=== 快排时间
+
+设长为 $n$ 的随机排列上快排的比较次数是随机变量 $Q_n$, 则 $q_n = EE[Q_n] = n - 1 + 1/n sum_(i=1)^n (q_(i-1)+q_(n-i)).$ 可以算出 $q_n = 2 n ln n - (4 - 2 gamma)n + 2 ln n + O(1).$
+
+*Theorem.* $forall 0 < epsilon < 1$, $Pr[abs(Q_n - q_n) >= epsilon q_n] = n^(-(2 + o(1))epsilon ln ln n)$.
+
+我们只证明 $<=$.
+
+将二叉树从根开始用 $1,2,3,dots.c$ 标号, 设节点 $j$ 对应序列的长度是 $L_j$, 那么 $sum_(j "at level" k) L_j <= n$.
+
+*Fact 1.* 设 $M_k^n = max{L_j : j "at level" k}$, $0 < alpha < 1, k >= ln(1/alpha)$, 则 $ Pr[M_k^n >= alpha n] <= alpha ((2 e ln (1/alpha))/k)^k. $
+
+*Fact 2.* 设 $V_n = {[(n - 1) + q_(j-1) + q_(n-j)] - q_n : j in [n]}$, 则 $V_n subset [-n, n]$. 这由 $q$ 的递推式很容易看出来.
+
+设 $H_k$ 为第 $k$ 层的比较结果, $cal(H)^(k) = (H_0, H_1, dots.c, H_(k-1))$. 设 $k_1 = 2 epsilon ln n, k_2 ~ ln n ln ln n$, 高概率算法在第 $k_2$ 层已经结束了.
+
+*Lemma.* $forall h, abs(EE[Q_n | cal(H)^(k) = h] - q_n) <= k n$.
+
+这基于 Fact 2. 若 $j$ 为第 $k$ 层的一个结点, 则往下走一层后期望的变化至多为 $plus.minus abs(L_j)$, 一层的总变化量至多为 $plus.minus n$. 
+
+当 $k_1 <= 2 epsilon ln n$ 的时候, $k_1 n <= epsilon q_n$.
+
+*Lemma.* 设 $0 < k_1 < k_2, 0 < alpha < 1, M_(k_1)^n <= alpha n$, 则 $ forall h, Pr[abs(EE[Q_n | cal(H)^(k_2)] - EE[Q_n | cal(H)^(k_1) = h]) >= lambda | cal(H)^(k_1) = h] <= 2 exp(-lambda^2 / (2(k_2 - k_1) alpha n^2)). $
+
+考虑如下的 Doob 鞅 $ X_0 = EE[Q_n | cal(H)^(k_1) = h], X_i = EE[Q_n | cal(H)^(k_1+i), cal(H)^(k_1) = h]. $
+我们不能期望 $abs(X_i - X_(i-1))$ 有界, 而是直接计算 $EE[exp(t(X_i - X_(i-1))) | cal(F)_i]$.
+
+$X_i - X_(i-1) = sum_(j "at level" i-1) T_j$, 其中 $T_j$ 是 $j$ 对 $X_i - X_(i-1)$ 的贡献. 注意到 $T_j$ 是互相独立的, $EE[T_j] = 0$, 且 $abs(T_j) <= L_j$. 根据凸性有 $EE[exp(t T_j) | L_j] <= exp(1/2 t^2 L_j^2)$. 相乘后得到
+$ EE[exp(t(X_i - X_(i-1))) | {L_j}] <= exp(1/2 t^2 sum_(j "at level" i-1) L_j^2) <= exp(1/2 t^2 alpha n^2). $
+
+于是可以得到类似 Azuma 不等式的引理. 根据 union bound,
+
+$ 
+  Pr[abs(Q_n - q_n) >= k_1 n + lambda] &<= Pr[M_(k_2)^n >= 2] + Pr[M_(k_1)^n > alpha n] + Pr[abs(EE[Q_n | cal(H)^(k_2)] - EE[Q_n | cal(H)^(k_1)]) >= lambda | cal(H)^(k_1), M_(k_1)^n <= alpha n] \
+  &<= 2/n ((2 epsilon ln(n/2))/k_2)^k_2 + alpha((2 epsilon ln(1/alpha))/k_1)^k_1 + 2 exp(- lambda^2/(2(k_2-k_1)alpha n^2)).
+$
+
+带入适当参数后得到定理.

@@ -145,6 +145,14 @@ $ D(P || Q) = integral_Omega p(x) log p(x) / q(x), I[X;Y] = D(P_(X Y) || P_X P_Y
 
 设 $A(n,d)$ 为在 ${0,1}^n$ 中至多能选多少个元素, 使得两两 Hamming 距离至少为 $d$, 则有显然的上界 $A(n,d) <= 2^n / (sum_(i=0)^floor((d-1)/2) binom(n,i))$.
 
+Universal Coding 给出 $A(n, d)$ 的下界: 枚举每个 $x$, 将其随机映射到 $C_x in {0, 1}^n$, 那么对于已经确定的 $C_y$, 其与 $C_x$ Hamming 距离不超过 $d$ 的概率不超过 $2^(-n (1-h(d/n)))$, 只需要这个数乘上 $A(n, d) < 1$, 故而 $A(n, d) >= 2^(n(1 - h(d/n)))$.
+
+=== Hamming Code
+
+设 $H$ 为 $k times (2^k - 1)$ 的校验矩阵, 满足码字集合为 ${x | H x = 0} = ker H$, 其第 $i$ 列为 $i$ 的二进制表示, 其可以纠正至多一位错误. 假设 $hat(x) = x + e$, 解码时通过 $H hat(x) = H e$ 可以找到错的一位.
+
+生成矩阵 $G$ 大小为 $(2^k - 1) times (2^k - 1 - k)$ 满足 $ker H = im G$. 一个构造是将 $H$ 分块后转置, 保持有一个满的单位子矩阵. 
+
 == Maximum Entropy Principle
 
 假设给出一个分布的期望 $mu$ 和方差 $sigma^2$. 设其密度函数 $f(x)$, 那么一般 $f$ 不是唯一确定的. 

@@ -235,3 +235,51 @@ $<==$ 方向显然. 对 $==>$ 方向若 $g >= 0$ 设 $g = sum_(n=1)^infinity alp
 对于未必有界的 $f$, 首先将定义域 $RR$ 分成 ${[n, n+1] | n in ZZ}$. 我们构造 $C_n subset S_n = [n + epsilon 2^(-abs(n) - 2), n + 1 - epsilon 2^(-abs(n) - 3)]$. 具体的, 由于 $S_n = union.big_(k > 0) f^(-1)((-infinity, k]) inter S_n$, 测度的连续性使得我们可以取充分大的 $k$, 差集的测度至多为 $epsilon 2^(-abs(n) - 3)$. 之后再用内正则性即可得到 $C_n$.
 
 一般而言闭集的可数并未必是闭集, 但这里我们特殊分离性质保证了这一点. $qed$
+
+== Ch Martingale
+
+=== 随机过程和鞅
+
+*Definition. Stochastic Process.* 一族随机变量 $(X_t, t in I)$ (定义在 $(Omega, cal(F), P)$ 上) 在 $(E, cal(E))$ 中取值, $E$ 为波兰空间, $cal(E)$ 为 $E$ 上的 Borel 代数. $(X_t)$ 是一个随机过程.
+
+记 $cal(L)[X]$ 为一个随机变量(过程)的分布.
+
+如果 $forall t_0 < t_1 < dots.c < t_n, t_i in I, (X_(t_i) - X_(t_(i-1)))$ 独立, 则称该过程是*独立增量*过程. 如果 $cal(L)[(X_(s+t))_(t in I)] = cal(L)[(X_t)(t in I)], forall s in I$ (假设 $I$ 可加), 则称该过程*稳定*. 如果 $cal(L)[X_(s+t+r) - X_(t+r)] = cal(L)[X_(s+r) - X_r], forall r,s,t in I$, 则称该过程有*稳定增量*.
+
+*Definition. Filtration.* 一族 $sigma$-代数 $FF = (cal(F)_t, t in I)$ 被称为*滤过*若 $s <= t => cal(F)_s subset cal(F)_t$. 如果 $forall t, X_t$ 是 $cal(F)_t$-可测的称 $X = (X_t)$ *is adapted to* $FF$. 如果对于 $I = NN$, $X_0$ 是常数且 $X_n$ $cal(F)_(n-1)$ 可测, 则称 $X$ *predictable*.
+
+*Definition. Stopping time.* 一个随机变量 $tau in I union {infinity}$ 被称为*停时*若 $forall t in I, {tau <= t} in cal(F)_t$. 若 $sigma, tau$ 是停时, $s >= 0$, $sigma or tau, sigma and tau, sigma + tau(sigma, tau >= 0), tau + s$ 均为停时. 令 $cal(F)_tau = {A in cal(F) : A inter {tau <= t} in cal(F)_t, forall t in I}$, 这被称为 $tau$-past 的 $sigma$-代数.
+
+有 $sigma <= tau => cal(F)_sigma subset cal(F)_tau$. 若 $tau < infinity$, 令 $X_tau (omega) := X_(tau(omega)) (omega)$. 
+
+*Lemma.* $X_tau$ 相对于 $cal(F)_tau$ 是可测的.
+
+设 $A$ 可测, 则 $ X_tau^(-1)(A) inter {tau <= t} = union_(s in I, s <= t) ({tau = s} inter X_s^(-1)(A)) in cal(F)_t. $ 根据 $cal(F)_tau$ 的定义 $X_tau$ 是可测的. $qed$
+
+*Definition. Martingale.* 设 $X = (X_t)_(t in I)$ 满足 $EE[abs(X_t)] < infinity$. 若 $forall s,t in I, t>s, EE[X_t | cal(F)_s] = X_s$ 称 $X$ 为 *martingale*. 若 $EE[X_t | cal(F)_s] >= X_s$ 称 $X$ 为 *submartingale*, 类似地有 *supermartingale*.
+
+根据条件期望的性质, $I$ 离散的时候只用考虑 $t = s+1$ 即可.
+
+鞅的线性组合还是鞅. 上鞅的非负线性组合, 取最小值还是上鞅.
+
+设 $(X_t)$ 是上鞅, 对某个 $T$ 有 $EE[X_T] >= EE[X_0]$. 对 $t <= T$, 令 $Y_t := EE[X_T | F_t]$, 则 $(Y_t)$ 是鞅, 且 $EE[X_0] <= EE[X_T] = EE[Y_T] = EE[Y_t] <= EE[X_t] <= EE[X_0]$. 这表明 $Y_t,X_t$ 几乎一定相等, 因此 $(X_t)_(0<=t<=T)$ 是鞅.
+
+*Theorem.* 设 $X$ 是鞅, $phi$ 是凸函数. 记 $x^+ := max(0, x), x^- := max(0, -x)$. 则 (i) $EE[phi(X_t)^+] < infinity$, 则 $(phi(X_t))$ 是下鞅. (ii) 若 $t* := sup(I) in I$, 则 $EE[phi(X_(t*))^+] < infinity$ 推出 (i). (iii) 特别地, 若 $p >= 1$, $EE[abs(X_t)^p] < infinity$, 则 $(abs(X_t)^p)$ 是下鞅.
+
+(i) 注意到由于凸函数有最小值, $EE[phi(X_t)^-] <= -EE[phi(X_t)] <= -phi(EE[X_t]) < infinity.$ 从而 $EE[abs(phi(X_t))] < infinity$, $forall t > s, EE[phi(X_t) | cal(F)_s] >= phi(EE[X_t | cal(F)_s]) = phi(X_s)$.
+
+(ii) $x mapsto phi(x)^+$ 也是凸函数. 从而 $ EE[phi(X_t)^+] = E[phi(EE[X_t* | cal(F)_t])^+] <= EE[EE[phi(X_t*)^+ | cal(F)_t]] = EE[phi(X_t*)^+] < infinity. $
+
+(iii) 由于 $x mapsto abs(x)^p$ 是凸的. $qed$
+
+e.g. 考虑 $ZZ$ 上的随机游走 $(X_n)$, 有 $(X_n^2)$ 是下鞅.
+
+=== 离散随机积分
+
+*Definition. Discrete Stochastic Integral.* 设 $(X_n),(H_n)$ 为 $FF$-adapted 实值随机过程, $(H_n)$ 是 predictable 的. 定义 $H$ 相对于 $X$ 的 *离散随机积分* 为一随机过程 $ (H dot.c X)_n = sum_(m=1)^n H_m (X_m - X_(m-1)). $
+若 $X$ 为一个鞅, $H dot.c X$ 也被称为 $X$ 的*鞅变换*. #tufted.margin-note[$H$ 可被视为一个赌博策略.]
+
+假定 $X$ 为鞅, $forall n, H_n$ 有界. 则 $EE[(X_(n+1)-X_n)H_(n+1) | cal(F)_n]$ 存在, 且 $ EE[(H dot.c X)_(n+1) | cal(F)_n] = EE[(H dot.c X)_n + H_(n+1) (X_(n+1) - X_n) | cal(F)_n] = (H dot.c X)_n. $ 从而 $H dot.c X$ 是鞅.
+
+令 $H_n = [n = n_0]$, 可以发现条件是充要的 (考虑所有的 $H$).
+
