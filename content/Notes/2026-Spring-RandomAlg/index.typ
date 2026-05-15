@@ -455,7 +455,7 @@ $
 
 e.g. 令上述概率为 $p$. 先验证 $EE[tau] < +infinity$. 则 $EE[X_tau] = p (-a) + (1-p) b = X_0 = 0$, 从而 $p = b / (a+b)$.
 
-e.g. 计算 $EE[tau]$. 令 $Y_i = X_i^2 - i$, 则 $(Y_t)$ 是一个鞅. 从而 $EE[tau] = EE[X_tau^2] = b/(a+b) a^2 + a/(a+b) b^2 = ab.$
+e.g. 计算 $EE[tau]$. 令 $Y_i = X_i^2 - i$, 则 $(Y_t)$ 是一个鞅. 从而 $EE[tau] = EE[X_tau^2] = b/(a+b) a^2 + a/(a+b) b^2 = a b.$
 
 e.g. 从 $(x,y) = (a,b) (a > b > 0)$ 开始, 每次以 $x/(x+y)$ 的概率令 $x <- x-1$, 以 $y/(x+y)$ 的概率令 $y <- x-1$. 计算当 $x+y>0$ 时 $x > y$ 始终成立的概率. 
 
