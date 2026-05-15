@@ -8,6 +8,7 @@
 )
 
 #set math.equation(numbering: none)
+#show sym.lt.eq: math.scripts 
 
 = 复杂度理论
 
@@ -65,9 +66,19 @@ $O(k T(n) log T(n))$ 的构造在于优化"移动纸带"的过程. 想象我们�
 
 === NP-Intermediate Problem
 
-=== 
+=== Relativize
 
 == NP Completeness
+
+Cook-Levin Theorem 说明了任何 NP 语言都能 $<=_p$ 归约到 $3"SAT"$. 采用 oblivious TM 可以发现实际上可以实现 $<=_l$ 归约.
+
+列举了一些 NP-Complete 问题.
+
+e.g. $"dHAMPATH"$. 有向 Hamilton 链判定. 下说明 $"SAT" <=_p "dHAMPATH"$.
+
+我们将一个变量用一条双向的链 $s_i <-> dots.c <-> t_i$ 表示. 如果这条链被从 $s_i -> t_i$ 经过, 表示变量取 1, 否则变量取 0.
+
+设从 $s_i$ 到 $t_i$ 相邻的两个点是 $u_i, u_(i+1)$. 若 $X_i in C_j$, 连边 $u_i -> C_j -> u_(i+1)$; 若 $overline(X_i) in C_j$, 连边 $u_(i+1) -> C_j -> u_i$. 我们可以通过添加二度点的方式保证不会中途离开一条链.
 
 == Logspace Computability, P Completeness
 

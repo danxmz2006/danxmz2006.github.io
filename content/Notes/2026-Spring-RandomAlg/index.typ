@@ -408,7 +408,7 @@ $ EE[e^(t(X_n - X_0))] &= EE_(cal(F)_(n-1))[EE [e^(t(X_n - X_0)) | cal(F)_(n-1)]
 
 === 快排时间
 
-设长为 $n$ 的随机排列上快排的比较次数是随机变量 $Q_n$, 则 $q_n = EE[Q_n] = n - 1 + 1/n sum_(i=1)^n (q_(i-1)+q_(n-i)).$ 可以算出 $q_n = 2 n ln n - (4 - 2 gamma)n + 2 ln n + O(1).$
+设长为 $n$ 的随机排列上快排的比较次数是随机变量 $Q_n$, 则 $q_n = EE[Q_n] = n - 1 + 1/n sum_(i=1)^n (q_(i-1)+q_(n-i)).$ 可以算出 $q_n = sum_(k=1)^(n-1) (2(n-k)) / (k+1) = 2 n ln n - (4 - 2 gamma)n + 2 ln n + O(1).$
 
 *Theorem.* $forall 0 < epsilon < 1$, $Pr[abs(Q_n - q_n) >= epsilon q_n] = n^(-(2 + o(1))epsilon ln ln n)$.
 
@@ -418,7 +418,7 @@ $ EE[e^(t(X_n - X_0))] &= EE_(cal(F)_(n-1))[EE [e^(t(X_n - X_0)) | cal(F)_(n-1)]
 
 *Fact 1.* 设 $M_k^n = max{L_j : j "at level" k}$, $0 < alpha < 1, k >= ln(1/alpha)$, 则 $ Pr[M_k^n >= alpha n] <= alpha ((2 e ln (1/alpha))/k)^k. $
 
-*Fact 2.* 设 $V_n = {[(n - 1) + q_(j-1) + q_(n-j)] - q_n : j in [n]}$, 则 $V_n subset [-n, n]$. 这由 $q$ 的递推式很容易看出来.
+*Fact 2.* 设 $V_n = {[(n - 1) + q_(j-1) + q_(n-j)] - q_n : j in [n]}$, 则 $V_n subset [-n, n]$. 这可由 $q$ 的精确表达式算出.
 
 设 $H_k$ 为第 $k$ 层的比较结果, $cal(H)^(k) = (H_0, H_1, dots.c, H_(k-1))$. 设 $k_1 = 2 epsilon ln n, k_2 ~ ln n ln ln n$, 高概率算法在第 $k_2$ 层已经结束了.
 
@@ -444,3 +444,74 @@ $
 $
 
 带入适当参数后得到定理.
+
+== lec16
+
+=== Optional Stopping Theorem
+
+从 0 开始在 $ZZ$ 上随机游走, 遇到 $-a$ 或 $b$ 的时候结束, 计算遇到 $-a$ 的概率. 则 $(X_t)$ 是一个鞅.
+
+*Theorem. Optional Stopping Theorem.* 设 $tau$ 为停时, 那么 $EE[X_tau] = X_0$, 若 (i) $EE[tau] < +infinity$, (ii) $EE[abs(X_i - X_(i-1)) | cal(F)_(i-1)] < c, forall i$.
+
+e.g. 令上述概率为 $p$. 先验证 $EE[tau] < +infinity$. 则 $EE[X_tau] = p (-a) + (1-p) b = X_0 = 0$, 从而 $p = b / (a+b)$.
+
+e.g. 计算 $EE[tau]$. 令 $Y_i = X_i^2 - i$, 则 $(Y_t)$ 是一个鞅. 从而 $EE[tau] = EE[X_tau^2] = b/(a+b) a^2 + a/(a+b) b^2 = ab.$
+
+e.g. 从 $(x,y) = (a,b) (a > b > 0)$ 开始, 每次以 $x/(x+y)$ 的概率令 $x <- x-1$, 以 $y/(x+y)$ 的概率令 $y <- x-1$. 计算当 $x+y>0$ 时 $x > y$ 始终成立的概率. 
+
+注意到 $(x-y)/(x+y)$ 是鞅. 定义 $tau$ 为第一次 $x=y$ 或 $(x,y) = (1, 0)$ 的时间, 可算出 $p = (a-b)/(a+b)$.
+
+=== Randomized 2SAT
+
+任选一个初始的赋值. 每次找第一个坏的语句随机翻转一个 bit.
+
+设一个满足的赋值是 $a*$. 设 $X_i$ 为 $i$ 轮后赋值与 $a*$ 的 Hamming 距离. 考虑第一个坏的子句, 有 $EE[X_i - X_(i-1) | cal(F)_(i-1)] <= 0$. 令 $Y_i = X_i^2 - 2n X_i - i$. 那么 $EE[Y_i - Y_(i-1) | cal(F)_(i-1)] = EE[(X_i - X_(i-1))(2X_(i-1) - 2n) | cal(F)_(i-1)] >= 0.$ 这表明 $Y_i$ 是 submartingale. 从而 $EE[tau] <= EE[X_tau^2 - 2n X_tau - X_0^2 + 2n X_0] <= n^2.$
+
+== lec17
+
+=== Percolation
+
+设 $G$ 为 $d$-正则图. 一个 $p = 1/(d-1)$ 渗滤为让 $G$ 的每条边以 $p$ 的概率存在的随机图. 
+
+仍然考虑之前的分支过程, 有 $t$ 时刻未探索的点数被 $X_t = X_(t-1) - 1 + B(d-1, 1/(d-1))$ 控制. $(X_t)$ 是一个鞅.
+
+取 $h,k$, 设 $tau := {min t : X_t = 0 or X_t >= h or t >= k}$. 我们期望 $k = n^(2/3)$. 则 $Pr[forall t <= k, X_t > 0] <= Pr[tau >= k] + Pr[X_tau >= h] <= EE[tau] / k + EE[X_tau] / h = EE[tau] / k + 1 / h$.
+
+令 $Y_t = X_t^2 - h X_t$, 则 $EE[Y_t - Y_(t-1) | cal(F)_(t-1)] = EE[(X_t - X_(t-1))^2 | cal(F)_(t-1)] = Var[B(d-1, 1/(d-1))] = (d-2)/(d-1) >= 1/2$. 从而 $EE[Y_tau] <= Pr[X_tau >= h] EE[X_tau^2 | X_tau >= h], EE[tau] <= 2(EE[Y_tau] - EE[Y_0]) <= 2(1/h EE[(h + B(d-1, 1/(d-1)))^2] - (1-h)) <= 2(2h + 1 + 1/h).$ $Pr[forall t <= k, X_t > 0] <= 2/k (2h + 1 + 1/h) + 1/h = O(1 / sqrt(k)) (h = Theta(sqrt(k))).$ 设 $N_k$ 表示所属连通块大小至少是 $k$ 的点的数量, 那么 $EE[N_k] = O(n / sqrt(k))$, $Pr[N_k >= k] <= EE[N_k] / k = O(n / (k^(3/2)))$. 取 $k = A n^(2/3)$ 可使得概率为小常数.
+
+== lec18
+
+=== Markov Chain
+
+随机变量序列 $(X_t)$ 满足 $Pr[X_(t+1) = y | X_1, dots.c, X_t] = Pr[X_(t+1) = y | X_t]$. 有限情况下写成转移矩阵 $pi -> pi P$.
+
+如果 $P$ 连通且满足非周期性, 那么可以证明一定收敛到唯一的稳定分布.
+
+e.g. 洗牌. 将其视为反向的 Coupon Collection.
+
+一个特殊情况: 如果 $forall x,y, pi(x) P(x,y) = pi(y) P(y,x)$, 则 $pi$ 是稳定分布.
+
+=== Metropolis Process
+
+将空间中的点连接起来, 抽取邻居的方法 $kappa(x, y) > 0$.
+
+过程: 设从 $x$ 按照 $kappa(x, y)$ 的概率抽到 $y$. 以 $p(x, y)$ 的概率转移到 $y$, 以 $1 - p(x, y)$ 的概率留到 $x$. 设计 $p$ 使得稳定分布为 $pi$.
+
+可以取 $pi(x) kappa(x, y) p(x, y) = pi(y) kappa(y, x) p(y, x) arrow.l.double p(x, y) = min{1, (pi(y) kappa(y, x)) / (pi(x) kappa(x, y))}$.
+
+=== Mixing Time 
+
+设 $Delta(t)$ 表示 $t$ 时刻*任意*初始分布得到的转移后的分布与均匀分布之间的最大全变差. 定义 $tau_"mix" = min{t : Delta(t) < 1/(2e)}$.
+
+如果存在强稳定时间 $T$: $Pr[X_t = y | T = t] = pi(y)$, 则 $Delta(t) <= Pr[T > t]$.
+
+=== Coupling
+
+考虑两个随机序列 $(X_t), (Y_t)$ 的联合分布, 满足其边缘分布相同, 并且 $X_t = Y_t => X_(t+1) = Y_(t+1)$. 设 $T_(x y) = min{t : X_t = Y_t | X_0 = x, Y_0 = y}$. 一个关键结论是 $Delta(t) <= max_(x,y) Pr[T_(x y) >= t].$ 这是由于
+
+$ max_x Delta(P_x^((t)), pi) <= max_(x,y) Delta(P_x^((t)), P_y^((t))) <= max_(x,y) Pr[X_t != Y_t | X_0 = x, Y_0 = y] <= max_(x,y) Pr[T_(x y) >= t]. $
+
+第二步用到了 $Pr[X != Y] >= Delta(X, Y)$ (考虑分析 $Pr[X = Y]$).
+
+下面分析通过每次随机交换两张牌(可以相同)进行洗牌. 与如下过程耦合: 随机选取位置 $i$ 和牌 $c$, 交换 $i$ 处的牌和 $c$, 那么每次距离不增. 设当前距离为 $d$, 那么距离减小的概率为 $d^2/n^2$, 因此降低为 $0$ 的期望时间是 $sum_d n^2 / d^2 = O(n^2)$. (这个界并不是最优的.)
+
