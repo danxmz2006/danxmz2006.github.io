@@ -147,6 +147,36 @@ $ D(P || Q) = integral_Omega p(x) log p(x) / q(x), I[X;Y] = D(P_(X Y) || P_X P_Y
 
 Universal Coding 给出 $A(n, d)$ 的下界: 枚举每个 $x$, 将其随机映射到 $C_x in {0, 1}^n$, 那么对于已经确定的 $C_y$, 其与 $C_x$ Hamming 距离不超过 $d$ 的概率不超过 $2^(-n (1-h(d/n)))$, 只需要这个数乘上 $A(n, d) < 1$, 故而 $A(n, d) >= 2^(n(1 - h(d/n)))$.
 
+考虑 Discrete Memoryless Channel $P_(Y|X)$. 定义 *Channel Capacity* $C = max_(P_X) I[X;Y]$. 编码可视为函数 $"Enc": {0, 1}^(n R) -> cal(X)^n$. 解码函数可视为 $"Dec": cal(Y)^n -> {0, 1}^(n R)$. $R$ 为 Information Rate. #footnote[这不同于码率, 后者是一个无量纲数, 类似于 $R/C$] 设输入在 ${0, 1}^(n R)$ 上均匀分布, 错误概率为 $P_e^n$.
+
+*Theorem.* 若 $R < C$, 则存在一族 $"Enc"$ 使得 $P_e^n -> 0$; 若 $R > C$, 则 $P_e^n -> 1$.
+
+_使用 AEP 的证明._ 对于 $(X^n, Y^n)$, 定义 $A_epsilon^((n)) subset cal(X)^n times cal(Y)^n$, 其成员满足 $max{abs(1/n log p(x^n) - H[X]), abs(1/n log p(y^n) - H[Y]), abs(1/n log p(x^n, y^n) - H[X, Y])} < epsilon$. 根据大数定律, $Pr[(X^n, Y^n) in A_epsilon^((n))] -> 1$. 设 $(tilde(X)^n, tilde(Y)^n) ~ P_X^n P_Y^n$. 注意到 
+
+$ Pr[(tilde(X)^n, tilde(Y)^n) in A_epsilon^((n))] dot 2^(n(I[X;Y] - 3 epsilon)) <= sum_(x^n, y^n) p(x^n) p(y^n) [(x^n, y^n) in A_epsilon^((n))] dot p(x^n, y^n) / (p(x^n) p(y^n)) <= 1, $
+
+因此 $Pr[(tilde(X)^n, tilde(Y)^n) in A_epsilon^((n))] <= 2^(-n (I[X;Y] - 3 epsilon))$.
+
+考虑矩阵 $cal(C)_(M times n)$, 其中 $M = 2^(n R)$. 设 $P_X$ 为使得 $I[X;Y]$ 最大化的分布. 让 $C_(i j) ~ P_X$ i.i.d. $"Enc"(i)$ 即为 $cal(C)$ 的第 $i$ 行. 解码的时候, 如果 $y^n$ 满足 $cal(C)$ 中存在唯一的 $x^n$ 使得 $(x^n, y^n) in A_epsilon^((n))$, 则令 $"Dec"(y^n) = x^n$, 否则视为失败.
+
+考虑一个固定的输入 $W = 1$ 的失败概率. 设事件 $E_i$ 表示 $cal(C)$ 的第 $i$ 行和 $Y^n$ jointly typical. $Enc(1)$ 经过信道后高概率是典型的: 取充分大的 $n$ 使得 $Pr[E_1^complement | W = 1] < epsilon$. 另一方面, 对于 $i > 1$, $Pr[E_i | W = 1] <= 2^(-n(I[X;Y] - 3 epsilon))$, 对 $2^(n R)$ 个 $i$ 求和得到 $2^(-n(I[X;Y] - R) + 3 n epsilon) <= epsilon$, 若 $R < I[X;Y] - 3 epsilon$ 且 $n$ 充分大.
+
+注意这里的 $cal(C)$ 是随机的, 而我们需要一个固定的 $cal(C)$. 在上面的结论中对 $W$ 求和得到
+
+$ 1 / M sum_(W in [M]) Pr_(cal(C), f)["Dec"(f("Enc"(W))) != W] < 2 epsilon. $
+
+因此存在一个 $cal(C)$ 使得 $1 / M sum_(W in [M]) Pr_f ["Dec"(f("Enc"(W))) != W] < 2 epsilon$. 根据 Markov 不等式这些 $W$ 中满足错误概率大于 $4 epsilon$ 的至多只有一半. 丢弃这一半后 $R' = R - 1/n$ 并且所有输入的最大概率都不超过 $4 epsilon$.
+
+下面证明 $liminf P_e >= 1 - C/R$. 根据 Fano 不等式
+
+$ h(P_e) + P_e log(2^(n R) - 1) >= H[W | Y^n]. $
+
+另一方面, 根据 data processing 不等式,
+
+$ I[W; Y^n] <= I[X^n; Y^n] &= H[Y^n] - H[Y^n | X^n] \ &<= sum_(i=1)^n H[Y_i] - H[Y_i | Y_(<=i-1), X^n] \ &= sum_(i=1)^n H[Y_i] - sum_(i=1)^n H[Y_i | X_i] = n I[X_i;Y_i] <= n C. $
+
+综上, $R <= C + 1/n + R P_e$, 令 $n -> infinity$ 即可.
+
 === Hamming Code
 
 设 $H$ 为 $k times (2^k - 1)$ 的校验矩阵, 满足码字集合为 ${x | H x = 0} = ker H$, 其第 $i$ 列为 $i$ 的二进制表示, 其可以纠正至多一位错误. 假设 $hat(x) = x + e$, 解码时通过 $H hat(x) = H e$ 可以找到错的一位.
