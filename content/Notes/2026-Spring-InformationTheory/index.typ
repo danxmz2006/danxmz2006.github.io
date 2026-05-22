@@ -159,7 +159,7 @@ $ Pr[(tilde(X)^n, tilde(Y)^n) in A_epsilon^((n))] dot 2^(n(I[X;Y] - 3 epsilon)) 
 
 考虑矩阵 $cal(C)_(M times n)$, 其中 $M = 2^(n R)$. 设 $P_X$ 为使得 $I[X;Y]$ 最大化的分布. 让 $C_(i j) ~ P_X$ i.i.d. $"Enc"(i)$ 即为 $cal(C)$ 的第 $i$ 行. 解码的时候, 如果 $y^n$ 满足 $cal(C)$ 中存在唯一的 $x^n$ 使得 $(x^n, y^n) in A_epsilon^((n))$, 则令 $"Dec"(y^n) = x^n$, 否则视为失败.
 
-考虑一个固定的输入 $W = 1$ 的失败概率. 设事件 $E_i$ 表示 $cal(C)$ 的第 $i$ 行和 $Y^n$ jointly typical. $Enc(1)$ 经过信道后高概率是典型的: 取充分大的 $n$ 使得 $Pr[E_1^complement | W = 1] < epsilon$. 另一方面, 对于 $i > 1$, $Pr[E_i | W = 1] <= 2^(-n(I[X;Y] - 3 epsilon))$, 对 $2^(n R)$ 个 $i$ 求和得到 $2^(-n(I[X;Y] - R) + 3 n epsilon) <= epsilon$, 若 $R < I[X;Y] - 3 epsilon$ 且 $n$ 充分大.
+考虑一个固定的输入 $W = 1$ 的失败概率. 设事件 $E_i$ 表示 $cal(C)$ 的第 $i$ 行和 $Y^n$ jointly typical. $"Enc"(1)$ 经过信道后高概率是典型的: 取充分大的 $n$ 使得 $Pr[E_1^complement | W = 1] < epsilon$. 另一方面, 对于 $i > 1$, $Pr[E_i | W = 1] <= 2^(-n(I[X;Y] - 3 epsilon))$, 对 $2^(n R)$ 个 $i$ 求和得到 $2^(-n(I[X;Y] - R) + 3 n epsilon) <= epsilon$, 若 $R < I[X;Y] - 3 epsilon$ 且 $n$ 充分大.
 
 注意这里的 $cal(C)$ 是随机的, 而我们需要一个固定的 $cal(C)$. 在上面的结论中对 $W$ 求和得到
 
