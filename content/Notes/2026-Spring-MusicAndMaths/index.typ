@@ -305,3 +305,60 @@ Markov 链可以扩展到 $m$ 阶, 即考虑最后的 $m$ 个状态.
 从不协和的和弦出发, 连接到(相对)协和和弦的和弦进行称为*解决*. 调性音乐中所有的和弦进行最终都要解决到主和弦 I.
 
 功能和弦之后, 更强调和弦的音响效果.
+
+== lec10 旋律与对称
+
+将所有的音级用 $[0, 96] inter ZZ$ 表示, 商调 12 后建立了 $ZZ\/12 ZZ$ 和 *音类空间* $cal(P C)$ 之间的双射.
+
+*移调变换*定义为 $T_n : overline(x) mapsto overline(x + n)$.
+
+*倒影变换*定义为 $I : overline(x) mapsto overline(-x)$.
+
+我们有 $chevron.l T, I chevron.r tilde.eq D_24$.
+
+对于一个音类的序列, *逆行变换* $R$ 将这个序列翻转. 则*音乐变换群* $cal(M) = chevron.l T, I, R chevron.r.$ 有 $abs(cal(M)) = 48$.
+
+实际上将 $cal(M)$ 作用在一个音列 $x$ 上, 得到的轨道可能小于 $48$, 有 $abs(cal(M) x) = abs(cal(M)) / abs("Stab"_cal(M) (x)).$
+
+音列矩阵的左右上下分别为 $P_n,R_n,I_n,R I_n$. 初始/移调音列 $P_n = T_n P_0$. 倒影音列 $I_n$ 为关于 $P_n$ 第一个音级做倒影变换. 逆行音列 $R_n = R P_n$. 逆行倒影音列 $R I_n = R(I_n)$.
+
+== lec11 音类集合和 Neo-Riemannian Theory
+
+*音类集合*为 $cal(P C)$ (等同于 $ZZ\/12 ZZ$) 的子集. 5 元 pc 集对应*五声音阶*, 6 元 pc 集对应*全音阶*, 12 元 pc 集对应*半音音阶*.
+
+音类距离定义为 $mod 12$ 的距离. *距离向量* 为一个 6 元向量, 表示 pc 集中距离为 $i$ 的点对数量.
+
+变换可以作用在 pc 集上. 例如, $T$ 保持大/小三和弦仍为大/小三和弦, $I$ 切换大/小.
+
+距离向量是 $chevron.l T,I chevron.r$ 下的不变量.
+
+每个*集合类* (pc 集的轨道) 可以选一个代表元称为*原型*, 用 k-x 或 k-xx 命名, k 为集合大小, xx 为编号.
+
+$delta = (1, 1, 1, 1, 1, 1)$ 的 pc 集 $cal(A)$ 称为是*全音程和弦*.
+
+如果 $cal(A) subset cal(B)$, 称 $cal(A)$ 是 $cal(B)$ 字面上的子集; 若 $cal(A)$ 的某个像 $subset cal(B)$ 称 $cal(A)$ 是 $cal(B)$ 的*抽象的*子集.
+
+
+=== 和弦连接与 Riemann 变换 
+
+24 个大, 小三和弦对应的 pc 集构成集合类 $cal(S)$, 福特名称 3-11, $delta = (0, 0, 1, 1, 1, 0)$.
+
+定义在 $cal(S)$ 上的变换. 平行变换 $P$ 交换 X 和 x, 只改变和弦的三音. 关系变换 $R$ 交换关系三和弦(类似关系大小调), 保持大三度音程不变. 导音交换 $L$ 将大三和弦的根音降低一个半音, 保持小三度音程不变. $P,R,L$ 统称为 *Riemann 变换*.
+
+=== 音网
+
+Euler 的音网是纯五度和大三度的组合.
+
+注意到 $P compose R compose L compose P compose R compose L = 1$. 从 12 个互不相同的大三和弦出发可以得到 12 个六边形.
+
+每个六边形对应的三和弦共同包含一个唯一的音类, 我们将其放在正六边形的中心, 作为这个正六边形的标号. #tufted.margin-note(image("imgs/net.png"),)
+
+相邻的六边形对应的音类是协和的.
+
+正六边形网格的对偶图是正三角形网格, 每个三角形对应一个三和弦, 其中 "-" 对应纯五度, "/" 和 "\" 对应大三度和小三度. 进而上三角形对应大三和弦, 下三角形对应小三和弦. #tufted.margin-note(image("imgs/netdual.png"))
+
+注意到音网
+
+=== Neo-Riemannian group
+
+定义 $cal(N) = chevron.l P,R,L chevron.r$. 可以证明 $cal(N) tilde.eq D_24$.
