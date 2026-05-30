@@ -527,6 +527,20 @@ $ max_x Delta(P_x^((t)), pi) <= max_(x,y) Delta(P_x^((t)), P_y^((t))) <= max_(x,
 
 === Lovasz Local Lemma
 
+我们证明非对称的版本. 设 $A_1, dots.c, A_n$ 为 $n$ 个坏事件, $D_i subset [n]$ 为 $n$ 个集合, $x_1, dots.c, x_n in [0, 1)$ 满足 $Pr[A_i] <= x_i product_(j in D_i) (1 - x_j)$, 则 $Pr[and.big_(i=1)^n overline(A_i)] >= product_(i=1)^n (1 - x_i)$.
+
+首先有 $Pr[and.big_(i=1)^n overline(A_i)] = product_(i=1)^n Pr[overline(A_i) | and.big_(j < i) overline(A_j)]$. 我们归纳地证明对于所有 $S$, $Pr[overline(A_i) | and.big_(j in S) overline(A_j)] >= 1 - x_i$.
+
+$S = emptyset$ 时是显然成立的. 我们有 
+
+$ Pr[A_i | and.big_(j in S) overline(A_j)] &= Pr[A_i and (and.big_(j in S inter D_i) overline(A_j)) | and.big_(j in S backslash D_i) overline(A_j)] / Pr[and.big_(j in S inter D_i) overline(A_j) | and.big_(j in S backslash D_i) overline(A_j)] \ &= (Pr[A_i | and.big_(j in S backslash D_i) overline(A_j)] Pr[and.big_(j in S inter D_i) overline(A_j) | A_i and (and.big_(j in S backslash D_i) overline(A_j))]) / Pr[and.big_(j in S inter D_i) overline(A_j) | and.big_(j in S backslash D_i) overline(A_j)] \ &<= (x_i product_(j in D_i) (1 - x_j)) / (product_(j in S inter D_i) (1 - x_j)) <= x_i. $
+
+分母对 $Pr[and.big_(j in S inter D_i) overline(A_j) | A_i and (and.big_(j in S backslash D_i) overline(A_j))]$ 进行展开后逐一用归纳假设. $qed$
+
+假设恒有 $abs(D_i) = d$, 令所有 $x_i$ 相等, 满足 $Pr[A_i] = p <= x(1 - x)^d$. 对给定的 $d$, 使得右式最大的 $x = 1 / (d+1)$, 此时 $p$ 的上界是 $1/(d+1) (d/(d+1))^d >= 1/(e(d+1))$. 因此当 $e(d+1)p <= 1$ 的时候坏事件均不发生的概率 $>0$.
+
+(还有一种选择是令 $x = 1/(2d)$, 此时 $x(1-x)^d = 1/(2d) ((2d-1)/(2d))^d >= 1/(4d)$, 即 $4p d <= 1$ 也满足条件).
+
 === Packet Routing
 
 在有向图上将若干数据包沿着指定的简单路径从起点运到终点, 每个时间步可以移动一次. 同时刻不同数据包不能占据同一条边. 设经过一条边的路径数最多是 $c$, 所有路径的长度最多是 $d$. 最小化完成运输的总时间.
@@ -536,3 +550,15 @@ $ max_x Delta(P_x^((t)), pi) <= max_(x,y) Delta(P_x^((t)), P_y^((t))) <= max_(x,
 不妨设 $c = d$. 我们让每条路径分别从 $[1,alpha d]$ 内随机选一个时刻开始, 不间断地从头走到尾, 那么总时间最多为 $(1+alpha) d$. 将其分为长度为 $ln d$ 的时间窗口, 我们说明每个窗口内一条边最多被覆盖 $ln c$ 次.
 
 设事件 $A_e$ 表示边 $e$ 在某个时间窗口内的阻塞高于 $ln c$, 那么 $Pr[A_e] <= (1 + alpha d) Pr[B(c, (ln d) / (alpha d)) > ln c] <= (1 + alpha d) exp(- (ln d) / alpha (alpha ln alpha - (alpha - 1))) <= (1 + alpha) d^(2 - ln alpha).$ 让 $alpha$ 充分大使得这个数小于 $1 / (e(d^2 + 1))$ (注意依赖集的大小最多为 $d^2$). 于是我们使得 $(c, d) -> (ln c, ln d)$, 并且总时间乘上了 $1 + alpha$ 的系数. 最后总时间如上. $qed$ 
+
+=== Algorithmic LLL
+
+考虑一个 kCNF, 满足每个变量至多只在 $2^(k-2)/k$ 个 clause 中出现. 取 $p = 1/2^k, d = 2^(k-2)$, 那么 $4p d <= 1 => $ 该 kCNF 属于 kSAT.
+
+考虑如下的算法: 每次找到第一个不满足的 clause, 对其随机赋值. 假设进行了 $T$ 轮, 那么至少需要 $k T$ bits 才能区分所有方案.
+
+我们给出如下 $< k T$ bits 的编码方案, 它能恢复出每次赋值的 clause. 结合最后的赋值结果, 便能(倒序)求出每一次的赋值.
+
+首先写出初始不合法的子句. 假设当前需要重新赋值 $C_i$, 赋值的结果可能破坏一些子句, 这些子句会从同 $C_i$ 相关的 $2^(k-2)$ 个子句当中选, 因此用 $(k-2)$ bits 编码每个子句. 需要用一个额外的 0/1 标注编码是否结束. 
+
+因此总共的 bit 数是 $(k-1)T + o(T)$. 这表明赋值 $T$ 轮的概率是 $2^(-Omega(T))$. 
