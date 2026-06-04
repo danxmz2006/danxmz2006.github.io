@@ -19,3 +19,5 @@
 #link("2026-Spring-toc/")[计算理论导论]
 
 #link("probability/")[概率论]
+
+#link("pseudorandomness")[Pseudorandomness]
