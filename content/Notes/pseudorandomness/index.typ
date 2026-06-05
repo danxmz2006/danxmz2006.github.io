@@ -129,3 +129,45 @@ $ sum_(S != emptyset) abs(hat(A)(S)) <= sqrt(2^k) sqrt(sum_(S subset.eq {i_1, do
 We can conclude with the lemma above. $qed$
 
 So it takes $O(log n/delta) = O(log n + k + log 1/epsilon)$ bits to construct an $epsilon$-almost $k$-wise uniform distribution. ($log n$ can be improved to $log log n$).
+
+== PRG for Derandomization, Branching Programs
+
+The complexity class $bold("BPL")$ is similar to $bold("BPP")$. It uses *read-once* seed of length *polynomial in $n$*. #tufted.margin-note[Breaking the second assumption allows us to solve hard problems like $"SAT"$ with exponential random bits. Breaking the first assumption gives us a class $bold("BP") dot bold("L")$ or $bold("BP*L")$ and it's proven that $bold("BPL") subset bold("ZP*L")$, and we don't know if it is in $bold("P")$.] 
+This implies that $bold("BPL") in bold("P")$ since $T(n) <= 2^(O(S(n))) m(n).$
+
+To derandomize $bold("BPL")$ it suffices to give $G : {0, 1}^(ell(n)) -> {0, 1}^(m(n))$ that $0.1$-fools logspace algorithm $A(x, r)$, $ell(n) = O(log n)$, and $G$ can be computed within $O(log n)$ space.
+
+But this can't be achieved. Let $A(x, r) = 1$ iff $r[1 dots 2 ell]$ is consistent with any string in $"range"(G)$, then $G$ doesn't fool $A$.
+
+The actual goal is to find $G_c$ that fools every $A$ in $sans("SPACE")(c log n)$ for each $c$, where $ell(n) = O(log n)$ and $G_c in bold("FL")$.
+
+*Definition. (ROBP)* A *read-once branching program* is a DAG with $(n+1)$ layers and $w$ vertices per each layer. In the first $n$ layers, the out-degree is 2. Vertices in the last layer each correspond to an output in ${0, 1}$. The ROBP is a function $B : {0, 1}^n -> {0, 1}$.
+
+A $sans("SPACE")(s)$ PTM can be simulated by a $sans("SPACE")(s)$-uniform $w = 2^(O(s)), n = 2^(O(s))$ PTM. For $bold("BPL")$, $A(x,r)$ can be simulated by $B_x (r)$ with width and length $"poly"(n)$.
+
+*Theorem.* If $forall n,w$, $exists ell = O(log(n w)), G_(n,w) in sans("SPACE")(O(ell)) : {0, 1}^ell -> {0, 1}^n$ that $0.1$-fools every ROBP with parameters $w,n$, then $bold("BPL") = bold("L")$.
+
+We can assume that the transition of a ROBP is time-invariant (by possibly increasing $w$). $EE_(r ~ {0, 1}^n) [B(r)]$ is a specific entry of a matrix power $M^n$. This can be computed recursively. Analyzing the 2-norm shows that we only need $1 / "poly"(n)$ precision. The total space is $O(log n log w) = O(log^2 n)$.
+
+== Nisan's PRG
+
+Consider the following recursive construction. Suppose we have a PRG $G : {0, 1}^ell -> {0, 1}^(n/2)$ that fools $"ROBP"(n/2, w)$. A naive idea is to have $(G(s), G(s')) (s,s' in {0,1}^ell)$, but the seed length doubles.
+
+Instead, try to use a function $h : {0, 1}^ell -> {0, 1}^ell$ that is complicated or random enough let $s' = h(s)$. 
+
+*Lemma.* If $h : {0, 1}^ell -> {0, 1}^ell$ is drawn from a *pairwise* uniform hash family, then forall $A : {0, 1}^(2 ell) -> [0, 1]$, w.p. $>= 1 - 1 / (2^ell epsilon^2)$, 
+$ abs(EE_(s,s' ~ {0, 1}^ell) [A(s,s')] - EE_(s ~ {0, 1}^ell) [A(s, h(s))]) <= epsilon. $
+
+This is a direct corollary of Chebychev's inequality (after $s$ is fixed).
+
+So if $G : {0, 1}^ell -> {0, 1}^(n/2)$ $epsilon$-fools $"ROBP"(n/2, w)$, forall $B in "ROBP"(n, w)$, w.p. $>= 1 - 1 / (2^ell delta^2)$ over $h$, $G_h (s) = (G(s), G(h(s)))$ $(2 epsilon + delta)$-fools $B$. However, this isn't good enough *compared with the assumption* since we can only fool a single ROBP. 
+
+Assume each layer of $B$ has the same transition matrix $M_0, M_1, M = (M_0 + M_1)/2, M_x = M_(x_n) M_(x_(n-1)) dots.c M_(x_1)$, then $EE_(x ~ {0, 1}^n) [M_x] = M^n$. $M$ is a stochastic matrix. Say $G : {0, 1}^ell -> {0, 1}^n epsilon$-fools $M^n$, if $norm(EE_(s ~ {0, 1}^ell) [M_x] - M^n)_1 <= epsilon$. Notice that $norm(M)_1 = 1$.
+
+*Lemma.* If $h : {0, 1}^ell -> {0, 1}^ell$ is drawn from a pairwise uniform hash function family, then $forall M, G : {0, 1}^ell -> {0, 1}^(n/2)$, w.p. $>= 1 - w^4 / (2^ell epsilon^2)$, $ norm(EE_(s,s') [M_(G(s), G(s'))] - EE_s [M_(G(s), G(h(s)))])_1 <= epsilon. $
+
+By triangular inequality, if $G : {0, 1}^ell -> {0, 1}^(n/2) epsilon$-fools $M^(n/2)$, w.p. $>= 1 - w^4 / (2^ell delta^2)$ over $h$ $G_h = (G(s), G(h(s)))$ $(2 epsilon + delta)$-fools $M^n$. Finally, let $epsilon = 2^k delta$, w.p. $>= 1 - (w^4 k) / (2^ell delta^2)$ over $h_1, h_2, dots.c h_k$ independently drawn, $G_(h_1,dots.c, h_k) (s) epsilon$-fools $B$, for every $B in "ROBP"(n, w)$. When $k = O(log n), delta = O(1 / n)$ we have $ell = O(log(w^4 k \/ delta^2)) = O(log(n w))$. However, we don't know if a specific $h_1, dots.c, h_k$ is good, so they are part of the seed. The actual seed length is $O(k ell) = O(log n dot log(n w))$.
+
+*Definition. (TISP, SC)* $sans("TISP")(n^c, log^c n) = sans("TIME")(O(n^c)) inter sans("SPACE")(O(log^c n))$, $bold("SC") = union_(c > 0) sans("TISP")(n^c, log^c n)$.
+
+The seed in Nisan's PRG can be divided into $k = O(log n)$ parts. Once $h_1, dots.c, h_(i-1)$ are given, we can check if $h_i$ is good by verifying the condition in the lemma, since each entry of the matrix $M_(G(s), G(s'))$ and $M_(G(s), G(h(s)))$ can be computed with brute force. So $bold("BPL") subset bold("SC")$.
