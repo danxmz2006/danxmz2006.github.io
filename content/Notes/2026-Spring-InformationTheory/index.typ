@@ -188,3 +188,15 @@ $ I[W; Y^n] <= I[X^n; Y^n] &= H[Y^n] - H[Y^n | X^n] \ &<= sum_(i=1)^n H[Y_i] - H
 假设给出一个分布的期望 $mu$ 和方差 $sigma^2$. 设其密度函数 $f(x)$, 那么一般 $f$ 不是唯一确定的. 
 
 我们寻求一个分布使得 $H[X] = integral f(x) log (1 / f(x)) dif x$ 最大. 令正态分布 $Y ~ N(mu, sigma^2)$, 有 $D(X || Y) = integral f(x) log f(x) dif x - integral f(x) (-(x - mu)^2 / (2 sigma^2) - log sqrt(2 pi)) dif x.$ 这表明正态分布是最大熵分布.
+
+== Communication Complexity
+
+假设需要计算一个二元函数 $f : X times Y -> {0, 1}$, 计算的方式是在 Alice 和 Bob 之间进行多轮交互, 即设 $a_1 = g(x)$, $b_1 = h(y \# a_1)$, $a_2 = g(x \# a_1 \# b_1)$ 等等, 当 Alice 和 Bob 都知道 $f(x,y)$ 的时候交互结束. 设交互的总代价为 $ max_(x,y) sum (abs(a_i) + abs(b_i))$, 令 $C C(f)$ 为最小总代价.
+
+对于一个固定的历史 $h = a_1 \# b_1 \# a_2 \# dot.c$, 其对应着一些可能的 $R_h = {(x,y)}$. $R_h$ 是对 $(X,Y)$ 的一个划分, 并且在 $R_h$ 内部 $f$ 的值都相同. 注意到 $R_h$ 一定形如 $S_X times S_Y$, 因为对 $x$ 和 $y$ 的约束是独立的. 设 $chi(f)$ 为将 $X times Y$ 划分为单色矩形的最小数量. 基于如上的观察, $ C C(f) >= log_2 chi(f). $
+
+(事实上, 我们有 $C C(f) = O(log^2 chi(f))$.)
+
+例如, 考虑 $f(x, y) = [x = y]$, 结合上面的结论和一个显然的协议我们有 $C C(f) = log abs(X) + O(1)$.
+
+对于随机的情况, 我们可能可以取得更好的结果. 仍然考虑计算 $[x = y]$. 我们将 $x,y$ 视为长为 $n$ 的多项式, 取一个常数倍于 $n$ 的素数 $p$ 并计算 $FF_p$ 中的一个点值, 那么错误概率不超过 $n/p$ 并且总代价为 $O(log n)$.

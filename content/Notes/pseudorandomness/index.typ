@@ -42,13 +42,13 @@ When $m < n$, we can take the lowest $m$ bits of a ${0, 1}^n -> {0, 1}^n$ functi
 
 A *sampler* is a function $"Samp" : {0, 1}^ell -> [M]^t$. We consider _averaging sampler_ and _hitting sampler_, which are applied in two-sided error and one-sided error settings respectively.
 
-*Definition. Averaging Sampler.* Let $f : [M] -> [0, 1], mu(f) = 1 / M sum_(x in [M]) f(x)$. $"Samp"$ is a $(delta, epsilon)$ averaging sampler if $forall f$, 
+*Definition. Averaging Sampler.* Let $f : [M] -> [0, 1]$, $mu(f) = 1 / M sum_(x in [M]) f(x)$. $"Samp"$ is a $(delta, epsilon)$ averaging sampler if $forall f$, 
 
 $ Pr_(z_i <- "Samp") [1/t sum_(i=1)^t f(z_i) > mu(f) + epsilon] <= delta. $
 
 (This is actually two-sided by letting $f <- 1 - f$.) 
 
-e.g. An i.i.d. averaging sampler requires $t = O(1 / epsilon^2 log delta^(-1)), ell = t m = O(m / epsilon^2 log delta^(-1))$.
+e.g. An i.i.d. averaging sampler requires $t = O(1 / epsilon^2 log delta^(-1))$, $ell = t m = O(m / epsilon^2 log delta^(-1))$.
 
 To reduce $ell$, we apply the $2k$th moment method. Assume $z_i$ are $2k$-wise independent.
 
@@ -145,7 +145,7 @@ The actual goal is to find $G_c$ that fools every $A$ in $sans("SPACE")(c log n)
 
 A $sans("SPACE")(s)$ PTM can be simulated by a $sans("SPACE")(s)$-uniform $w = 2^(O(s)), n = 2^(O(s))$ PTM. For $bold("BPL")$, $A(x,r)$ can be simulated by $B_x (r)$ with width and length $"poly"(n)$.
 
-*Theorem.* If $forall n,w$, $exists ell = O(log(n w)), G_(n,w) in sans("SPACE")(O(ell)) : {0, 1}^ell -> {0, 1}^n$ that $0.1$-fools every ROBP with parameters $w,n$, then $bold("BPL") = bold("L")$.
+*Theorem.* If $forall n,w$, $exists ell = O(log(n w))$, $G_(n,w) in sans("SPACE")(O(ell)) : {0, 1}^ell -> {0, 1}^n$ that $0.1$-fools every ROBP with parameters $w,n$, then $bold("BPL") = bold("L")$.
 
 We can assume that the transition of a ROBP is time-invariant (by possibly increasing $w$). $EE_(r ~ {0, 1}^n) [B(r)]$ is a specific entry of a matrix power $M^n$. This can be computed recursively. Analyzing the 2-norm shows that we only need $1 / "poly"(n)$ precision. The total space is $O(log n log w) = O(log^2 n)$.
 
@@ -166,8 +166,8 @@ Assume each layer of $B$ has the same transition matrix $M_0, M_1, M = (M_0 + M_
 
 *Lemma.* If $h : {0, 1}^ell -> {0, 1}^ell$ is drawn from a pairwise uniform hash function family, then $forall M, G : {0, 1}^ell -> {0, 1}^(n/2)$, w.p. $>= 1 - w^4 / (2^ell epsilon^2)$, $ norm(EE_(s,s') [M_(G(s), G(s'))] - EE_s [M_(G(s), G(h(s)))])_1 <= epsilon. $
 
-By triangular inequality, if $G : {0, 1}^ell -> {0, 1}^(n/2) epsilon$-fools $M^(n/2)$, w.p. $>= 1 - w^4 / (2^ell delta^2)$ over $h$ $G_h = (G(s), G(h(s)))$ $(2 epsilon + delta)$-fools $M^n$. Finally, let $epsilon = 2^k delta$, w.p. $>= 1 - (w^4 k) / (2^ell delta^2)$ over $h_1, h_2, dots.c h_k$ independently drawn, $G_(h_1,dots.c, h_k) (s) epsilon$-fools $B$, for every $B in "ROBP"(n, w)$. When $k = O(log n), delta = O(1 / n)$ we have $ell = O(log(w^4 k \/ delta^2)) = O(log(n w))$. However, we don't know if a specific $h_1, dots.c, h_k$ is good, so they are part of the seed. The actual seed length is $O(k ell) = O(log n dot log(n w))$.
+By triangular inequality, if $G : {0, 1}^ell -> {0, 1}^(n/2) epsilon$-fools $M^(n/2)$, w.p. $>= 1 - w^4 / (2^ell delta^2)$ over $h$ $G_h = (G(s), G(h(s)))$ $(2 epsilon + delta)$-fools $M^n$. Finally, let $epsilon = 2^k delta$, w.p. $>= 1 - (w^4 k) / (2^ell delta^2)$ over $h_1, h_2, dots.c h_k$ independently drawn, $G_(h_1,dots.c, h_k) (s) epsilon$-fools $B$, for every $B in "ROBP"(n, w)$. When $k = O(log n)$, we have $ell = O(log(w^4 k \/ delta^2)) = O(log(n w \/ epsilon))$. However, we don't know if a specific $h_1, dots.c, h_k$ is good, so they are part of the seed. The actual seed length is $O(k ell) = O(log n dot log(n w \/ epsilon))$.
 
-*Definition. (TISP, SC)* $sans("TISP")(n^c, log^c n) = sans("TIME")(O(n^c)) inter sans("SPACE")(O(log^c n))$, $bold("SC") = union_(c > 0) sans("TISP")(n^c, log^c n)$.
+*Definition. (TISP, SC)* $ sans("TISP")(n^c, log^c n) = sans("TIME")(O(n^c)) inter sans("SPACE")(O(log^c n)), $ $ bold("SC") = union_(c > 0) sans("TISP")(n^c, log^c n). $
 
 The seed in Nisan's PRG can be divided into $k = O(log n)$ parts. Once $h_1, dots.c, h_(i-1)$ are given, we can check if $h_i$ is good by verifying the condition in the lemma, since each entry of the matrix $M_(G(s), G(s'))$ and $M_(G(s), G(h(s)))$ can be computed with brute force. So $bold("BPL") subset bold("SC")$.
