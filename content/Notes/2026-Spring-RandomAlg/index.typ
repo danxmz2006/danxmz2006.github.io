@@ -310,7 +310,7 @@ $ P_(k+1) prec.eq_R sum_(l <= beta_i) P_(k,l) [(l / n)^2 X + 1 - (l / n)^2] prec
 
 由于 $n / 6 < n / (2e)$, $B_6 <= n / (2e) := beta_6$. 取 $beta_(i+1) = (e beta_i^2) / n$. 根据 Multiplicative Chernoff bound $Pr[X >= e mu] <= e^(-mu)$. 基于上述结论 $Pr[overline(E_(i+1))] <= Pr[E_i] Pr[overline(E_(i+1)) | E_i] + Pr[overline(E_i)] <= e^(-beta_i^2 \/ n) / Pr[E_i] <= (1 \/ n^2) / Pr[E_i] Pr[E_i] + Pr[overline(E_i)]$, 若 $beta_i^2 >= 2 n ln n$. 从而 $Pr[overline(E_i)] <= i / n^2 <= 1 / n$ 若 $beta_i^2 >= 2 n ln n$. 最小的 $i$ 使得 $beta_i^2 < 2n ln n$ 是 $i^* = (ln ln n) / (ln 2) + O(1)$.
 
-落入装了 $>= i^* + 1$ 的球的个数期望以高概率不超过 $(sqrt(2n ln n))^2 / n = 2 ln n$. 进一步地, $Pr[B_(i^* + 2) >= 1] = O(log^2 / n).$
+落入装了 $>= i^* + 1$ 的球的个数期望以高概率不超过 $(sqrt(2n ln n))^2 / n = 2 ln n$. 进一步地, $Pr[B_(i^* + 2) >= 1] = O(log^2 n / n).$
 
 == lec12
 
@@ -330,7 +330,7 @@ $ P_(k+1) prec.eq_R sum_(l <= beta_i) P_(k,l) [(l / n)^2 X + 1 - (l / n)^2] prec
 
 我们有 $X_k prec.eq_R 1 + sum_(i=1)^k B(n, p)$. 根据 Chernoff bound, $Pr[sum_(i=1)^k Y_i >= k-1] (Y_i ~ B(n, c/n)) = Pr[sum_(i=1)^k Y_i - c k >= (1 - c) k - 1] <= exp(- (1-c)^2 k / 2)$, 最后用 Union bound 即可.
 
-假设 $c > 1$. 我们证明 a.a.s. 最大连通分支大小为 $(1 + o(1)) beta n$, $beta$ 为 $beta + e^(-beta c)$ 的解. 
+假设 $c > 1$. 我们证明 a.a.s. 最大连通分支大小为 $(1 + o(1)) beta n$, $beta$ 为 $beta + e^(-beta c) = 1$ 的解. 
 
 *Lemma.* 取 $k^- = O(ln n), k^+ = n^(2 / 3)$. 对于任何 $v$, a.a.s. (i) 从 $v$ 开始的分支过程在 $k^-$ 步后终止或 (ii) $forall k^- <= k <= k^+$, 从 $v$ 开始的分支过程在 $k$ 步之后队列内剩余至少 $(c - 1) k \/ 2$ 个点.
 
@@ -375,7 +375,7 @@ $X$ 为 $RR^d$ 中的 $n$ 个点, $forall epsilon in (0, 1), k > (24 ln n) / eps
 WLOG, 我们有 $abs(B^o (y, rho_j)) < 2^j$ 和 $abs(B(x, rho_(j-1))) >= 2^(j-1)$, 从而
 $ Pr[S(2^(-j)) inter B^o (y, rho_j) != emptyset and S(2^(-j)) inter B(x, rho_j) = emptyset] >= (1 - (1 - 2^(-j))^(2^(j-1)))(1 - 2^(-j))^(2^j) >= 1 / 12. $
 
-取 $m = O(log n)$, 独立采样 $m$ 个 $S(2^(-j))$, 则以高概率上述事件至少发生 $m / 24$ 次, 取均值后贡献 $"Const" dot.c (rho_j - rho_(j-1))$. 对所有 $j$ 加总取均值得到以高概率贡献至少 $"Const" dot.c d(x, y) / log n$. 坐标总量 $O(log^2 n)$.
+取 $m = O(log n)$, 独立采样 $m$ 个 $S(2^(-j))$, 则以高概率上述事件至少发生 $m / 24$ 次, 取均值后贡献 $"Const" dot.c (rho_j - rho_(j-1))$. 对所有 $j$ 加总取均值得到以高概率贡献至少 $"Const" dot.c d(x, y) / (log n)$. 坐标总量 $O(log^2 n)$.
 
 以上为 $cal(l)_1$ 的情况. 对于 $cal(l)_p$ 的情况依然采取上述构造. 设 $k$ 为总共的坐标数, 首先有 $norm(f(x) - f(y))_p <= k^(1 / p) d(x, y)$, 根据 Hölder 不等式 $norm(f(x) - f(y))_p k^(1 - 1/p) >= norm(f(x) - f(y))_1 >= Theta(log n) d(x, y)$. 结合两者即可得到偏移量是 $O(log n)$.
 
@@ -475,9 +475,9 @@ e.g. 从 $(x,y) = (a,b) (a > b > 0)$ 开始, 每次以 $x/(x+y)$ 的概率令 $x
 
 仍然考虑之前的分支过程, 有 $t$ 时刻未探索的点数被 $X_t = X_(t-1) - 1 + B(d-1, 1/(d-1))$ 控制. $(X_t)$ 是一个鞅.
 
-取 $h,k$, 设 $tau := {min t : X_t = 0 or X_t >= h or t >= k}$. 我们期望 $k = n^(2/3)$. 则 $Pr[forall t <= k, X_t > 0] <= Pr[tau >= k] + Pr[X_tau >= h] <= EE[tau] / k + EE[X_tau] / h = EE[tau] / k + 1 / h$.
+取 $h,k$, 设 $tau := {min t : X_t = 0 or X_t >= h or t >= k}$. 我们期望 $k = n^(2/3)$. 则 $ Pr[forall t <= k, X_t > 0] <= Pr[tau >= k] + Pr[X_tau >= h] <= EE[tau] / k + EE[X_tau] / h = EE[tau] / k + 1 / h. $
 
-令 $Y_t = X_t^2 - h X_t$, 则 $EE[Y_t - Y_(t-1) | cal(F)_(t-1)] = EE[(X_t - X_(t-1))^2 | cal(F)_(t-1)] = Var[B(d-1, 1/(d-1))] = (d-2)/(d-1) >= 1/2$. 从而 $EE[Y_tau] <= Pr[X_tau >= h] EE[X_tau^2 | X_tau >= h], EE[tau] <= 2(EE[Y_tau] - EE[Y_0]) <= 2(1/h EE[(h + B(d-1, 1/(d-1)))^2] - (1-h)) <= 2(2h + 1 + 1/h).$ $Pr[forall t <= k, X_t > 0] <= 2/k (2h + 1 + 1/h) + 1/h = O(1 / sqrt(k)) (h = Theta(sqrt(k))).$ 设 $N_k$ 表示所属连通块大小至少是 $k$ 的点的数量, 那么 $EE[N_k] = O(n / sqrt(k))$, $Pr[N_k >= k] <= EE[N_k] / k = O(n / (k^(3/2)))$. 取 $k = A n^(2/3)$ 可使得概率为小常数.
+令 $Y_t = X_t^2 - h X_t$, 则 $ EE[Y_t - Y_(t-1) | cal(F)_(t-1)] = EE[(X_t - X_(t-1))^2 | cal(F)_(t-1)] = Var[B(d-1, 1/(d-1))] = (d-2)/(d-1) >= 1/2. $ 从而 $EE[Y_tau] <= Pr[X_tau >= h] EE[X_tau^2 | X_tau >= h]$, $ EE[tau] <= 2(EE[Y_tau] - EE[Y_0]) <= 2(1/h EE[(h + B(d-1, 1/(d-1)))^2] - (1-h)) <= 2(2h + 1 + 1/h). $ $ Pr[forall t <= k, X_t > 0] <= 2/k (2h + 1 + 1/h) + 1/h = O(1 / sqrt(k)) (h = Theta(sqrt(k))). $ 设 $N_k$ 表示所属连通块大小至少是 $k$ 的点的数量, 那么 $EE[N_k] = O(n / sqrt(k))$, $Pr[N_k >= k] <= EE[N_k] / k = O(n / (k^(3/2)))$. 取 $k = A n^(2/3)$ 可使得概率为小常数. #tufted.margin-note[我们证明了 Giant Component 高概率是 $O(n^(2/3))$, 但不能对下界给出估计, 后者需要对图有更强的限制. 例如考虑原图为若干个 $K_(d+1)$, 则每个连通分量大小都不超过 $d+1$. ]
 
 == lec18
 
