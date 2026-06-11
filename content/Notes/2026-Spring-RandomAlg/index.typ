@@ -440,7 +440,7 @@ $ EE[exp(t(X_i - X_(i-1))) | {L_j}] <= exp(1/2 t^2 sum_(j "at level" i-1) L_j^2)
 
 $ 
   Pr[abs(Q_n - q_n) >= k_1 n + lambda] &<= Pr[M_(k_2)^n >= 2] + Pr[M_(k_1)^n > alpha n] + Pr[abs(EE[Q_n | cal(H)^(k_2)] - EE[Q_n | cal(H)^(k_1)]) >= lambda | cal(H)^(k_1), M_(k_1)^n <= alpha n] \
-  &<= 2/n ((2 epsilon ln(n/2))/k_2)^k_2 + alpha((2 epsilon ln(1/alpha))/k_1)^k_1 + 2 exp(- lambda^2/(2(k_2-k_1)alpha n^2)).
+  &<= 2/n ((2 epsilon ln(n/2))/k_2)^(k_2) + alpha((2 epsilon ln(1/alpha))/k_1)^(k_1) + 2 exp(- lambda^2/(2(k_2-k_1)alpha n^2)).
 $
 
 带入适当参数后得到定理.
