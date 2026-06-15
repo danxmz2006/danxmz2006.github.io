@@ -368,9 +368,9 @@ $X$ 为 $RR^d$ 中的 $n$ 个点, $forall epsilon in (0, 1), k > (24 ln n) / eps
 
 对于一个集合 $S$, 定义 $d(x, S) = min_(y in S) {d(x, y)}$. 一个 *Fréchet 嵌入* 指的是给定集合 $S_1, dots.c, S_r, f(x) = (d(x, S_i))_(1 <= i <= r)$. 根据三角不等式, $norm(f(x) - f(y))_1 <= r d(x, y)$. 下文中 $S$ 将会以某个 $p$ 概率独立采样, 即 $Pr[x in S] = p$.
 
-设 $B(u, rho) = {x in X : d(u, x)}$. 我们考虑一种极端情况: 假设所有点分散于 $B(x, epsilon) union.plus B(y, epsilon)$ 之中, 两者大小相近, 那么我们取 $p approx 1 / abs(B(x, epsilon))$ 可以保证以至少常数概率 $S(p) inter B(x, epsilon) = emptyset and S(p) inter B(y, epsilon) != emptyset$, 此时 $d(x, S) - d(y, S) >= d(x, y) - 2 epsilon$.
+设 $B(u, rho) = {x in X : d(u, x) <= rho}$. 我们考虑一种极端情况: 假设所有点分散于 $B(x, epsilon) union.plus B(y, epsilon)$ 之中, 两者大小相近, 那么我们取 $p approx 1 / abs(B(x, epsilon))$ 可以保证以至少常数概率 $S(p) inter B(x, epsilon) = emptyset and S(p) inter B(y, epsilon) != emptyset$, 此时 $d(x, S) - d(y, S) >= d(x, y) - 2 epsilon$.
 
-一般的情况下, 我们需要考虑固定 $abs(B(dot.c, rho))$ 下的 $rho$. 设 $rho_k = min {rho : B(x, rho), B(y, rho) >= 2^k}$. 令 $B^o (u, rho) = {v : d(u, v) < rho}$. 取一个充分大的 $t$ 使得 $rho_(t-1) < rho_t < d(x,y) / 4$ (进行"截断"), 我们可以令 $B(x, dot.c) inter B(y, dot.c) = emptyset$.
+一般的情况下, 我们需要考虑固定 $abs(B(dot.c, rho))$ 下的 $rho$. 设 $rho_k = min {rho : abs(B(x, rho)), abs(B(y, rho)) >= 2^k}$. 令 $B^o (u, rho) = {v : d(u, v) < rho}$. 取一个充分大的 $t$ 使得 $rho_(t-1) < rho_t < d(x,y) / 4$ (进行"截断"), 我们可以令 $B(x, dot.c) inter B(y, dot.c) = emptyset$.
 
 WLOG, 我们有 $abs(B^o (y, rho_j)) < 2^j$ 和 $abs(B(x, rho_(j-1))) >= 2^(j-1)$, 从而
 $ Pr[S(2^(-j)) inter B^o (y, rho_j) != emptyset and S(2^(-j)) inter B(x, rho_j) = emptyset] >= (1 - (1 - 2^(-j))^(2^(j-1)))(1 - 2^(-j))^(2^j) >= 1 / 12. $

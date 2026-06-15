@@ -123,7 +123,7 @@ AEP: 根据 Law of Large Numbers, 我们有若 $X_1, X_2, dots.c ~ p(x)$ (i.i.d.
 
 具体地, 假设将 $Omega$ 分为 $Delta_1, Delta_2, dots.c$, $abs(Delta_i) = Delta$, $p_i = integral_(Delta_i) p(x) dif x = p(x_i) Delta$, 我们有 $sum_i -p_i log p_i = -sum_i p(x_i) log p(x_i) Delta - sum_i p(x_i) log Delta = -sum_i p(x_i) log p(x_i) Delta - log Delta$. 注意根据 Riemann 积分的定义第一项会趋于 $H[X]$, 而第二项会趋于 $+infinity$.
 
-微分熵可正可负. 注意我们可以取分划使得每个部分概率小于 $epsilon$, 于是 $sum_i -p_i log p_i -> +infinity$, 这个结论即使 $H[X] = +infinity$ 的时候还是对的.
+微分熵可正可负. 注意我们可以取分划使得每个部分概率小于 $epsilon$, 于是 $sum_i -p_i log p_i -> +infinity$, 这个结论即使 $H[X] = -infinity$ 的时候还是对的.
 
 我们可以类似地定义 KL 散度和互信息.
 
