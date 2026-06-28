@@ -132,7 +132,7 @@ So it takes $O(log n/delta) = O(log n + k + log 1/epsilon)$ bits to construct an
 
 == PRG for Derandomization, Branching Programs
 
-The complexity class $bold("BPL")$ is similar to $bold("BPP")$. It uses *read-once* seed of length *polynomial in $n$*. #tufted.margin-note[Breaking the second assumption allows us to solve hard problems like $"SAT"$ with exponential random bits. Breaking the first assumption gives us a class $bold("BP") dot bold("L")$ or $bold("BP*L")$ and it's proven that $bold("BPL") subset bold("ZP*L")$, and we don't know if it is in $bold("P")$.] 
+The complexity class $bold("BPL")$ is similar to $bold("BPP")$. It uses *read-once* seed of length *polynomial in $n$*. #tufted.margin-note[Breaking the second assumption allows us to solve $"PATH"$ by keep guessing a path. Breaking the first assumption gives us a class $bold("BP") dot bold("L")$ or $bold("BP*L")$ and it's proven that $bold("BPL") subset bold("ZP*L")$, and we don't know if it is in $bold("P")$.] 
 This implies that $bold("BPL") in bold("P")$ since $T(n) <= 2^(O(S(n))) m(n).$
 
 To derandomize $bold("BPL")$ it suffices to give $G : {0, 1}^(ell(n)) -> {0, 1}^(m(n))$ that $0.1$-fools logspace algorithm $A(x, r)$, $ell(n) = O(log n)$, and $G$ can be computed within $O(log n)$ space.
@@ -170,4 +170,50 @@ By triangular inequality, if $G : {0, 1}^ell -> {0, 1}^(n/2) epsilon$-fools $M^(
 
 *Definition. (TISP, SC)* $ sans("TISP")(n^c, log^c n) = sans("TIME")(O(n^c)) inter sans("SPACE")(O(log^c n)), $ $ bold("SC") = union_(c > 0) sans("TISP")(n^c, log^c n). $
 
-The seed in Nisan's PRG can be divided into $k = O(log n)$ parts. Once $h_1, dots.c, h_(i-1)$ are given, we can check if $h_i$ is good by verifying the condition in the lemma, since each entry of the matrix $M_(G(s), G(s'))$ and $M_(G(s), G(h(s)))$ can be computed with brute force. So $bold("BPL") subset bold("SC")$.
+The seed in Nisan's PRG can be divided into $k = O(log n)$ parts. Once $h_1, dots.c, h_(i-1)$ are given, we can check if $h_i$ is good by verifying the condition in the lemma, since each entry of the matrix $M_(G(s), G(s'))$ and $M_(G(s), G(h(s)))$ can be computed with brute force. So $bold("BPL") subset sans("TISP")(n^(O(1)), log^2 n) bold("SC")$. #footnote[$O(log^2 n)$ is the best known space bound today if we insist on a polynomial-time simulation.]
+
+== Saks-Zhou Theorem
+
+An attempt to reduce the seed length in Nisan's PRG is to avoid using different $h_i$. We would like
+$ EE_(s in {0, 1}^ell) [M_(G(s)) M_(G(h(s)))] approx EE_(s in {0, 1}^ell) [M_(G(s))]^2. $
+
+Both sides should be close to $M^(2^k ell)$. This suggests that $M_(G(s))$ and $h$ are not _so_ correlated, even if we use $h$ in $G$.
+
+*Downward perturbation.* For $hat(p) in [0, 1]$, $d in NN$, $r in [2^d]$, let $ hat(p) minus.o_d r := 2^(-d) floor(2^d max{0, hat(p) - r dot 2^(-2d)}). $ 
+
+We have $max{0, hat(p) - 2^(-d+1)} <= hat(p) minus.o_d r <= hat(p)$, so $minus.o$ doesn't introduce much error. Meanwhile, $minus.o$ destroys information: consider $p in [0, 1]$ such that $abs(p - hat(p)) < 2^(-2d - 1)$, then for all but *at most 1* $r$, $hat(p) minus.o_d r = p minus.o_d r$. (Consider the $(d+1) ~ 2d$th highest bits of $hat(p)$'s mantissa).
+
+Suppose $hat(M)_(w times w)$ is a stochastic matrix. Define $hat(M) minus.o_d r$ as follows: apply $minus.o_d$ on each entry of $hat(M)$, then increase the last entry of each column that it becomes a stochastic matrix.
+
+From the properties above we have $norm(hat(M) - (hat(M) minus.o_d r))_1 <= 2^(-d+2) w,$ and for all but at most $w^2$ $r$'s, if $norm(M - hat(M))_infinity < 2^(-2d-1)$, $hat(M) minus.o_d r = M minus.o_d r$. The computation of $hat(M) minus.o_d r$ is done with $O(k + d + log w)$ space ($k$ is the precision of $hat(M)$). #tufted.margin-note([A stochastic matrix $M$ can be used to build a function $[w] times {0, 1}^k -> [w]$, which is an _automaton_ for multiple steps. What we have done is calculating this automaton implicitly.])
+
+Given $M: [w] times {0, 1} -> [w]$, we would like to build $hat(M)$ s.t. $norm(hat(M) - M^n)_1 <= epsilon$. Let $k = O(log (w n \/ epsilon)), d<=k, s t = log n$ be parameters, $cal(H)$ be a pairwise independent hash family ${h : {0, 1}^k -> {0, 1}^k}$. Sample $h_1, dots.c, h_s in cal(H)$, $r_1, dots.c, r_t in [2^d]$ independently, and let $ hat(M)^((0)) = M, \ hat(M)^((i)) = hat(M)_(vec(h))^((i-1)) minus.o_d r_i. $ #tufted.margin-note([For $M : [w] times Sigma -> [w]$, $h : Sigma -> Sigma$, define $M_h : [w] times Sigma -> [w]$ as $M_h (u,x) = M(M(u,x), h(x))$, $M_(h_1, h_2, dots.c) = (dots.c (M_(h_1))_(h_2) dots.c)$.])
+
+The output of the Saks-Zhou algorithm is $hat(M)^((t))$. Both the space complexity and randomness is $O(log(w n \/ epsilon) (s + t))$.
+
+*Proposition.* Except w.p. at most $w^2 t 2^(-d) + w^5 log n 2^(O(d+s)) 2^(-k)$, $ norm(hat(M)^((t)) - M^n)_1 <= 4 n w 2^(-d). $
+
+_Proof._ Define $ M^((0)) = M, \ M^((i)) = (M^((i-1)))^(2^s) minus.o_d r_i. $
+
+The probability that some $r_i$ is bad for $(M^((i-1)))^(2^s) minus.o_d$ is at most $w^2 t 2^(-d)$. Assume this doesn't happen. Also, by analysis in Nisan's PRG we have except w.p. $w^5 log n 2^(O(d+s)) 2^(-k)$, $norm(M_(vec(h))^((i-1)) - (M^((i-1))^(2^s))_1 < 2^(-2d-1))$. Assume no bad event happens. Then induction shows $hat(M)^((i)) = M^((i))$. The remaining work is to bound $norm(M^((i)) - M^(2^(s i)))_1$, the key is 
+$ norm(M^((i)) - M^(2^(s i)))_1 <= norm(M^((i)) - (M^((i-1)))^(2^s))_1 + norm((M^((i-1)))^(2^s) - M^(2^(s i)))_1 <= 2^(-d + 2) w + 2^s norm(M^((i-1)) - M^(2^(s (i-1))))_1 <= (2^(s i) - 1) / (2^s - 1) 2^(-d+2) w. $
+
+*Corollary.* Set $s = t = sqrt(log n)$. We have $bold("BPL") subset sans("DSPACE")(log^(3\/2) n).$
+
+== INW Generator
+
+*Definition. ($epsilon$-recycling)* For $d in ZZ_(>0)$, $H : {0, 1}^ell times [d] -> {0, 1}^ell$ is $epsilon$-recycling iff for every $w > 0$, $F : {0, 1}^ell -> [w]$, $ Delta_"TV" ((F(s), s'), (F(s), H(s, r))) <= w epsilon. $
+
+Where $s,s' in {0, 1}^ell$ and $r in [d]$. In Nisan's PRG, $H$ is a pairwise independent hash family with $d = 2^(O(ell))$ and is 0-recycling.
+
+The INW generator is built upon a family of $epsilon$-recycling functions,
+
+$ cal(H) = {H_k : {0, 1}^(ell + (k-1)log d) times [d] -> {0, 1}^(ell + (k-1) log d), k in NN}. $
+
+$G_k : {0, 1}^(ell + k log d) -> {0, 1}^(2^k ell)$ is defined as 
+$ G_0 (s) = s, G_k (s_k) = (G_(k-1) (s_(k-1)), G_(k-1) (H_k (s_(k-1), r_k))) $
+where $s_k = (s, r_1, r_2, dots.c, r_k)$, $r_i in [d]$. Let $B in "ROBP"(2^k ell, w)$. 
+
+*Theorem.* $G_k$ with $epsilon$-recycling functions $(2^k - 1) w epsilon$-fools $"ROBP"(2^k ell, w)$.
+
+_Proof._ Induction on $k$. Since $H_k$ is $epsilon$-recycling, $ abs(EE_(s_k) [B(G_k (s_k))]) $
