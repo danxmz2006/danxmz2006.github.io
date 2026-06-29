@@ -7,6 +7,8 @@
   lang: "en",
 )
 
+#set math.equation(numbering: none)
+
 = Pseudorandomness
 
 == Concepts of PRG
@@ -212,8 +214,186 @@ $ cal(H) = {H_k : {0, 1}^(ell + (k-1)log d) times [d] -> {0, 1}^(ell + (k-1) log
 
 $G_k : {0, 1}^(ell + k log d) -> {0, 1}^(2^k ell)$ is defined as 
 $ G_0 (s) = s, G_k (s_k) = (G_(k-1) (s_(k-1)), G_(k-1) (H_k (s_(k-1), r_k))) $
-where $s_k = (s, r_1, r_2, dots.c, r_k)$, $r_i in [d]$. Let $B in "ROBP"(2^k ell, w)$. 
+where $s_k = (s, r_1, r_2, dots.c, r_k)$, $r_i in [d]$. Let $B in "ROBP"(2^k ell, w)$. #footnote[A major difference between this and Nisan's PRG is that we use $r_i$ as *seeds* instead of *subscripts*, so the seed length is increasing.]
 
 *Theorem.* $G_k$ with $epsilon$-recycling functions $(2^k - 1) w epsilon$-fools $"ROBP"(2^k ell, w)$.
 
-_Proof._ Induction on $k$. Since $H_k$ is $epsilon$-recycling, $ abs(EE_(s_k) [B(G_k (s_k))]) $
+_Proof._ Induction on $k$. Since $H_k$ is $epsilon$-recycling, $ abs(EE_(s_k) [B(G_k (s_k))] - EE_(s_(k-1),s'_(k-1)) [B(G_(k-1) (s_(k-1)), G_(k-1) (s'_(k-1)))]) <= w epsilon. $ 
+
+By inductive hypothesis, $ abs(EE_(s_(k-1), s'_(k-1)) [B(G_(k-1) (s_(k-1)), G_(k-1) (s'_(k-1)))] - EE_(s_(k-1),x_2) [B(G_(k-1) (s_(k-1)), x_2)]) + abs(EE_(s_(k-1),x_2) [B(G_(k-1) (s_(k-1)), x_2)] - EE_(x_1,x_2) [B(x_1, x_2)]) <= 2 (2^(k-1) - 1) w epsilon. $
+
+So the total is at most $(2^k - 1) w epsilon. qed$
+
+When $ell = O(1), k = O(log n)$ the seed length is $O(ell + k log d) = O(log n dot log d)$. We need $epsilon = O(1 / (n w))$. So it boils down to find $d$.
+
+*Theorem.* Assume $H : {0, 1}^ell times [d] -> {0, 1}^ell$ is $epsilon$-recycling, then $d = Omega(min{epsilon^(-1), 2^ell})$.
+
+_Proof._ Let $F : {0, 1}^ell -> [w]$ be uniform that $forall v$, $abs(F^(-1) (v)) <= ceil(2^ell \/ w)$, then 
+$ Delta_"TV" ((F(s), s'), (F(s), H(s, r))) = EE_v [Delta_"TV" (s', H(s, r) | F(s) = v)]. $
+
+The support size of $s' = 2^ell$. When $w = 1 \/ 2 epsilon$, $Delta_"TV" <= 1 \/ 2$, so for at least one $v$, the support of $H(s, r) | F(s) = v$ has size $>= 2^ell \/ 2$, therefore $ 2^ell \/ 2 <= ceil(2^ell \/ w) d <= d (2^epsilon dot 2^ell + 1). $
+
+This implies $d = Omega(min{epsilon^(-1), 2^ell}). qed$
+
+When $ell = log n dot log d$, $2^ell >> d$, so we get $d = Omega(epsilon^(-1))$. When $d = O(epsilon^(-1))$, the seed length is as good as Nisan's PRG.
+
+We can't afford to use pairwise independent function (which is in fact 0-recycling) or any function with $d >= 2^ell$ since $ell$ is to large.
+
+*Definition. ($epsilon$-mixing)* A function $H:{0, 1}^ell -> {0, 1}$ is said to be $epsilon$-mixing if $(s, H(s, r)) (s ~ {0, 1}^ell, r ~ [d])$ $epsilon$-fools every combinatorical rectangle ($f(x, y) = g(x) h(y)$).
+
+For any distinguisher $A : [w] times {0, 1}^ell -> {0, 1}$, we have $ A(F(s), s') = sum_(v in [w]) [F(s) = v] dot [A(v, s') = 1], $
+
+so an $epsilon$-mixing function is an $epsilon$-recycling function.
+
+Consider a $d$-regular graph with $V = {0, 1}^ell = n$. The $epsilon$-mixing property is equivalent to $forall S,S' subset.eq V$, 
+$ abs(e(S,S') / (n d) - (abs(S) abs(S')) / n^2) <= epsilon. $
+
+This is called the $epsilon$-mixing property of a graph, which is satisfied on _expanders_.
+
+== Spectral expansion
+
+Let $G$ be an undirected $d$-regular graph and $A$ be its adjacent matrix. Then $M = 1/d A$ is doubly stochastic and $norm(M)_1 = 1$. Let $lambda_1 >= lambda_2 >= dots.c >= lambda_n$ be the eigenvalues of $M$. #footnote[For regular digraphs many of the following properties still hold, but $lambda_i$ might not be real numbers.]
+
+*Definition. (spectral expansion)* $gamma = 1 - max{abs(lambda_2), abs(lambda_n)}$.
+
+Since $M$ preserves $norm(dot)_1$, $abs(lambda_i) <= 1$ and $lambda_1 = 1$ ($M u = u$).
+
+*Theorem.* $ 1 - gamma = max_(x perp u) norm(M x)_2 \/ norm(x)_2 = max_(norm(x)_1 = 1) norm(M x - u)_2 \/ norm(x - u)_2. $
+
+It's easy to prove that $lambda_2 < 1$ iff the graph is connected; a connected undirected graph is bipartite iff $lambda_n = -1$ (consider $x^top (M + 1_(n times n)) x$).
+
+*Theorem.* A graph $H$ is *$(K, alpha)$-vertex expanding* if $forall abs(S) <= K$, $abs(N(S) without S) >= alpha abs(S)$, where $N(S) = {u | exists v in S, (v,u) in H}$. Then $H$ has $gamma$ spectral expansion $=>$ $H$ has $(n/2, gamma)$ vertex expansion.
+
+_Proof._ Let $x$ be the uniform distribution on $S$. Then $chevron.l x,u chevron.r = 1/n$, $norm(x - u)_2 = sqrt(1 / abs(S) - 1 / n)$. Since $M x$ has support in $N(S)$, by Cauchy-Schwartz inequality 
+
+$ (1 - gamma) sqrt(1 / abs(S) - 1 / n) >= norm(M x)_2^2 >= abs(M x)_1^2 \/ abs(N(S)) = 1 / abs(N(S)). $
+
+Thus $ abs(N(S)) / abs(S) >= 1 / (1 - (2 gamma - gamma^2) (1 - abs(S) / n)) >= 1 / (1 - gamma + 1/2 gamma^2) >= 1 + gamma. qed$
+
+*Theorem.* A graph $H$ is *$(K,alpha)$-edge expanding* if $forall abs(S) <= K$, $e(S, overline(S)) >= alpha d abs(S)$. A graph with spectral expansion $gamma$ also has $(n/2, gamma/2)$ edge expansion.
+
+_Proof._ For $abs(S) <= n/2$, we have $e(S, overline(S)) = bb(1)_S^top A bb(1)_overline(S)$. Let $x$ be uniform distribution on $S$. Then
+
+$ e(S,overline(S)) &= abs(S) x^top A (n u - abs(S) x) \ &= n d abs(S) x^top u - abs(S)^2 x^top A x \
+  &= d abs(S) - abs(S)^2 (x-u)^top A (x-u) - abs(S)^2 (u^top A x + x^top A u - u^top A u) \ 
+  &= d abs(S) - abs(S)^2 (x-u)^top A (x-u) - d/n abs(S)^2 \
+  &>= d abs(S) - d abs(S)^2 norm(x-u)_2 norm(M (x-u))_2 - d/n abs(S)^2 \
+  &>= d abs(S) - d abs(S)^2 (1 - gamma) (1 / abs(S) - 1 / n) - d/n abs(S)^2 \
+  &= gamma d abs(S) (1 - abs(S) / n) >= 1/2 gamma d abs(S). qed $
+
+*Theorem.* If a graph $H$ has $(1-lambda)$ spectral expansion then it is $lambda$-mixing.
+
+_Proof._ Let $x,y$ be uniform distributions on $S,S'$ respectively. Then 
+$ x^top A y = (x - u)^top A (y - u) + u^top A y + x^top A u - u^top A u = (x - u)^top A (y - u) + d/n. $
+
+Thus 
+$ abs(e(S,S') / (d n) - (abs(S) abs(S')) / n^2) &= (abs(S) abs(S')) / (n d) abs((x - u)^top A (y - u)) \
+&<= (abs(S) abs(S')) / n norm(x - u)_2 (1 - gamma) norm(y - u)_2 \
+&= (1 - gamma) sqrt(abs(S) / n dot (n - abs(S)) / n dot abs(S') / n dot (n - abs(S')) / n) <= 1 - gamma. qed $
+
+Now we consider random walks on expanders. The following two properties contribute to hitting samplers and average samplers. The main idea is that we can directly compute some quantities via linear algebra.
+
+*Theorem. (Hitting property)* Suppose $H$ has $gamma$ spectral expansion, $(v_1, dots.c, v_t)$ be a random walk on $H$. $forall S subset.eq V$,
+$ Pr[forall i, v_i in.not S] <= (1 - (gamma abs(S)) / n)^t. $
+
+_Proof._ 
+$ Pr[forall i, v_i in.not S] = Pr[v_1 in.not S] dot product_(i=2)^t (Pr[v_i in.not S, v_(i-1) in.not S]) / (Pr[v_(i-1) in.not S]). $
+Since $H$ is $d$-regular, each $v_i$ is uniformly distributed, and $Pr[v_(i-1) in.not S] = 1 - abs(S) / n$. Meanwhile, 
+$ Pr[v_(i-1),v_i in.not S] = (e(overline(S),overline(S))) / (n d) <= (abs(overline(S)) / n)^2 + (1 - gamma) (abs(S) abs(overline(S))) / n^2. $
+
+Plug them in and we have the result. $qed$
+
+*Theorem. (Expander Chernoff bound)* Under the same setting, for every $f : V -> [0, 1]$, $mu = 1/n sum_v f(v)$,
+$ Pr[1/t sum_(i=1)^t f(v_i) - mu >= lambda + epsilon] <= exp(- 1/4 t epsilon^2). $
+
+_Proof._ First we give a decomposition of the matrix $M$. Let $J = (1/n)_(i,j)$ be the projection onto $RR u$, then $ M v = J v + M (1 - J) v = gamma J v + (lambda J v + M (1 - J) v). $
+Let $E = 1 / lambda (lambda J + M (1 - J))$, then $M = gamma J + lambda E$. We claim that $norm(E)_2 <= 1$. Both $RR u$ and $(RR u)^perp$ are $M$-invariant, so it suffices to show that $norm(E u)_2 <= norm(u)_2$ and $norm(E v^perp)_2 <= norm(v^perp)_2$, which are straightforward. 
+The benefit of this decomposition is that we don't need prior knowledge on $v$ (like its decomposition).
+
+Let $phi_t (s) = EE[exp(s sum_(i=1)^t f(v_i))]$, then $phi_t (s) = norm((P M)^t u)_1$, where $P = "diag"(exp(s f(v)))$.
+
+We would like to bound $norm(P M)_2 <= gamma norm(P J)_2 + (1 - gamma) norm(P E)_2$.
+
+$ norm(P J)_2^2 &= norm(P u)_2^2 / norm(u)_2^2 \ &= 1 / n sum_v e^(2 s f(v)) \ &<= 1 + 2 mu s + s^2 (s <= 1/2 => e^s <= 1 + s + s^2) \ &<= (1 + mu s + s^2)^2. $
+
+$ norm(P E)_2 <= norm(P)_2 <= e^s <= 1 + s + s^2. $
+
+So $norm(P M)_2 <= 1 + (mu + lambda) s + s^2$,
+$ Pr[sum_(i=1)^t f(v_i) - mu t >= lambda t + epsilon t] &<= e^(-s t (mu + lambda + epsilon)) phi_t (s) \ 
+&<= e^(-s t (mu + lambda + epsilon)) norm(P M)_2^t \
+&<= e^(-epsilon s t + s^2 t) = e^(-1/4 t epsilon^2). $
+
+*Remark.* It is also proven that 
+$ Pr[1/t sum_(i=1)^t f(v_i) - mu >= epsilon] <= exp(-1/4 gamma t epsilon^2). $
+
+This is done by decomposing $v$ and simultaneously bound $v^parallel$ and $v^perp$. Refer to @healy2008. Neither of the two results implies the other, and there are methods to interpolate between them.
+
+Spectral expanders can be used to construct optimal samplers. Assume $d = O(1), gamma <= 1/2$, then $ell$ can be reduced from $O(m t)$ to $m + O(t)$.
+
+A *near-optimal* average sampler is constructed using the _median of averages_ trick. Let $t = T k$, for each of the $T$ groups of samples, compute the average of $f$, and output the median of the $T$ results. The samples in each group are pairwise independent. When $k = O(1 / epsilon^2)$, with probability $>= 2/3$ the average is $epsilon$-close to $mu(f)$. Finally, use expander walk to generate $T = O(log(1/delta))$ seeds, each of length $O(m + log(1/epsilon))$. The total randomness is $ell = O(m + log(1/epsilon) + log(1/delta))$.
+
+Similarily, for hitting sampler, $t = O(1/epsilon log(1/delta))$, $ell = O(m + log(1/epsilon) + log(1/delta))$.
+
+== Constructions of Expanders
+
+We first give bounds for spectral expansion.
+
+*Theorem.* Let $d$ be a constant. Then every $d$-regular graph with spectral expansion $(1-lambda)$ satisfies $ lambda >= (2 sqrt(d-1)) / d - o_n (1). $
+
+The main idea is that the "optimal" $d$-regular expander is an infinite $d$-regular tree.
+
+*Theorem.* $forall epsilon > 0$, a random $d$-regular graph over $n$ vertices with high probability satisfies
+
+$ lambda <= (2 sqrt(d-1)) / d + epsilon. $
+
+We can construct larger expanders based on small expanders. The following table shows different *graph products* and their parameters.
+
+#let zprod = math.class("binary", $ⓩ$)
+#let rprod = math.class("binary", $ⓡ$)
+#table(columns: 4,
+      align: center,
+      table.header([Graphs], [size], [degree], [$1 - gamma$]),
+      [$G$], [$N$], [$D$], [$Lambda$],
+      [$H$], [$n$], [$d$], [$lambda$],
+      [$G H = H G$ \ $G^2$], [$N = n$ \ $N^2$], [$D d$ \ $D^2$], [$Lambda lambda$ \ $Lambda^2$],
+      [$G times.o H$ \ $G times.o G$], [$N n$ \ $N^2$], [$D d$ \ $D^2$], [$max{Lambda, lambda}$ \ $Lambda$],
+      [$G rprod H = B + I_N times.o H$], [$N n = N D$], [$d + 1$], [?],
+      [$G zprod H = (I_N times.o H) B (I_N times.o H)$], [$N n = N D$], [$d^2$], [$Lambda + 2 lambda$]).
+
+If two expanders $G,H$ share the same size, their *matrix product* $G H$ consists of edges corresponding to two-step walks by first taking a step in $H$ then taking a step in $G$.
+
+The *tensor product* $G times.o H$ has vertices in $V(G) times V(H)$. For $(u,v) in G$, $(u',v') in H$, there is $((u,u'), (v,v')) in G times.o H$.
+
+Let $tilde(G) = 1/D G$ and $tilde(H) = 1/d H$. For a direct product $v times.o w$, let $v = v^parallel + v^perp$ and $w = w^parallel + w^perp$ be its composition. Then
+$ (tilde(G) times.o tilde(H)) (v times.o w - v^parallel times.o w^parallel) &= (tilde(G) times.o tilde(H)) (v^parallel times.o w^perp + v^perp times.o w^parallel + v^perp times.o w^perp) \
+&= v^parallel times.o (tilde(H) w^perp) + (tilde(G) v^perp) times.o w^parallel + (tilde(G) v^perp) times.o (tilde(H) w^perp). $
+
+Each term shrinks by a factor at most $max{Lambda, lambda}$, so the spectral expansion is $1 - max{Lambda, lambda}.$
+
+Assume $n = D$. The *replacement product* $G rprod H$ is "replacing" each vertex of $G$ by a copy of $H$. Specifically, let $B$ is a degree-1 graph with $N D$ vertices so that $((v,i), (u,j)) in B$ if the $i$th adjacent edge of $v$ is the $j$th adjacent edge of $u$. Then $G rprod H = B + I_N times.o H$.
+
+The *zigzag product* $G zprod H$ corresponds to a three-step walk on $G rprod H$: $G zprod H = (I_N times.o H) B (I_N times.o H)$.
+
+*Theorem.* $G zprod H$ as spectral expansion $>= 1 - Lambda - 2 lambda$.
+
+_Proof._ Let $J_n$ be a all-1 matrix. Consider the intermediate graph $G zprod J_n$. A crucial observation is that $G zprod J_n = G times.o J_n$ (two random steps are equivalent to one). Therefore,
+$ norm(1/d^2 G zprod H - 1 / (N n) J_(N n))_2 &<= norm(1/d^2 G zprod H - 1 / n^2 G zprod J_n)_2 + norm(1/n^2 G times.o J_n - 1/N J_N times.o 1/n J_n)_2 \
+&<= norm(1/d^2 (I_N times.o H) B (I_N times.o H) - 1 / (d n) (I_N times.o J_n) B (I_N times.o H))_2 \
+&space + norm(1/(d n) (I_N times.o J_n) B (I_N times.o H) - 1/n^2 (I_N times.o J_n) B (I_N times.o J_n))_2 \
+&space + norm(1/n^2 G times.o J_n - 1/N J_N times.o 1/n J_n)_2 \
+&<= 2 norm(I_N times.o (1/d H - 1 / n J_n))_2 + norm((1/n G - 1/N J_N) times.o 1/n J_n)_2 \
+&<= 2 lambda + Lambda. qed $
+
+Starting from a $(c,10^8, 0.1)$-graph $G$ (for $c$ large enough) and $(10^16, 100, 0.1)$-graph $H$, the new graph
+
+$ G_1 = ((G times G) zprod H)^2 $
+
+is $(10^16 c^2, 10^8, 0.09)$. In $O(log log n)$ repetitions we can get an $(n, 10^8, 0.1)$-graph. 
+
+The graph can be computed *fully explicitly* in $bold("L")$. That is, on input $(v,i)$, we can recursively compute $(u,j)$ such that the $i$th edge adjacent to $v$ is the $j$th edge adjacent to $u$. The key is that during the whole process, the space used to save vertices is invariant, and the representation of every other element is $<< log n$.
+
+== Randomness Extractor
+
+
+
+#bibliography("refs.bib")
