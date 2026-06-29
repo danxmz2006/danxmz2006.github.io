@@ -224,7 +224,7 @@ By inductive hypothesis, $ abs(EE_(s_(k-1), s'_(k-1)) [B(G_(k-1) (s_(k-1)), G_(k
 
 So the total is at most $(2^k - 1) w epsilon. qed$
 
-When $ell = O(1), k = O(log n)$ the seed length is $O(ell + k log d) = O(log n dot log d)$. We need $epsilon = O(1 / (n w))$. So it boils down to find $d$.
+When $ell = O(1), k = O(log n)$ the seed length is $O(ell + k log d) = O(log n dot log d)$. We need $epsilon = O(1 / (n w))$. So it boils down to finding $d$.
 
 *Theorem.* Assume $H : {0, 1}^ell times [d] -> {0, 1}^ell$ is $epsilon$-recycling, then $d = Omega(min{epsilon^(-1), 2^ell})$.
 
@@ -358,7 +358,7 @@ We can construct larger expanders based on small expanders. The following table 
       [$G H = H G$ \ $G^2$], [$N = n$ \ $N^2$], [$D d$ \ $D^2$], [$Lambda lambda$ \ $Lambda^2$],
       [$G times.o H$ \ $G times.o G$], [$N n$ \ $N^2$], [$D d$ \ $D^2$], [$max{Lambda, lambda}$ \ $Lambda$],
       [$G rprod H = B + I_N times.o H$], [$N n = N D$], [$d + 1$], [?],
-      [$G zprod H = (I_N times.o H) B (I_N times.o H)$], [$N n = N D$], [$d^2$], [$Lambda + 2 lambda$]).
+      [$G zprod H = (I_N times.o H) B (I_N times.o H)$], [$N n = N D$], [$d^2$], [$Lambda + 2 lambda$])
 
 If two expanders $G,H$ share the same size, their *matrix product* $G H$ consists of edges corresponding to two-step walks by first taking a step in $H$ then taking a step in $G$.
 
@@ -386,12 +386,43 @@ $ norm(1/d^2 G zprod H - 1 / (N n) J_(N n))_2 &<= norm(1/d^2 G zprod H - 1 / n^2
 
 Starting from a $(c,10^8, 0.1)$-graph $G$ (for $c$ large enough) and $(10^16, 100, 0.1)$-graph $H$, the new graph
 
-$ G_1 = ((G times G) zprod H)^2 $
+$ G_1 = ((G times.o G) zprod H)^2 $
 
 is $(10^16 c^2, 10^8, 0.09)$. In $O(log log n)$ repetitions we can get an $(n, 10^8, 0.1)$-graph. 
 
 The graph can be computed *fully explicitly* in $bold("L")$. That is, on input $(v,i)$, we can recursively compute $(u,j)$ such that the $i$th edge adjacent to $v$ is the $j$th edge adjacent to $u$. The key is that during the whole process, the space used to save vertices is invariant, and the representation of every other element is $<< log n$.
 
 == Randomness Extractor
+
+We've shown that for an $epsilon$-recycling $H$,
+$ Delta_"TV" ((F(s), s'), (F(s), H(s, r))) = EE_(v in [w]) [Delta_"TV" (s', H(s, r) | F(s) = v)]. $
+
+$H(s,r)$ conditioning on $F(s) = v$ has entropy at least $ell - log(w)$. We are trying to _extract_ randomness from an imperfect source.
+
+*Definition. (Extractor)* $"Ext": {0, 1}^n times {0, 1}^d -> {0, 1}^m$ is a *$(k,epsilon)$-extractor* if for every distribution $X$ over ${0, 1}^n$ with min-entropy $H_infinity [X] >= k$, $ Delta_"TV" ("Ext"(X,r), U_m) <= epsilon. $
+
+Here $H_infinity [X] = -log(max_x Pr[X = x])$, the assumption is equivalent to $Pr[X = x] <= 2^(-k)$. Such $X$ is called a *$k$-source*. The reason we are not using Shannon entropy is that $H_infinity$ gives the strongest assumption on $X$.
+
+A *flat $k$-source* is a uniform distribution on a support of size $2^k$. The $k$-sources form a convex polytope, and each of them is a convex combination of flat $k$-sources.
+
+*Theorem.* If $H : {0, 1}^n times {0, 1}^d -> {0, 1}^m$ is a $(k,epsilon)$-extractor, then $forall w, F:{0, 1}^n -> [w]$, $ Delta_"TV" ((F(s), s'), (F(s), H(s, r))) <= epsilon + w dot 2^(k-n). $
+
+_Proof._ If $Pr[F(s) = v] >= 2^(k-n)$, then $Pr[s = x | F(s) = v] <= 2^(-k)$, and $H_infinity [s | F(s) = v] >= k$.
+
+$ & sum_(v in [w]) Pr[F(s) = v] dot Delta_"TV" (s', H(s, r) | F(s) = v) \ &= sum_(Pr[F(s) = v] >= 2^(k-n)) Pr[F(s) = v] dot Delta_"TV" (s', H(s, r) | F(s) = v) + sum_(Pr[F(s) = v] < 2^(k-n)) Pr[F(s) = v] Delta_"TV" (s', H(s, r) | F(s) = v) \ &<= sum_(Pr[F(s) = v] >= 2^(k-n)) Pr[F(s) = v] dot Delta_"TV" (s', H(s, r) | F(s) = v) + 2^(k-n) w \ &<= epsilon + 2^(k-n) w. qed $
+
+_Random construction._ If we let $"Ext":{0, 1}^n times {0, 1}^d -> {0, 1}^m$ be i.i.d., by analyzing the flat $k$-sources, we can conclude that there exists a $(k,epsilon)$-extractor with $ cases(m = k + d - 2 log(1/epsilon) - O(1), d = log(n - k) + 2 log(1/epsilon) + O(1)). $
+
+*Theorem. (Leftover Hash Lemma)* If $cal(H) = {h : {0, 1}^n -> {0, 1}^m}$ is pairwise uniform, then $"Ext":{0, 1}^n times cal(H) -> {0, 1}^m times cal(H)$, $"Ext"(x, h) = (h(x), h)$ is a $(k,epsilon)$-extractor where $epsilon = 2^((m-k)\/2 - 1)$.
+
+_Proof._ Let $Y = (h(X), X)$. The 2-norm of $Y$'s distribution
+
+$ norm(P_Y)_2^2 = sum_y Pr[Y = y]^2 <= 1 / abs(cal(H)) (2^(-k) + 2^(-m)). $
+
+Since $norm(P_Y - P_U)_2^2 = norm(P_Y)_2^2 - norm(P_U)_2^2$, $norm(P_U)_2^2 = 1 / (abs(cal(H)) 2^m)$, $norm(P_Y - P_U)_2^2 <= 2^(-k) / abs(cal(H))$. Finally,
+
+$ Delta_"TV" (Y,U) = 1/2 norm(P_Y - P_U)_1 <= 1/2 2^(m\/2) sqrt(abs(cal(H))) norm(P_Y - P_U)_2^2 <= 2^((m-k)\/2 - 1). $
+
+We have $d = log abs(cal(H)) = O(n)$ which is not optimal compared to the random construction. The output length, $m + d = k + d - 2 log(1/epsilon) + 2$, is optimal.
 
 #bibliography("refs.bib")
