@@ -394,6 +394,4 @@ The graph can be computed *fully explicitly* in $bold("L")$. That is, on input $
 
 == Randomness Extractor
 
-
-
 #bibliography("refs.bib")
