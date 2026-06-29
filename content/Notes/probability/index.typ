@@ -160,7 +160,7 @@ $ mu(union.plus.big_(k=1)^m S_k) &= sum_(k=1)^m mu(S_k) \ &= sum_(k=1)^m mu(unio
 
 $B_n$ 是一些 $C_1, C_2, dots.c, C_m in cal(A)$ 的无交并. 因此存在某个 $i$, 对于所有 $k, [omega_1, dots.c, omega_k] inter C_i != emptyset$. 根据 $C_i$ 的构成可知矛盾. $qed$
 
-记 $(sum_(e in E) p_e delta_e)^(times.circle NN) := mu$.
+记 $(sum_(e in E) p_e delta_e)^(times.o NN) := mu$.
 
 === Approximation Theorem for Measures
 
