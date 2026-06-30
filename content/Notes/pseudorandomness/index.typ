@@ -239,7 +239,7 @@ When $ell = log n dot log d$, $2^ell >> d$, so we get $d = Omega(epsilon^(-1))$.
 
 We can't afford to use pairwise independent function (which is in fact 0-recycling) or any function with $d >= 2^ell$ since $ell$ is to large.
 
-*Definition. ($epsilon$-mixing)* A function $H:{0, 1}^ell -> {0, 1}$ is said to be $epsilon$-mixing if $(s, H(s, r)) (s ~ {0, 1}^ell, r ~ [d])$ $epsilon$-fools every combinatorical rectangle ($f(x, y) = g(x) h(y)$).
+*Definition. ($epsilon$-mixing)* A function $H:{0, 1}^ell times [d] -> {0, 1}^ell$ is said to be $epsilon$-mixing if $(s, H(s, r)) (s ~ {0, 1}^ell, r ~ [d])$ $epsilon$-fools every combinatorical rectangle ($f(x, y) = g(x) h(y)$).
 
 For any distinguisher $A : [w] times {0, 1}^ell -> {0, 1}$, we have $ A(F(s), s') = sum_(v in [w]) [F(s) = v] dot [A(v, s') = 1], $
 
@@ -399,7 +399,7 @@ $ Delta_"TV" ((F(s), s'), (F(s), H(s, r))) = EE_(v in [w]) [Delta_"TV" (s', H(s,
 
 $H(s,r)$ conditioning on $F(s) = v$ has entropy at least $ell - log(w)$. We are trying to _extract_ randomness from an imperfect source.
 
-*Definition. (Extractor)* $"Ext": {0, 1}^n times {0, 1}^d -> {0, 1}^m$ is a *$(k,epsilon)$-extractor* if for every distribution $X$ over ${0, 1}^n$ with min-entropy $H_infinity [X] >= k$, $ Delta_"TV" ("Ext"(X,r), U_m) <= epsilon. $
+*Definition. (Extractor)* $sans("Ext"): {0, 1}^n times {0, 1}^d -> {0, 1}^m$ is a *$(k,epsilon)$-extractor* if for every distribution $X$ over ${0, 1}^n$ with min-entropy $H_infinity [X] >= k$, $ Delta_"TV" (sans("Ext")(X,r), U_m) <= epsilon. $
 
 Here $H_infinity [X] = -log(max_x Pr[X = x])$, the assumption is equivalent to $Pr[X = x] <= 2^(-k)$. Such $X$ is called a *$k$-source*. The reason we are not using Shannon entropy is that $H_infinity$ gives the strongest assumption on $X$.
 
@@ -411,9 +411,11 @@ _Proof._ If $Pr[F(s) = v] >= 2^(k-n)$, then $Pr[s = x | F(s) = v] <= 2^(-k)$, an
 
 $ & sum_(v in [w]) Pr[F(s) = v] dot Delta_"TV" (s', H(s, r) | F(s) = v) \ &= sum_(Pr[F(s) = v] >= 2^(k-n)) Pr[F(s) = v] dot Delta_"TV" (s', H(s, r) | F(s) = v) + sum_(Pr[F(s) = v] < 2^(k-n)) Pr[F(s) = v] Delta_"TV" (s', H(s, r) | F(s) = v) \ &<= sum_(Pr[F(s) = v] >= 2^(k-n)) Pr[F(s) = v] dot Delta_"TV" (s', H(s, r) | F(s) = v) + 2^(k-n) w \ &<= epsilon + 2^(k-n) w. qed $
 
-_Random construction._ If we let $"Ext":{0, 1}^n times {0, 1}^d -> {0, 1}^m$ be i.i.d., by analyzing the flat $k$-sources, we can conclude that there exists a $(k,epsilon)$-extractor with $ cases(m = k + d - 2 log(1/epsilon) - O(1), d = log(n - k) + 2 log(1/epsilon) + O(1)). $
+_Random construction._ If we let $sans("Ext"):{0, 1}^n times {0, 1}^d -> {0, 1}^m$ be i.i.d., by analyzing the flat $k$-sources, we can conclude that there exists a $(k,epsilon)$-extractor with $ cases(m = k + d - 2 log(1/epsilon) - O(1), d = log(n - k) + 2 log(1/epsilon) + O(1)). $
 
-*Theorem. (Leftover Hash Lemma)* If $cal(H) = {h : {0, 1}^n -> {0, 1}^m}$ is pairwise uniform, then $"Ext":{0, 1}^n times cal(H) -> {0, 1}^m times cal(H)$, $"Ext"(x, h) = (h(x), h)$ is a $(k,epsilon)$-extractor where $epsilon = 2^((m-k)\/2 - 1)$.
+$d$ should be regarded as an increasing function of $m$. When $m >> k$ we have $d >= m + O(1)$, so we don't want $m$ to be much larger then $k$.
+
+*Theorem. (Leftover Hash Lemma)* If $cal(H) = {h : {0, 1}^n -> {0, 1}^m}$ is pairwise uniform, then $sans("Ext"):{0, 1}^n times cal(H) -> {0, 1}^m times cal(H)$, $sans("Ext")(x, h) = (h(x), h)$ is a $(k,epsilon)$-extractor where $epsilon = 2^((m-k)\/2 - 1)$.
 
 _Proof._ Let $Y = (h(X), X)$. The 2-norm of $Y$'s distribution
 
@@ -424,5 +426,50 @@ Since $norm(P_Y - P_U)_2^2 = norm(P_Y)_2^2 - norm(P_U)_2^2$, $norm(P_U)_2^2 = 1 
 $ Delta_"TV" (Y,U) = 1/2 norm(P_Y - P_U)_1 <= 1/2 2^(m\/2) sqrt(abs(cal(H))) norm(P_Y - P_U)_2^2 <= 2^((m-k)\/2 - 1). $
 
 We have $d = log abs(cal(H)) = O(n)$ which is not optimal compared to the random construction. The output length, $m + d = k + d - 2 log(1/epsilon) + 2$, is optimal.
+
+== Nisan-Zuckerman Generator for short and wide ROBPs
+
+We've shown that expanders can be used to construct $epsilon$-mixing function. Similarily, they can be used to construct extractors.
+
+*Theorem.* If $H : {0, 1}^n times {0, 1}^d -> {0, 1}^n$ is $(1-lambda)$-spectral expanding, then $H$ is a $(k, epsilon = lambda dot 2^((n-k)/2))$-extractor.
+
+_Proof._ Let $X$ be a flat $k$-source, $A$ be arbitrary distinguisher ${0, 1}^n -> {0, 1}$, $S$ be the support of $X$, $S' = {v : A(v) = 1}$. This follows directly from the expander mixing lemma. $qed$
+
+If $H$ is a Ramanujan graph, $lambda = O(2^(-d\/2))$. The output $m = n$ (which is too good) and the seed length $d = n - k + 2 log (1\/epsilon)$ which is exponentially worse then optimal.
+
+=== Extractor from expander random walks
+
+Let $(v_0, r_1, r_2, dots.c, r_t)$ be a $t$-step random walk on $H$, $r_i in {0, 1}^d$. Let $sans("Ext"): {0, 1}^(n + d t) times [t] -> {0, 1}^n$, $sans("Ext")((v_0, r_1, dots.c, r_t), i) = v_i.$
+
+*Theorem.* If $H$ is $gamma$-expanding for some constant $d,gamma$, then $sans("Ext")$ is a $(k = delta(n + d t), epsilon)$-extractor for some constant $delta < 1, epsilon > 0$.
+
+_Proof._ For $A : {0, 1}^n -> {0, 1}$, if a walk is sampled uniformly, by expander Chernoff bound,
+$ Pr[abs(1/t sum_(i=1)^t A(v_i) - EE[A(v)]) >= epsilon/2] <= 2 e^(-1/16 gamma t epsilon^2). $
+So the number of bad walks is at most $2 e^(-1/16 gamma t epsilon^2) 2^(n+d t)$. If a walk is sampled from a $k$-source $X$ instead, 
+$ Pr_X [abs(1/t sum_(i=1)^t A(v_i) - EE[A(v)]) >= epsilon/2] <= 2 e^(-1/16 gamma t epsilon^2) 2^(n+d t - k).$
+Thus the total variation distance
+$ abs(EE_((v_0, r_1, dots.c, r_t) ~ X, i ~ [t]) [A(v_i)] - EE_v [A(v)]) <= epsilon/2 + 2 e^(-1/16 gamma t epsilon^2) 2^(n+d t-k). $
+When $k = delta(n + d t)$, $delta$ is close enough to 1, $t = O(n / epsilon^2)$ bounds the term with $epsilon / 2 + 2^(-n)$ which is at most $epsilon$ when $n >= log(1/epsilon) + 1$. $qed$
+
+The output length $m = n = Theta(n + d t)$ is asymptotically optimal. Meanwhile $log t = log n + 2 log (1\/epsilon) + O(1)$ is close to optimal. However, $k$ most be at least $delta (n + d t)$ for some $delta$ close to 1.
+
+*Theorem.* @4262755 $forall delta < 1, epsilon > 0$, there exists an explicit $(k, epsilon)$-extractor $sans("Ext"): {0, 1}^n times {0, 1}^d -> {0, 1}^m$ with output $m = delta k$ and seed length $d = O(log n + log(1/epsilon))$.
+
+== Nisan-Zuckerman Generator
+
+The Nisan-Zuckerman generator has optimal seed length $O(log w)$ for $n = op("polylog")(w)$.
+
+Let $G : {0, 1}^(n + d t) -> {0, 1}^(t m)$, $ G(s, r_1, r_2, dots.c, r_t) = (sans("Ext")(s, r_1), sans("Ext")(s, r_2), dots.c, sans("Ext")(s, r_t)). $
+
+Intuitively, after the ROBP reads $(sans("Ext")(X,Y_1), sans("Ext")(X,Y_2),dots.c, sans("Ext")(X,Y_i))$, it "remembers" $log w$ bits of information. So if the information of $X$ is $3 log w$, from the ROBP's perspective $X$ still has $2 log w$ information and $sans("Ext")(X,Y_(i+1))$ should appear nearly uniform to the ROBP.
+
+*Definition. (Conditional min-entropy)* Let $X,A$ be jointly distributed, then
+$ H_infinity [X | A] = - log(EE_(a~A) [max_x Pr[X = x | A = a]]). $
+
+*Lemma. (Chain rule)* If the support of $A$ is at most $w$, then $ H_infinity [X | A] >= H_infinity [X] - log w. $
+
+_Proof._ $ 2^(-H_infinity [X | A]) = sum_a P_A (a) max_x P_(X | A) (x | a) &<= abs(A) max_(a,x) P_A (a) P_(X | A) (x | a) \ &<= abs(A) max_x sum_a P_A (a) P_(X | A) (x | a) \ &<= abs(A) 2^(- H_infinity [X]). qed $
+
+*Lemma.* Let $sans("Ext") : {0, 1}^n times {0, 1}^d -> {0, 1}^m$ be a $(k,epsilon)$-extractor. If $H_infinity [X | A] >= k$, then $ Delta_"TV" ((sans("Ext")(X, U_d), A), (U_m, A)) <= 3 epsilon. $
 
 #bibliography("refs.bib")
