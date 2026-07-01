@@ -1,4 +1,5 @@
 #import "../index.typ": template, tufted
+#import "@preview/fletcher:0.5.8" as fletcher: diagram, node, edge
 
 #show: template.with(
   title: "Pseudorandomness",
@@ -403,6 +404,11 @@ $H(s,r)$ conditioning on $F(s) = v$ has entropy at least $ell - log(w)$. We are 
 
 Here $H_infinity [X] = -log(max_x Pr[X = x])$, the assumption is equivalent to $Pr[X = x] <= 2^(-k)$. Such $X$ is called a *$k$-source*. The reason we are not using Shannon entropy is that $H_infinity$ gives the strongest assumption on $X$.
 
+$H_infinity$ is the minimum of the *Rényi entropy family*:
+
+$ H_p [X] = -log (sum_x Pr[X = x]^p)^(1/(p-1)). $
+$H_p$ is decreasing. $H_1$ is the Shannon entropy, $H_0$ is the logarithm of the support.
+
 A *flat $k$-source* is a uniform distribution on a support of size $2^k$. The $k$-sources form a convex polytope, and each of them is a convex combination of flat $k$-sources.
 
 *Theorem.* If $H : {0, 1}^n times {0, 1}^d -> {0, 1}^m$ is a $(k,epsilon)$-extractor, then $forall w, F:{0, 1}^n -> [w]$, $ Delta_"TV" ((F(s), s'), (F(s), H(s, r))) <= epsilon + w dot 2^(k-n). $
@@ -414,6 +420,9 @@ $ & sum_(v in [w]) Pr[F(s) = v] dot Delta_"TV" (s', H(s, r) | F(s) = v) \ &= sum
 _Random construction._ If we let $sans("Ext"):{0, 1}^n times {0, 1}^d -> {0, 1}^m$ be i.i.d., by analyzing the flat $k$-sources, we can conclude that there exists a $(k,epsilon)$-extractor with $ cases(m = k + d - 2 log(1/epsilon) - O(1), d = log(n - k) + 2 log(1/epsilon) + O(1)). $
 
 $d$ should be regarded as an increasing function of $m$. When $m >> k$ we have $d >= m + O(1)$, so we don't want $m$ to be much larger then $k$.
+
+$sans("Ext") : {0, 1}^n times {0, 1}^d -> {0, 1}^m$ is a *strong $(k,epsilon)$-extractor* if for every $(n,k)$ source $X$, $(U_d, sans("Ext")(X, U_d))$ is $epsilon$-close to $(U_d, U_m)$. Equivalently, $sans("Ext")'(x, y) = (y, sans("Ext")(x, y))$ is a (weak) $(k,epsilon)$-extractor.
+Random construction also gives $ cases(d = log(n - k) + 2 log(1/epsilon) + O(1), m = k - 2 log(1/epsilon) - O(1)). $
 
 *Theorem. (Leftover Hash Lemma)* If $cal(H) = {h : {0, 1}^n -> {0, 1}^m}$ is pairwise uniform, then $sans("Ext"):{0, 1}^n times cal(H) -> {0, 1}^m times cal(H)$, $sans("Ext")(x, h) = (h(x), h)$ is a $(k,epsilon)$-extractor where $epsilon = 2^((m-k)\/2 - 1)$.
 
@@ -427,15 +436,32 @@ $ Delta_"TV" (Y,U) = 1/2 norm(P_Y - P_U)_1 <= 1/2 2^(m\/2) sqrt(abs(cal(H))) nor
 
 We have $d = log abs(cal(H)) = O(n)$ which is not optimal compared to the random construction. The output length, $m + d = k + d - 2 log(1/epsilon) + 2$, is optimal.
 
-== Nisan-Zuckerman Generator for short and wide ROBPs
-
 We've shown that expanders can be used to construct $epsilon$-mixing function. Similarily, they can be used to construct extractors.
 
 *Theorem.* If $H : {0, 1}^n times {0, 1}^d -> {0, 1}^n$ is $(1-lambda)$-spectral expanding, then $H$ is a $(k, epsilon = lambda dot 2^((n-k)/2))$-extractor.
 
 _Proof._ Let $X$ be a flat $k$-source, $A$ be arbitrary distinguisher ${0, 1}^n -> {0, 1}$, $S$ be the support of $X$, $S' = {v : A(v) = 1}$. This follows directly from the expander mixing lemma. $qed$
 
-If $H$ is a Ramanujan graph, $lambda = O(2^(-d\/2))$. The output $m = n$ (which is too good) and the seed length $d = n - k + 2 log (1\/epsilon)$ which is exponentially worse then optimal.
+If $H$ is a Ramanujan graph, $lambda = O(2^(-d\/2))$. The output $m = n$ (which is too good) and the seed length $d = n - k + 2 log (1\/epsilon)$ which is exponentially worse then optimal, but better than pairwise-independent hashing when $k$ is close to $n$. #tufted.margin-note([Both of them are _Rényi-entropy_ extractors: they work on not only $H_infinity$ but also $H_2$. Those extractors have large seed length lower bound $d >= min{m\/2, n-k} - O(1)$.])
+
+=== Block Sources
+
+*Definition. (block sources)* A random variable $X = (X_1, X_2, dots.c, X_t)$ is a $(k_1, k_2, dots.c, k_t)$ *block source* if $forall i$, $X_i$ conditioned on $X_1, X_2, dots.c, X_(i-1)$ is a $k_i$-source.
+
+*Lemma.* Let $sans("Ext")_1 : {0, 1}^(n_1) times {0, 1}^(d_1) -> {0, 1}^(m_1)$ be a $(k_1, epsilon_1)$-extractor, and $sans("Ext")_2 : {0, 1}^(n_2) times {0, 1}^(d_2) -> {0, 1}^(m_2)$ be a $(k_2, epsilon_2)$-extractor. Assume $m_2 >= d_1$. Then the following function $sans("Ext")' : {0, 1}^(n_1 + n_2) times {0, 1}^(d_2) -> {0, 1}^(m_1 + m_2 - d_1)$ satisfies that for every $(k_1,k_2)$ block source $X = (X_1, X_2)$, $sans("Ext")'(X,U_(d_2))$ is $(epsilon_1 + epsilon_2)$-close to $U_(m_1 + m_2 - d_1)$.
+
+$ 
+  x_1 quad underbrace(x_2 quad y_2, arrow.b.double sans("Ext")_2) \
+  underbrace(x_1 quad y_1, arrow.b.double sans("Ext")_1) quad z_2 \
+  z_1 quad z_2
+$
+
+_Proof._ Since $(X_1, X_2)$ is a $(k_1, k_2)$ block source, $(X_1, sans("Ext")_2 (X_2, Y_2)) approx^epsilon (X_1, U_(m_2))$.
+
+#diagram($A edge(->, shift: #3pt) edge(<-, shift: #(-3pt)) & B$)
+
+// #diagram(cell-size: 15mm, $ (X_1, Y_1, Z_2) edge(epsilon_2, "=") edge("d", sans("Ext")_1, ->) & (X_1, U_(d_1), U_(m_2 - d_1)) edge("d", sans("Ext")_1, ->) \
+                            // (sans("Ext")_1 (X_1, Y_1), Z_2) edge(epsilon_2, "=") & (sans("Ext")_1 (X_1, U_(d_1)), U_(m_2 - d_1)) edge (epsilon_2, "=") U_(m_1 + m_2 - d_1) $)
 
 === Extractor from expander random walks
 
