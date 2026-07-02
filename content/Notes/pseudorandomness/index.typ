@@ -400,7 +400,7 @@ $ Delta_"TV" ((F(s), s'), (F(s), H(s, r))) = EE_(v in [w]) [Delta_"TV" (s', H(s,
 
 $H(s,r)$ conditioning on $F(s) = v$ has entropy at least $ell - log(w)$. We are trying to _extract_ randomness from an imperfect source.
 
-*Definition. (Extractor)* $sans("Ext"): {0, 1}^n times {0, 1}^d -> {0, 1}^m$ is a *$(k,epsilon)$-extractor* if for every distribution $X$ over ${0, 1}^n$ with min-entropy $H_infinity [X] >= k$, $ Delta_"TV" (sans("Ext")(X,r), U_m) <= epsilon. $
+*Definition. (Extractor)* $sans("Ext"): {0, 1}^n times {0, 1}^d -> {0, 1}^m$ is a *$(k,epsilon)$ extractor* if for every distribution $X$ over ${0, 1}^n$ with min-entropy $H_infinity [X] >= k$, $ Delta_"TV" (sans("Ext")(X,r), U_m) <= epsilon. $
 
 Here $H_infinity [X] = -log(max_x Pr[X = x])$, the assumption is equivalent to $Pr[X = x] <= 2^(-k)$. Such $X$ is called a *$k$-source*. The reason we are not using Shannon entropy is that $H_infinity$ gives the strongest assumption on $X$.
 
@@ -411,20 +411,20 @@ $H_p$ is decreasing. $H_1$ is the Shannon entropy, $H_0$ is the logarithm of the
 
 A *flat $k$-source* is a uniform distribution on a support of size $2^k$. The $k$-sources form a convex polytope, and each of them is a convex combination of flat $k$-sources.
 
-*Theorem.* If $H : {0, 1}^n times {0, 1}^d -> {0, 1}^m$ is a $(k,epsilon)$-extractor, then $forall w, F:{0, 1}^n -> [w]$, $ Delta_"TV" ((F(s), s'), (F(s), H(s, r))) <= epsilon + w dot 2^(k-n). $
+*Theorem.* If $H : {0, 1}^n times {0, 1}^d -> {0, 1}^m$ is a $(k,epsilon)$ extractor, then $forall w, F:{0, 1}^n -> [w]$, $ Delta_"TV" ((F(s), s'), (F(s), H(s, r))) <= epsilon + w dot 2^(k-n). $
 
 _Proof._ If $Pr[F(s) = v] >= 2^(k-n)$, then $Pr[s = x | F(s) = v] <= 2^(-k)$, and $H_infinity [s | F(s) = v] >= k$.
 
 $ & sum_(v in [w]) Pr[F(s) = v] dot Delta_"TV" (s', H(s, r) | F(s) = v) \ &= sum_(Pr[F(s) = v] >= 2^(k-n)) Pr[F(s) = v] dot Delta_"TV" (s', H(s, r) | F(s) = v) + sum_(Pr[F(s) = v] < 2^(k-n)) Pr[F(s) = v] Delta_"TV" (s', H(s, r) | F(s) = v) \ &<= sum_(Pr[F(s) = v] >= 2^(k-n)) Pr[F(s) = v] dot Delta_"TV" (s', H(s, r) | F(s) = v) + 2^(k-n) w \ &<= epsilon + 2^(k-n) w. qed $
 
-_Random construction._ If we let $sans("Ext"):{0, 1}^n times {0, 1}^d -> {0, 1}^m$ be i.i.d., by analyzing the flat $k$-sources, we can conclude that there exists a $(k,epsilon)$-extractor with $ cases(m = k + d - 2 log(1/epsilon) - O(1), d = log(n - k) + 2 log(1/epsilon) + O(1)). $
+_Random construction._ If we let $sans("Ext"):{0, 1}^n times {0, 1}^d -> {0, 1}^m$ be i.i.d., by analyzing the flat $k$-sources, we can conclude that there exists a $(k,epsilon)$ extractor with $ cases(m = k + d - 2 log(1/epsilon) - O(1), d = log(n - k) + 2 log(1/epsilon) + O(1)). $
 
 $d$ should be regarded as an increasing function of $m$. When $m >> k$ we have $d >= m + O(1)$, so we don't want $m$ to be much larger then $k$.
 
-$sans("Ext") : {0, 1}^n times {0, 1}^d -> {0, 1}^m$ is a *strong $(k,epsilon)$-extractor* if for every $(n,k)$ source $X$, $(U_d, sans("Ext")(X, U_d))$ is $epsilon$-close to $(U_d, U_m)$. Equivalently, $sans("Ext")'(x, y) = (y, sans("Ext")(x, y))$ is a (weak) $(k,epsilon)$-extractor.
+$sans("Ext") : {0, 1}^n times {0, 1}^d -> {0, 1}^m$ is a *strong $(k,epsilon)$ extractor* if for every $(n,k)$ source $X$, $(U_d, sans("Ext")(X, U_d))$ is $epsilon$-close to $(U_d, U_m)$. Equivalently, $sans("Ext")'(x, y) = (y, sans("Ext")(x, y))$ is a (weak) $(k,epsilon)$ extractor.
 Random construction also gives $ cases(d = log(n - k) + 2 log(1/epsilon) + O(1), m = k - 2 log(1/epsilon) - O(1)). $
 
-*Theorem. (Leftover Hash Lemma)* If $cal(H) = {h : {0, 1}^n -> {0, 1}^m}$ is pairwise uniform, then $sans("Ext"):{0, 1}^n times cal(H) -> {0, 1}^m times cal(H)$, $sans("Ext")(x, h) = (h(x), h)$ is a $(k,epsilon)$-extractor where $epsilon = 2^((m-k)\/2 - 1)$.
+*Theorem. (Leftover Hash Lemma)* If $cal(H) = {h : {0, 1}^n -> {0, 1}^m}$ is pairwise uniform, then $sans("Ext"):{0, 1}^n times cal(H) -> {0, 1}^m times cal(H)$, $sans("Ext")(x, h) = (h(x), h)$ is a $(k,epsilon)$ extractor where $epsilon = 2^((m-k)\/2 - 1)$.
 
 _Proof._ Let $Y = (h(X), X)$. The 2-norm of $Y$'s distribution
 
@@ -438,36 +438,82 @@ We have $d = log abs(cal(H)) = O(n)$ which is not optimal compared to the random
 
 We've shown that expanders can be used to construct $epsilon$-mixing function. Similarily, they can be used to construct extractors.
 
-*Theorem.* If $H : {0, 1}^n times {0, 1}^d -> {0, 1}^n$ is $(1-lambda)$-spectral expanding, then $H$ is a $(k, epsilon = lambda dot 2^((n-k)/2))$-extractor.
+*Theorem.* If $H : {0, 1}^n times {0, 1}^d -> {0, 1}^n$ is $(1-lambda)$-spectral expanding, then $H$ is a $(k, epsilon = lambda dot 2^((n-k)/2))$ extractor.
 
 _Proof._ Let $X$ be a flat $k$-source, $A$ be arbitrary distinguisher ${0, 1}^n -> {0, 1}$, $S$ be the support of $X$, $S' = {v : A(v) = 1}$. This follows directly from the expander mixing lemma. $qed$
 
 If $H$ is a Ramanujan graph, $lambda = O(2^(-d\/2))$. The output $m = n$ (which is too good) and the seed length $d = n - k + 2 log (1\/epsilon)$ which is exponentially worse then optimal, but better than pairwise-independent hashing when $k$ is close to $n$. #tufted.margin-note([Both of them are _Rényi-entropy_ extractors: they work on not only $H_infinity$ but also $H_2$. Those extractors have large seed length lower bound $d >= min{m\/2, n-k} - O(1)$.])
 
-=== Block Sources
+=== Block Sources and Construction of Optimal Extractors
+
+A natural application of extractors is to use general sources on $bold("BPP")$ instead of perfect ones.
 
 *Definition. (block sources)* A random variable $X = (X_1, X_2, dots.c, X_t)$ is a $(k_1, k_2, dots.c, k_t)$ *block source* if $forall i$, $X_i$ conditioned on $X_1, X_2, dots.c, X_(i-1)$ is a $k_i$-source.
 
-*Lemma.* Let $sans("Ext")_1 : {0, 1}^(n_1) times {0, 1}^(d_1) -> {0, 1}^(m_1)$ be a $(k_1, epsilon_1)$-extractor, and $sans("Ext")_2 : {0, 1}^(n_2) times {0, 1}^(d_2) -> {0, 1}^(m_2)$ be a $(k_2, epsilon_2)$-extractor. Assume $m_2 >= d_1$. Then the following function $sans("Ext")' : {0, 1}^(n_1 + n_2) times {0, 1}^(d_2) -> {0, 1}^(m_1 + m_2 - d_1)$ satisfies that for every $(k_1,k_2)$ block source $X = (X_1, X_2)$, $sans("Ext")'(X,U_(d_2))$ is $(epsilon_1 + epsilon_2)$-close to $U_(m_1 + m_2 - d_1)$.
+*Lemma.* Let $sans("Ext")_1 : {0, 1}^(n_1) times {0, 1}^(d_1) -> {0, 1}^(m_1)$ be a $(k_1, epsilon_1)$ extractor, and $sans("Ext")_2 : {0, 1}^(n_2) times {0, 1}^(d_2) -> {0, 1}^(m_2)$ be a $(k_2, epsilon_2)$ extractor. Assume $m_2 >= d_1$. Then the following function $sans("Ext")' : {0, 1}^(n_1 + n_2) times {0, 1}^(d_2) -> {0, 1}^(m_1 + m_2 - d_1)$ satisfies that for every $(k_1,k_2)$ block source $X = (X_1, X_2)$, $sans("Ext")'(X,U_(d_2))$ is $(epsilon_1 + epsilon_2)$-close to $U_(m_1 + m_2 - d_1)$.
 
 $ 
   x_1 quad underbrace(x_2 quad y_2, arrow.b.double sans("Ext")_2) \
   underbrace(x_1 quad y_1, arrow.b.double sans("Ext")_1) quad z_2 \
-  z_1 quad z_2
+  space space z_1 quad quad z_2
 $
 
-_Proof._ Since $(X_1, X_2)$ is a $(k_1, k_2)$ block source, $(X_1, sans("Ext")_2 (X_2, Y_2)) approx^epsilon (X_1, U_(m_2))$.
+_Proof._ Since $(X_1, X_2)$ is a $(k_1, k_2)$ block source, $(X_1, sans("Ext")_2 (X_2, Y_2)) approx^epsilon_2 (X_1, U_(m_2))$. After applying $sans("Ext")_1$ on both sides the total derivation distance rises to $epsilon_1 + epsilon_2$. $qed$
 
-#diagram($A edge(->, shift: #3pt) edge(<-, shift: #(-3pt)) & B$)
+Similarily, for a $(k_1, k_2, dots.c, k_t)$ block source, $t$ extractors $sans("Ext")_i : {0, 1}^(n_i) times {0, 1}^(d_i) -> {0, 1}^(m_i)$ can be composed into an $(sum epsilon_i)$ extractor with seed length $d_t$, $m = sum_(i=1)^t (m_i - d_(i-1))$. It preserves "strongness" when $d_i >= d_t$ (the output has the seed as a prefix).
 
-// #diagram(cell-size: 15mm, $ (X_1, Y_1, Z_2) edge(epsilon_2, "=") edge("d", sans("Ext")_1, ->) & (X_1, U_(d_1), U_(m_2 - d_1)) edge("d", sans("Ext")_1, ->) \
-                            // (sans("Ext")_1 (X_1, Y_1), Z_2) edge(epsilon_2, "=") & (sans("Ext")_1 (X_1, U_(d_1)), U_(m_2 - d_1)) edge (epsilon_2, "=") U_(m_1 + m_2 - d_1) $)
+With this construction, we can simulate $bold("BPP")$ with an _unpredictable-bit_ source. That is, $forall x_1, dots.c, x_(i-1)$, $ delta <= Pr[X_i = 1 | X_1 = x_1, X_2 = x_2, dots.c, X_(i-1) = x_(i-1)] <= (1-delta). $
+
+Decompose $n$ bits into $t$ blocks of length $ell$. We obtain a $t times k$ block source with $t = n \/ ell$, $k = delta' ell = log(1\/(1-delta)) ell$. Let $ell = 10 \/ delta' log n$ so that $k = 10 log n$. Let $epsilon = n^(-2)$, $sans("Ext"): {0, 1}^ell times {0, 1}^d -> {0, 1}^(d + m)$ be the $(k,epsilon)$ strong extractor using universal functions. We have $d = O(ell) = O(log n)$ and $m = k - 2 log(1\/epsilon) - O(1) > k \/ 2$. From the lemma we have $sans("Ext")' :{0, 1}^n times {0, 1}^d -> {0, 1}^(d + t m)$ so that the output is $1/n$-close to uniform. The randomness we recovered is about half of the source.
+
+Now we would like to reduce general sources to block sources. The main benefit is that we would like to use the randomness for multiple times.
+
+*Definition. (Conditional min-entropy)* Let $X,A$ be jointly distributed, then
+$ H_infinity [X | A] = - log(EE_(a~A) [max_x Pr[X = x | A = a]]). $
+
+*Lemma. (Chain rule)* If the support of $A$ is at most $w$, then $ H_infinity [X | A] >= H_infinity[X,A] - log w >= H_infinity [X] - log w. $
+
+*Corollary.* Assume $(X,A)$ is a $k$-source, $abs(A) <= 2^ell$. Then w.p. at least $1-epsilon$ over $a ~ A$, $X |_(A = a)$ is a $(k - ell - log(1/epsilon))$-source.
+
+_Proof._ Replace $k - ell$ with $H_infinity [X | A]. qed$
+
+*Corollary.* If $X$ is an $(n, n - Delta)$-source, $X = (X_1, X_2)$ where $abs(X_1) = n_1$, $abs(X_2) = n_2$, then $(X_1, X_2)$ is $epsilon$-close to some $(n_1 - Delta, n_2 - Delta - log(1/epsilon))$.
+
+_Proof._ Clearly $H_infinity [X_1] >= n_1 - Delta$. W.p. at least $1-epsilon$ over $X_1$, $X_2$ conditioning on $X_1 = x_1$ is a $n_2 - Delta - log(1/epsilon)$-source, in this case we let $X'_2 = X_2$, otherwise we let $X'_2$ be uniformly distributed. Then $(X_1, X_2) approx^epsilon (X_1, X'_2)$ and the latter is a $(n_1 - Delta, n_2 - Delta - log(1/epsilon))$ block source. $qed$
+
+The construction works when $Delta = delta n$ and $delta$ is large enough. Thus we need to transform a general $k$-source into a high min-entropy rate one.
+
+*Definition. (Condenser)* A function $sans("Con") : {0, 1}^n times {0, 1}^d -> {0, 1}^m$ is a *$k ->_epsilon k'$ condenser* if $forall$ $k$-source $X$, $sans("Con")(X, U_d) approx^epsilon$ some $k'$-source. It is *lossless* if $k' = k + d$. (When $k' = m$, it becomes an extractor.)
+
+We can view a condenser as a bipartite multigraph $G = ([N], [M], E)$.
+
+*Theorem.* A function is a $k ->_epsilon k+d$ lossless condenser iff the corresponding bipartite multigraph of left degree $D$ is a $(=K, (1-epsilon)D)$ vertex expander. (This is much stronger then _dispersers_, whose vertex expansion is similar to $A = (1-epsilon) M \/ K$.)
+
+Algebraic construction (Parvaresh-Vardy codes) shows that for every $alpha > 0, n >= k$, there are explicit lossless condensers for $ d = O(log n + log(1/epsilon)), m = (1 + alpha)k + O(log(n\/epsilon)). $
+
+The min-entropy rate can be arbitrarily close to 1. (Non-constructive construction shows but $m = k+d+O(1)$, $d = O(log n)$ is possible, but explicit construction is unknown.)
+
+Now we will use the above ideas to construct an explicit $(k,epsilon)$ extractor $sans("Ext") : {0, 1}^n times {0, 1}^d -> {0, 1}^m$ with $m >= k/2$ and $d = O(log(n\/epsilon))$.
+
+*Lemma.* For every constant $t > 0$, $n >= k$, $epsilon > 0$, there is an explicit $(k,epsilon)$ extractor $sans("Ext") : {0, 1}^n times {0, 1}^d -> {0, 1}^m$ with $m >= k/2$ and $d = k/t + O(log(n\/epsilon))$.
+
+So when $k = O(log(n/epsilon))$ we already have a construction. We would like to give the construction for larger $k$'s by increasing the output length.
+
+*Lemma.* Assume $sans("Ext")_i : {0,1}^(n_i) times {0, 1}^(d_i) -> {0, 1}^(m_i)$ is a $(k_i,epsilon_i)$ extractor ($i in {1, 2}$). Assume $k_2 = k_1 - m_1 - log(1\/epsilon_3)$. Then $sans("Ext")': {0,1}^n times {0,1}^(d_1+d_2) -> {0,1}^(m_1+m_2)$, $sans("Ext")'(x,(y_1,y_2)) = (sans("Ext")_1 (x,y_1), sans("Ext")_2 (x,y_2))$ is a $(k_1,epsilon_1+epsilon_2+epsilon_3)$ extractor.
+
+_Proof._ Because of the chain rule lemma, once $sans("Ext")_1 (x,y_1)$ is revealed, except w.p. at most $epsilon_3$, $X$ still has $k_1 - m_1 - log(1/epsilon_3)$ min-entropy. The lemma follows from
+
+$ sans("Ext")'(X, Y_1, Y_2) stretch(approx, size: #200%)^(epsilon_2 + epsilon_3) (sans("Ext")_1 (X,Y_1), U_(m_2)) approx^(epsilon_1) U_(m_1 + m_2). qed $
+
+This lemma gives a constant blowup to both the seed and the error. The latter won't be a big issue since the recursion depth is $O(log n)$.
+
+To reduce the seed length, we convert the source into a block source.
 
 === Extractor from expander random walks
 
 Let $(v_0, r_1, r_2, dots.c, r_t)$ be a $t$-step random walk on $H$, $r_i in {0, 1}^d$. Let $sans("Ext"): {0, 1}^(n + d t) times [t] -> {0, 1}^n$, $sans("Ext")((v_0, r_1, dots.c, r_t), i) = v_i.$
 
-*Theorem.* If $H$ is $gamma$-expanding for some constant $d,gamma$, then $sans("Ext")$ is a $(k = delta(n + d t), epsilon)$-extractor for some constant $delta < 1, epsilon > 0$.
+*Theorem.* If $H$ is $gamma$-expanding for some constant $d,gamma$, then $sans("Ext")$ is a $(k = delta(n + d t), epsilon)$ extractor for some constant $delta < 1, epsilon > 0$.
 
 _Proof._ For $A : {0, 1}^n -> {0, 1}$, if a walk is sampled uniformly, by expander Chernoff bound,
 $ Pr[abs(1/t sum_(i=1)^t A(v_i) - EE[A(v)]) >= epsilon/2] <= 2 e^(-1/16 gamma t epsilon^2). $
@@ -479,7 +525,7 @@ When $k = delta(n + d t)$, $delta$ is close enough to 1, $t = O(n / epsilon^2)$ 
 
 The output length $m = n = Theta(n + d t)$ is asymptotically optimal. Meanwhile $log t = log n + 2 log (1\/epsilon) + O(1)$ is close to optimal. However, $k$ most be at least $delta (n + d t)$ for some $delta$ close to 1.
 
-*Theorem.* @4262755 $forall delta < 1, epsilon > 0$, there exists an explicit $(k, epsilon)$-extractor $sans("Ext"): {0, 1}^n times {0, 1}^d -> {0, 1}^m$ with output $m = delta k$ and seed length $d = O(log n + log(1/epsilon))$.
+*Theorem.* @4262755 $forall delta < 1, epsilon > 0$, there exists an explicit $(k, epsilon)$ extractor $sans("Ext"): {0, 1}^n times {0, 1}^d -> {0, 1}^m$ with output $m = delta k$ and seed length $d = O(log n + log(1/epsilon))$.
 
 == Nisan-Zuckerman Generator
 
@@ -489,13 +535,6 @@ Let $G : {0, 1}^(n + d t) -> {0, 1}^(t m)$, $ G(s, r_1, r_2, dots.c, r_t) = (san
 
 Intuitively, after the ROBP reads $(sans("Ext")(X,Y_1), sans("Ext")(X,Y_2),dots.c, sans("Ext")(X,Y_i))$, it "remembers" $log w$ bits of information. So if the information of $X$ is $3 log w$, from the ROBP's perspective $X$ still has $2 log w$ information and $sans("Ext")(X,Y_(i+1))$ should appear nearly uniform to the ROBP.
 
-*Definition. (Conditional min-entropy)* Let $X,A$ be jointly distributed, then
-$ H_infinity [X | A] = - log(EE_(a~A) [max_x Pr[X = x | A = a]]). $
-
-*Lemma. (Chain rule)* If the support of $A$ is at most $w$, then $ H_infinity [X | A] >= H_infinity [X] - log w. $
-
-_Proof._ $ 2^(-H_infinity [X | A]) = sum_a P_A (a) max_x P_(X | A) (x | a) &<= abs(A) max_(a,x) P_A (a) P_(X | A) (x | a) \ &<= abs(A) max_x sum_a P_A (a) P_(X | A) (x | a) \ &<= abs(A) 2^(- H_infinity [X]). qed $
-
-*Lemma.* Let $sans("Ext") : {0, 1}^n times {0, 1}^d -> {0, 1}^m$ be a $(k,epsilon)$-extractor. If $H_infinity [X | A] >= k$, then $ Delta_"TV" ((sans("Ext")(X, U_d), A), (U_m, A)) <= 3 epsilon. $
+*Lemma.* Let $sans("Ext") : {0, 1}^n times {0, 1}^d -> {0, 1}^m$ be a $(k,epsilon)$ extractor. If $H_infinity [X | A] >= k$, then $ Delta_"TV" ((sans("Ext")(X, U_d), A), (U_m, A)) <= 3 epsilon. $
 
 #bibliography("refs.bib")
