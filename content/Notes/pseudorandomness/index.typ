@@ -503,7 +503,7 @@ So when $k = O(log(n/epsilon))$ we already have a construction. We would like to
 
 _Proof._ Because of the chain rule lemma, once $sans("Ext")_1 (x,y_1)$ is revealed, except w.p. at most $epsilon_3$, $X$ still has $k_1 - m_1 - log(1/epsilon_3)$ min-entropy. The lemma follows from
 
-$ sans("Ext")'(X, Y_1, Y_2) stretch(approx, size: #200%)^(epsilon_2 + epsilon_3) (sans("Ext")_1 (X,Y_1), U_(m_2)) approx^(epsilon_1) U_(m_1 + m_2). qed $
+$ sans("Ext")'(X, (Y_1, Y_2)) stretch(approx, size: #200%)^(epsilon_2 + epsilon_3) (sans("Ext")_1 (X,Y_1), U_(m_2)) approx^(epsilon_1) U_(m_1 + m_2). qed $
 
 This lemma gives a constant blowup to both the seed and the error. The latter won't be a big issue since the recursion depth is $O(log n)$.
 
@@ -531,10 +531,146 @@ The output length $m = n = Theta(n + d t)$ is asymptotically optimal. Meanwhile 
 
 The Nisan-Zuckerman generator has optimal seed length $O(log w)$ for $n = op("polylog")(w)$.
 
-Let $G : {0, 1}^(n + d t) -> {0, 1}^(t m)$, $ G(s, r_1, r_2, dots.c, r_t) = (sans("Ext")(s, r_1), sans("Ext")(s, r_2), dots.c, sans("Ext")(s, r_t)). $
+Let $G : {0, 1}^(n + t d) -> {0, 1}^(t m)$, $ G(s, r_1, r_2, dots.c, r_t) = (sans("Ext")(s, r_1), sans("Ext")(s, r_2), dots.c, sans("Ext")(s, r_t)). $
 
-Intuitively, after the ROBP reads $(sans("Ext")(X,Y_1), sans("Ext")(X,Y_2),dots.c, sans("Ext")(X,Y_i))$, it "remembers" $log w$ bits of information. So if the information of $X$ is $3 log w$, from the ROBP's perspective $X$ still has $2 log w$ information and $sans("Ext")(X,Y_(i+1))$ should appear nearly uniform to the ROBP.
+*Lemma.* If $sans("Ext") : {0, 1}^n times {0, 1}^d -> {0, 1}^m$ is a $(k,epsilon)$-extractor, then $G$ $delta$-fools $"ROBP"(t m, w)$, for $delta = t (epsilon + w dot 2^(k-n))$. #footnote[This is not optimal when $n$ is close to $m$ since $t m$ is only polynomial in $n + t d$.]
 
-*Lemma.* Let $sans("Ext") : {0, 1}^n times {0, 1}^d -> {0, 1}^m$ be a $(k,epsilon)$ extractor. If $H_infinity [X | A] >= k$, then $ Delta_"TV" ((sans("Ext")(X, U_d), A), (U_m, A)) <= 3 epsilon. $
+This is proved by using recycling property we have proven for $t$ times. 
+
+We apply the GUV extractor. Let $ell_0 = log^c w$ be the length of the ROBP $B$. When $m = log w$, $t = log^(c-1) w$, $n = 4 log w$, $k = 2 log w$, $delta = O(1)$, $epsilon = 1/2 delta t^(-1)$, $d = O(log n + log(1\/epsilon)) = O(log log w)$, we have
+
+$ ell_1 = n + d t = O(log w + (log log w + log t) dot log^(c-1) w) = O(log w + log^(c-1) log log w). $
+
+$B compose G$ can be simulated with $"ROBP"(ell_1, w' = w dot 2^(O(n+d)) = "poly"(w))$. We can repeat the process and have $ ell_i = O(log w + ell_(i-1) (log log w / log w)) = O(log w + log^(c-i) w log log^i w). $ After $c$ iterations $ell = O(log w)$ and the PRG $c delta$-fools $B$.
+
+The Nisan-Zuckerman Generator implies that randomized logspace algorithms using $"polylog"(n)$ many random bits can be derandomized into $bold("L")$.
+
+== Hardness v.s. Randomness
+
+Assume there exists a PRG $G : {0, 1}^ell -> {0, 1}^n$, $ell = O(log n)$ fooling $sans("TIME")(n^c)$. Then $A(x) = [x in "range"(G)]$ is hard to compute correctly in time $n^c$ in the worst case. It is also hard to compute on average:
+
+*Theorem. (PRG Implies Hardness)* Assume $G$ is injective. For $n = ell + 1$, $A(x)$ can't be computed correctly on more than $(1/2 + epsilon)$-fraction of inputs $x in {0, 1}^n$ by any algorithm in $sans("TIME")(n^c)$.
+
+Let $sans("suc")(f, cal(C)) := max_(c in cal(C)) Pr_x [f(x) = c(x)]$.
+
+Now consider the reverse direction. Assume $f(s)$ is hard to compute on average. We will show that $G(s) = (s,f(s))$ is a PRG.
+
+*Theorem. (Next-bit predictor)* If $A$ is not $epsilon$-fooled by $G$, then $exists i in [n]$, predictor $P : {0, 1}^i -> {0, 1}$, which is a non-uniform circuit the same size as $A$, s.t. 
+$ Pr_(s in {0, 1}^ell) [P(G(s)_(1 dots.c i)) = G(s)_(i+1)] >= 1/2 + epsilon/n. $
+
+The other direction is trivial ($P$ gives a distinguisher).
+
+_Proof._ Let $ G^((i)) (s) = (G(s)_1, G(s)_2, dots.c, G(s)_i, x_(i+1), x_(i+2), dots.c, x_n) $
+where $x_i$ are independent random bits. As $A$ is not $epsilon$-fooled by G, $abs(EE[A(G^((n)) (s))] - EE[A(G^((0)) (s))]) >= epsilon$. So for some $i$, $abs(EE[A(G^((i+1)) (s))] - EE[A(G^((i)) (s))]) >= epsilon/n.$
+
+WLOG assume that the difference is positive, and let $ P(G(s)_(1 dots.c i)) = cases(x_(i+1) "if" A(G^((i)) (s)) = 1, 1 - x_(i+1) "if" A(G^((i)) (s)) = 0). $ $x_(i+1) dots.c x_n$ are sampled uniformly at random. Direct calculation shows that $P$ is a predictor. 
+$P$ is a randomized algorithm and at least one $(x_(i+1), dots.c, x_n)$ is good. We can hardwire them into a non-uniform circuit. $qed$
+
+For $G(s) = (s, f(s))$, only one difference of the hybrids is nonzero, and the predictor of the last bit computes $f(s)$.
+
+*Corollary.* For a circuit class $cal(C)$, if $sans("suc")(f, cal(C)) <= 1/2 + epsilon$, then $G(s) = (s, f(s))$ $epsilon$-fools $cal(C)$.
+
+=== Nisan-Wigderson PRG
+
+The following PRG have shorter length.
+
+*Theorem.* Suppose $f : {0, 1}^m -> {0, 1}$ suffices $sans("suc")(f, sans("SIZE")(C)) <= 1/2 + epsilon$. Then $G : {0, 1}^ell -> {0, 1}^n$,
+$ G(s) = (f(s |_(I_1)), f(s |_(I_2)), dots.c, f(s |_(I_n))) $
+where $I_1, I_2 dots.c I_n$ are subsets that $abs(I_i) = m$, is a PRG that $n epsilon$-fools $sans("SIZE")(C - n dot max_(i != j) 2^abs(I_i inter I_j)).$
+
+_Proof._ Assume there exists a distinguisher of size $C - n dot max 2^abs(I_i inter I_j).$ Then $exists i in [n]$, $P : {0, 1}^i -> {0, 1}$ of size $C - n dot max 2^abs(I_i inter I_j)$ s.t.
+
+$ Pr_s [P(f(s|_(I_1)), dots.c, f(s|_(I_i))) = f(s|_(I_(i+1)))] > 1/2 + (n epsilon) / n = 1/2 + epsilon. $
+
+We would like to compute $f(s|_(I_(i+1)))$ with $s|_(I_(i+1))$ uniformly random over ${0,1}^m$. It is possible to fix $s$ on $[ell] without I_(i+1)$ so the inequality above still holds. Then $f(s|_(I_j))$ is a function on $s|_(I_i inter I_j)$ and thus can be computed by a circuit of size $2^abs(I_(i+1) inter I_j)$. So $P$ can be realized by a circuit of size
+$ C - n dot max 2^abs(I_i inter I_j) + sum_(j=1)^i 2^abs(I_(i+1) inter I_j) <= C. $
+
+This contradicts the hardness of $f$. $qed$
+
+The following goal is to construct $I_i subset [ell]$ that $I_i inter I_j$ are small. 
+
+*Definition. (Combinatorial Design)* $(I_i)$ is called a *combinatorial design* if (i) $forall i in [n], abs(S_i) = m$ (ii) $forall i != j, abs(S_i inter S_j) <= log n.$
+
+*Theorem.* There exists a combinatorial design with $ell = O(m^2 / log n)$ that can be found in $O(n^2 2^ell)$ time.
+
+_Proof._ We apply the probabilistic method. For each $i$, select $I_i$ randomly by having each $x in I_i$ w.p. $2m \/ ell$. Then $Pr[I_i <= m] <= e^(-m/4)$, and $EE[abs(I_i inter I_j)] = (4 m^2) / ell$. Let $(4 m^2) / ell <= 1/100 log n$ then 
+$ Pr[abs(I_i inter I_j) >= log n] <= (e/100)^(log n) << 1/n^3. $
+
+Applying union bound and we get the existence. To actually find $(I_i)$, we can construct $I_1, I_2, dots.c$ one by one and enumerate $I_i$ so that $abs(I_i inter I_j) (j < i)$ is small enough. $qed$
+
+When $m = O(log n)$ and $ell = O(log n)$, the design can be found in $"poly"(n)$ time. When $f : {0, 1}^m -> {0, 1}$ satisfies $ sans("suc")(f, sans("SIZE")(2^(c_1 m))) <= 1/2 + 2^(-c_2 m). $
+
+For $sans("SIZE")(n^c)$, choose $m = max{2c \/ c_1, 2 \/ c_2} log n$ and we have a PRG that $1/n$-fools every circuit in $sans("SIZE")(n^c)$. If $f in sans("TIME")(2^(O(m))) subset bold("P")$, then $G$ can be computed in polynomial time.
+
+*Corollary.* If $bold("E") subset.eq.not sans("avgSIZE")(2^(c n))$ for some constant $c$, then $bold("P") = bold("BPP")$. $bold("E") = sans("TIME")(2^(O(n))).$
+
+== IW Generator and Trevisan's Extractor
+
+We would like to improve $sans("avgSIZE")$ in the last theorem to $sans("SIZE")$.
+
+*Theorem. (Impagliazzo-Wigderson)* If $bold("E") subset.eq.not sans("SIZE")(2^(c n))$ for some $c > 0$, then $bold("BPP") = bold("P")$.
+
+The idea is that a worst-case hard function $f in bold("E")$ can be used to construct an average-case hard function $f' in bold("E")$. It proceeds in the following steps:
+
+1. Use error-correcting codes to reduce $sans("suc")(f, sans("SIZE")(2^(c n))) < 1$ to $sans("suc")(f_1, sans("SIZE")(2^(c_1 n))) < 0.99$.
+
+2. Use the direct product theorem to amplify the hardness of $f$ and obtain $f_2 : {0, 1}^n -> {0, 1}^(O(n))$ computable in $2^(O(n))$ time, s.t. $sans("suc")(f_2, sans("SIZE")(2^(c_2 n))) < 2^(-Omega(n))$.
+
+3. Use Goldreich-Levin Theorem to get $f_3 in bold("E")$ s.t. $sans("suc")(f_3, sans("SIZE")(2^(c_3 n))) < 1/2 + 2^(-Omega(n))$.
+
+4. Use the Nisan-Wigderson Theorem.
+
+We focus on step 3.
+
+*Theorem. (Goldreich-Levin)* For $f : {0,1}^n -> {0,1}^m$, let $g : {0,1}^(n+m) -> {0,1}$ where $g(x, y) = chevron.l f(x),y chevron.r.$ If $sans("suc")(g, cal(C)) >= 1/2 + epsilon$, then $sans("suc")(f, cal(C)') = Omega(epsilon^2 \/ n)$ for some circuit $cal(C)'$ that uses $cal(C)$ $"poly"(n\/epsilon)$ times.
+
+The _Walsh-Hadamard code_ maps a string $a in {0, 1}^m$ to a function ${0, 1}^m -> {0, 1}$, $x mapsto chevron.l a,x chevron.r.$ The theorem basically gives a scheme to list-decode the Walsh-Hadamard code.
+
+_Proof._ Sample i.i.d. $y_1, dots.c, y_t ~ {0, 1}^m$, $G_1, dots.c, G_t ~ {0, 1}.$ Let $ y_S = plus.big.o_(i in S) y_i, G_S = plus.big.o_(i in S) G_i. $
+
+By linearity, if $forall i$, $G_i = chevron.l f(x), y_i chevron.r$, then $forall S, G_S = chevron.l f(x), y_S chevron.r$. This happens w.p. $1/(2^t)$.
+
+Let $C$ computes $g$ with success probability $1/2 + epsilon$. Then
+
+$ Pr[C(x, y_S + e_i) - G_S = f(x)_i | G_S = chevron.l f(x),y_S chevron.r, forall S] >= 1/2 + epsilon. $
+
+Take the majority vote for all $S subset [t], S != emptyset$. The $(2^t - 1)$ random variables $(y_S, G_S)$ are pairwise independent, so 
+
+$ Pr["Maj"_S (C(x, y_S + e_i) - G_S) != f(x)_i | G_S = chevron.l f(x),y_S chevron.r, forall S] <= 1/((2^t - 1)epsilon^2). $
+
+By union bound, $f(x)$ is correctly outputted w.p. at least $1/2^t (1 - n / ((2^t - 1) epsilon^2)).$
+
+This is $Omega(epsilon^2 \/ n)$ when $2^t = 2 n \/ epsilon^2.$ The algorithms use $C$ $n(2^t - 1) = "poly"(n \/ epsilon)$ times.
+
+We can fix a $y_dot, G_dot$ which succeed on most of the $x$'s. $qed$
+
+== Trevisan's Extractor
+
+We have constructed a PRG $"IW"_f : {0, 1}^ell -> {0, 1}^n$, $f : {0,1}^m -> {0, 1}$, $ell = O(m)$, $n = 2^(Omega(m))$, $epsilon = 2^(-Omega(m))$ that if there exists a distinguisher $A$, then $f$ can be computed with a circuit of size $2^(O(m))$ using $A$.
+
+Trevisan's extractor is defined as $sans("Ext"):{0,1}^(2^m) times {0,1}^ell -> {0,1}^n$, $sans("Ext")(f,s) = "IW"_f (s)$.
+
+*Theorem.* Trevisan's extractor is a $(k, epsilon)$ extractor for $k = 2^(O(m)) + log(1/epsilon) + O(1)$ and $epsilon = 2^(-Omega(m))$.
+
+_Proof._ From the IW Theorem, the number of $f$ that 
+$ abs(EE_s [A("IW"_f (s))] - EE_x [A(x)]) >= epsilon/2 $
+
+is bounded by the number of size $2^(O(m))$ circuits, which is at most $2^(2^(O(m))).$ Therefore, when $f ~ F$ is sampled from a flat $k$-source,
+
+$ abs(EE_(f ~ F, s ~ {0, 1}^ell) [A(sans("Ext")(f, s))] - EE_x [A(x)]) &<= EE_(f ~ F) [abs(EE_s A(sans("Ext")(f, s)) - EE_x [A(x)])] \
+&<= epsilon/2 + 2^(2^(O(m))) dot 2^(-k) <= epsilon. qed$
+
+We get $sans("Ext") : {0,1}^n times {0, 1}^d -> {0, 1}^m$ being a $(k,epsilon)$ extractor with $ k = n^(O(1)), epsilon = n^(-O(1)), m = (k - log(1/epsilon) - O(1))^(O(1)), d = O(log n). $ 
+So $m$ is just polynomially worse than optimal.
+
+== Cryptographic PRG and One Way Function
+
+Recall that a cryptographic PRG $G : {0, 1}^ell -> {0, 1}^n$ can be computed deterministically in $"poly"(n)$ time, and it $"negl"(n)$-fools every polynomial time distinguisher. $ell$ needs to be $omega(log n)$.
+
+Consider $ell$ and $n$ are polynomially related. We show that $n = ell + 1$ and $n = "poly"(ell)$ are equivalent.
+
+*Lemma.* If there is a (cryptographic) PRG $G : {0,1}^n -> {0,1}^(n+1)$, then for every $m = "poly"(n)$ there exists $m$-stretch PRG $G' : {0, 1}^n -> {0, 1}^m$.
+
+_Proof._ Let $s_0 = s$, $G(s_i) = x_i s_(i+1)$. $G'(s) = x_1 x_2 dots.c x_n$. By a hybrid argument
 
 #bibliography("refs.bib")
