@@ -671,6 +671,51 @@ Consider $ell$ and $n$ are polynomially related. We show that $n = ell + 1$ and 
 
 *Lemma.* If there is a (cryptographic) PRG $G : {0,1}^n -> {0,1}^(n+1)$, then for every $m = "poly"(n)$ there exists $m$-stretch PRG $G' : {0, 1}^n -> {0, 1}^m$.
 
-_Proof._ Let $s_0 = s$, $G(s_i) = x_i s_(i+1)$. $G'(s) = x_1 x_2 dots.c x_n$. By a hybrid argument
+_Proof._ Let $s_0 = s$, $G(s_i) = x_i s_(i+1)$. $G'(s) = x_1 x_2 dots.c x_n$. Assume $G'$ is not a PRG, by a hybrid argument there is a previous-bit predictor $P$,
+$ Pr_s [P(x_(i+1), x_(i+2), dots.c, x_n) = x_i] >= 1/2 + 1/("poly"(n)). $
+
+$x_(i+1) dots.c x_n$ can be computed from $s_i$, so we get $P'(s_i)=x_i$ w.p. $1/2 + 1/("poly"(n)).$ $P'$ is a next-bit predictor of $G(s_(i-1))$. Since $s_(i-1)$ is indistinguishable from uniform, this gives contradiction. $qed$
+
+*Definition. (PRF)* Let $cal(F) = {f : {0, 1}^n -> {0, 1}^n}$. $F : {0,1}^n times {0,1}^ell -> {0,1}^n$ is a *pseudorandom function* if $F$ is computable in polynomial time and $F$ fools $bold("P")^F$.
+
+$F(dot, s)$ can be viewed as a $2^n n$-bit string thus PRF implies PRG trivially.
+
+*Theorem.* PRG implies PRF.
+
+_Proof Sketch._ PRG $G : {0, 1}^n -> {0, 1}^(2n)$ exists from the lemma. Let the left and right half be $G_0, G_1 : {0, 1}^n -> {0, 1}^n$ respectively. Let $F: {0, 1}^n times {0, 1}^n -> {0, 1}^n$ with $ell = n$ s.t.
+$ F(x,s) = G_(x_n) compose G_(x_(n-1)) compose dots.c compose G_(x_1) (s). $
+
+Consider the hybrids: $ F_i (x, R_i) = G_(x_n) compose dots.c G_(x_(i+1)) compose R_i (x_i, dots.c, x_1) $ be replacing the top $i$ layers of $F$ with truly random functions. $F_i$ can be evaluated in polynomial time since we only need to sample and store $R_i$'s which are invoked during some oracle calls.
+
+We can give a more detailed hybrids: consider the prefixes computed on the $i$th layer. There are at most $q = "poly"(n)$ of them. Let $F_i^((j))$ be replacing the top $(i-1)$ layers of $F$, along with the first $j$ prefixes on level $i$, with truly randomness. Assume $F_i^((j))$ and $F_i^((j+1))$ are non-negligibly distinguished. We construct a distinguisher $B$ using source $s$: when computing the $j$th prefix on level $i$, simply use the input of $B$. The output is either identically distributed with $F_i^((j))$ or $F_i^((j+1))$. $qed$
+
+*Theorem. (PRP)* A PRF $F$ is a *pseudorandom permutation* if for every $s$, $F(dot. s)$ is a bijection. Existence of PRF implies existence of PRP.
+
+*Definition. (OWF, OWP)* $F : {0, 1}^n -> {0, 1}^m$ is an *one way function* if $F in bold("FP")$, and $ Pr_(x in {0, 1}^n) [F(A(F(x))) = F(x)] <= "negl"(n) $
+for any randomized poly-time algorithm $A$. If $n = m$ and $F$ is a bijection then it is also called an *one way permutation*.
+
+*Theorem.* Existence of PRG implies OWF.
+
+_Proof._ Consider PRG $G : {0, 1}^ell -> {0, 1}^n$, $"poly"(n) <= ell <= n/2$. We show that $G$ is an OWF.
+
+Assume efficient $A : {0, 1}^n -> {0, 1}^ell$ that can invert OWF with non-negligible probability. Let $A' : {0, 1}^n -> {0, 1}$, $A'(y) = [G(A(y)) = y]$. Then $EE_s [A'(G(s))] > 1/("poly"(n))$ but $ EE[A'(s)] <= abs("range"(A)) / 2^n <= 2^(ell - n) = "negl"(n), $ contradiction. $qed$
+
+The reverse also holds.
+
+*Theorem.* The existence of OWF implies PRG.
+
+We prove the easier one:
+
+*Theorem.* OWP $=>$ PRG.
+
+_Proof._ Let $F:{0,1}^n -> {0,1}^n$ be an OWP. Let $G:{0,1}^(2 n) -> {0,1}^(2 n+1)$, $ G(s,r) = (F(s), r, chevron.l s,r chevron.r). $
+
+The first $2n$ bits are uniformly random. Assume $G$ is not a PRG, then there exists a predictor $P:{0,1}^(2n) -> {0,1}$ s.t. $ Pr[P(F(s),r)=chevron.l s,r chevron.r] >= 1/2 + 1/("poly"(n)). $
+
+Equivalently, $ Pr[P(s,r)=chevron.l F^(-1) (s),r chevron.r] >= 1/2 + 1/("poly"(n)). $
+
+By Goldreich-Levin, there is a $"poly"(n)$-time *randomized* algorithm $A$ s.t.
+
+$ Pr_s [A(s) = F^(-1) (s)] >= 1/("poly"(n)). $
 
 #bibliography("refs.bib")
