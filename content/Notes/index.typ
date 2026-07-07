@@ -20,4 +20,8 @@
 
 #link("probability/")[概率论]
 
-#link("pseudorandomness")[Pseudorandomness]
+#link("pseudorandomness/")[Pseudorandomness]
+
+== 2026 Summer
+
+#link("error correcting codes/")[Error Correcting Codes]

@@ -198,7 +198,7 @@ The output of the Saks-Zhou algorithm is $hat(M)^((t))$. Both the space complexi
 
 _Proof._ Define $ M^((0)) = M, \ M^((i)) = (M^((i-1)))^(2^s) minus.o_d r_i. $
 
-The probability that some $r_i$ is bad for $(M^((i-1)))^(2^s) minus.o_d$ is at most $w^2 t 2^(-d)$. Assume this doesn't happen. Also, by analysis in Nisan's PRG we have except w.p. $w^5 log n 2^(O(d+s)) 2^(-k)$, $norm(M_(vec(h))^((i-1)) - (M^((i-1))^(2^s))_1 < 2^(-2d-1))$. Assume no bad event happens. Then induction shows $hat(M)^((i)) = M^((i))$. The remaining work is to bound $norm(M^((i)) - M^(2^(s i)))_1$, the key is 
+The probability that some $r_i$ is bad for $(M^((i-1)))^(2^s) minus.o_d$ is at most $w^2 t 2^(-d)$. Assume this doesn't happen. Also, by analysis in Nisan's PRG we have except w.p. $w^5 log n 2^(O(d+s)) 2^(-k)$, $norm(M_(vec(h))^((i-1)) - (M^((i-1)))^(2^s))_1 < 2^(-2d-1)$. Assume no bad event happens. Then induction shows $hat(M)^((i)) = M^((i))$. The remaining work is to bound $norm(M^((i)) - M^(2^(s i)))_1$, the key is 
 $ norm(M^((i)) - M^(2^(s i)))_1 <= norm(M^((i)) - (M^((i-1)))^(2^s))_1 + norm((M^((i-1)))^(2^s) - M^(2^(s i)))_1 <= 2^(-d + 2) w + 2^s norm(M^((i-1)) - M^(2^(s (i-1))))_1 <= (2^(s i) - 1) / (2^s - 1) 2^(-d+2) w. $
 
 *Corollary.* Set $s = t = sqrt(log n)$. We have $bold("BPL") subset sans("DSPACE")(log^(3\/2) n).$
