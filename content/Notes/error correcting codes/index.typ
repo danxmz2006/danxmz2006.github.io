@@ -59,7 +59,7 @@ The idea is to fix the prefix and use the theorem above.
 
 === Asymptotically Good Codes
 
-*Theorem. (GV bound)* For $q,n,d$, $exists cal(C)$ with $d(cal(C)) >= d$ and $ abs(cal(C)) >= q^(n(1 - H_q((d-1)/n, n))). $
+*Theorem. (GV bound)* For $q,n,d$, $exists cal(C)$ with $d(cal(C)) >= d$ and $ abs(cal(C)) >= q^(n(1 - H_q ((d-1)/n, n))). $
 
 _Proof._ Keep picking $c in cal(C)$ until every point is covered by some Hamming ball. $qed$  
 
@@ -142,3 +142,79 @@ The *Justesen Codes* provide a fully expicit construction that matches the Zyabl
 We claim that $ delta >= (1-2R) h^(-1) (1/2) - o(1). $
 
 *Lemma.* As $m -> infinity$, $forall epsilon > 0$, $ Pr_(alpha in FF_(2^m)^times) [delta(C_alpha) >= h^(-1) (1/2) - epsilon] -> 1. $
+
+_Proof._ ${C_alpha}$ is known as the *Wozencraft Ensemble*. For $alpha != alpha'$, $C_alpha inter C_alpha' = {0}$. Since the distance of a *linear code* is determined by its nonzero element with minimum Hamming weight, the number of $alpha$ with $delta(C_alpha) < h^(-1) (1/2) - epsilon$ is bounded by the number of $x in FF_2^(2m) != 0$ with Hamming weight $< 2 m (h^(-1) (1/2) - epsilon)$, which is 
+$ sum_(i=1)^(2 m (h^(-1) (1/2) - epsilon)) binom(2m, i) = 2^(2 m (h(h^(-1) (1/2) - epsilon) + o(1))) << 2^m. $
+
+The limit $R < 1/2$ is due to the inner code. Define the following "truncated code"
+$ C_alpha^"trunc" : x mapsto (x, (alpha dots x)[0:s-1]). $
+It gives $R = m / (m+s)$. Similar argument shows that
+$ Pr_alpha [delta(C_alpha^"trunc") > h^(-1) (s / (m+s)) - epsilon] -> 1. $ Put it together,
+$ delta_"Justesen" (R) = max_(max{R,1/2} <= r <= 1) (1-R/r) h^(-1) (1-r). $
+
+$R$ can be furthur reduced by using $x mapsto (x, alpha x, beta x)$ for instance. This increases the number of inner codes thus requires longer outer codewords while $FF_(q^m)$ is invariant. General algebraic geometry codes can meet this criterion.
+
+== Decoding RS Codes
+
+*Erasure.* Suppose $c = (f(a_1), f(a_2), dots.c, f(a_n))$. Decoding erasure can be done with fast interpolation in $tilde(O)(n)$ time.
+
+*Error. (Welch-Berlekamp Algorithm)* Assume $c'$ contains $e$ errors. There are $binom(n, e)$ possibilities. 
+
+Let $F = {i: f(a_i) != y_i}$, $abs(F) <= e$. Let $E(X) = product_(i in F) (X - a_i)$. The bivariate polynomial
+
+$ Q(X,Y) = E(X) (Y - f(X)) = E(X) Y - N(X), Q(a_i, y_i) = 0. $
+
+We have $deg E(X) <= e$ and $deg N(X) <= e + k - 1$. The coefficients of $E$ and $N$ can be found in polynomial time. Let $E,N$ be the solution, we claim that $f = N(X) / E(X)$.
+
+Let $R(X) = f(X) E(X) - N(X)$. If $f(a_i) = y_i$, then $R (a_i) = f(a_i) E(a_i) - N(a_i) = Q(a_i, y_i) = 0 $. So $deg R >= n - e$ or $R = 0$. However, $deg f = k-1$, $deg R <= e+k-1$. $e <= floor((n-k)/2)$ by the definition of $e$, 
+showing that $R = 0$.
+
+== Decoding Concatenated Codes
+
+We would like to correct $e < (delta_"out" dot delta_"in") / 2$ fraction of errors in $cal(C) = cal(C)_"out" diamond cal(C)_"in"$ in time polynomial in $n$.
+
+Assume $d(cal(C)_"out") = D$ and $d(cal(C)_"in") = d$, the inner code has length $n'$. A naive solution is to first decode inner code blocks and then decode the outer code, but it can only correct up to $(D dot d) / 4$ errors.
+
+$tau = (delta_"out" dot delta_"in") / 2$ is achieved using the *Generalized Minimum Distance Decoding*. It proceeds in two steps:
+
+1. Inner Decoding: For $c' = (z_1, z_2, dots.c, z_n)$, decode $z_i$ to $a_i in Sigma$ s.t. $d(z_i, cal(C)_"in" (a_i))$ is minimized with brute force. Let $w_i = min(d/2, d(z_i, cal(C)_"in" (a_i)))$.
+
+2. Outer Decoding: Set $a_i$ as an erasure w.p. $(2 w_i) / d$ and run errors and erasures decoding on the outer codeword.
+
+*Lemma.* Let $e_i = d(z_i, cal(C)_"in" (c_i))$. If $sum_i e_i < (D dot d) / 2$, then $EE[2 Z_i^"errors" + Z_i^"erasures"] < D$.
+
+_Proof._ By linearity we can focus on each individual $i$. If $a_i = c_i$, then $EE[Z_i^"errors"] = 0$ and $EE[Z_i^"erasures"] = (2 w_i) / d = (2 e_i) / d$. If $a_i != c_i$, $EE[Z_i^"errors"] = 1 - (2 w_i) / d$ and $EE[Z_i^"erasures"] = (2 w_i) / d$. 
+
+We have $ w_i + e_i = d(z_i, cal(C)_"in" (a_i)) + d(z_i, cal(C)_"in" (c_i)) >= d(cal(C)_"in" (a_i), cal(C)_"in" (c_i)) >= d. $
+Therefore, $ EE[2 Z_i^"errors" + Z_i^"erasures"] = 2(1 - (2 w_i) / d) + (2 w_i) / d >= (2 e_i) / d. $
+
+Summation over $i$ gives us the result. 
+
+To make it deterministic, notice that we don't need independence. We may use a _coupled_ coin, i.e. for $(2 w_i) / d < (2 w_j) / d$, always make $j$ an erasure when $i$ is an erasure. Thus we can enumerate $O(n)$ thresholds $l$ and make $i$ s.t. $(2 w_i) / d > l$ an erasure. $qed$
+
+== Tanner Codes and Expander Codes
+
+*Definition.* Given a $r$-right regular bipartite graph $G = (L,R)$, $abs(L) = n$, $abs(R) = m$, $C_0 subset.eq FF_2^r$. The *Tanner code* 
+$ T(G, C_0) = {c in FF_2^n | forall u in R, C|_(N(u)) in C_0}. $
+
+Assume $C_0$ is the parity check code, then $T(G,C_0)$ has parity check matrix equal to the adjacent matrix of $G$.
+
+Assume $C_0$ is linear, then $T(G,C_0)$ is linear and $dim T(G,C_0) >= n - m(r - dim C_0)$.
+
+A $(2,r)$-regular bipartite graph can be constructed from a $r$-regular graph $G' = (V,E)$ where $L = E$ and $R = V$. We view the bits of codewords of a Tanner code as edges on $G'$, where each vertex is a constraint. Let $X(G',C_0) = T(G,C_0)$, $R_0$ and $delta_0$ be the parameters of $C_0$.
+
+$ dim X(G',C_0) >= v r / 2 - v (r - dim C_0) = v r / 2 - v (r - R_0 r) = v r / 2 (2 R_0 - 1). $
+
+To have positive rate we can pick $R_0 > 1/2$.
+
+Bounding relative distance of $X(G',C_0)$ is equivalent to lower bounding the weight of $c in X(G',C_0)$. Let $c in FF_2^E$ be a nonzero codeword. Let $V_c$ be vertices adjacent to some nonzero edge in $c$. Let $H$ be the subgraph of $V_c$ and edges in $c$.
+
+By the distance of the local code, vertices in $H$ has degree $>= delta_0 r$. Thus $ op("wt")(c) = abs(E(H)) >= delta_0 r abs(V_c) \/ 2. $
+To show $op("wt")(c) >= delta v r \/ 2$, we only need to prove $abs(V_c) >= (2 delta) / delta_0 v.$
+
+Assume $G'$ has spectral expansion $1 - lambda$. By expander's mixing lemma,
+
+$ abs(V_c) delta_0 r <= abs(E(V_c, V_c)) <= (r abs(V_c)^2) / v + lambda r abs(V_c), \
+abs(V_c) >= (delta_0 - lambda) v. $
+
+This implies $delta >= (delta_0 - lambda) delta_0.$
