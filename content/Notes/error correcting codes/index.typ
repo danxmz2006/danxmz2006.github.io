@@ -101,7 +101,7 @@ Bound LCM's with products. When $q = 2$, $"Min"_(FF_q) (alpha^i) = "Min"_(FF_q) 
 
 *Lemma.* $d(cal(C)) >= d$.
 
-_Proof._ Assume $g(X) divides p(X)$ and $p(X)$ has less than $d$ non-zero terms. Let $p(X) = sum_(i=1)^(d-1) b_i X^(k_i).$ Since $alpha, dots.c, alpha^(d-1)$ are roots of $p$, 
+_Proof._ Assume $g(X) divides p(X)$ and $p(X)$ has less than $d$ nonzero terms. Let $p(X) = sum_(i=1)^(d-1) b_i X^(k_i).$ Since $alpha, dots.c, alpha^(d-1)$ are roots of $p$, 
 $ sum_(j=1)^(d-1) b_j alpha^(i k_j) = 0, forall j. $
 This implies $b_j equiv 0$ since the coefficients form a transposed Vandermonde matrix. $qed$
 
@@ -125,7 +125,7 @@ An idea to reduce large alphabet is to replace each symbol with several symbols.
 
 Instead, we use inner code to correct errors. 
 
-*Definition.* Given $[n,k]_(q^m)$ outer code $cal(C)_"out"$ and $[n',m]_q$ inner code $cal(C)_"in"$, the concatenated code $cal(C) = cal(C)_"out" diamond cal(C)_"in"$ is defined by composition of $cal(C)_"in"$ and some bijective linear map on each symbol. 
+*Definition.* Given $[n,k]_(q^m)$ outer code $cal(C)_"out"$ and $[n',m]_q$ inner code $cal(C)_"in"$, the concatenated code $cal(C) = cal(C)_"out" diamond.stroked.small.small cal(C)_"in"$ is defined by composition of $cal(C)_"in"$ and some bijective linear map on each symbol. 
 
 $cal(C)$ is a $[n dot n', k dot m]_q$ code. We have $d(cal(C)) >= d(cal(C_"out")) d(cal(C_"in"))$.
 
@@ -171,7 +171,7 @@ showing that $R = 0$.
 
 == Decoding Concatenated Codes
 
-We would like to correct $e < (delta_"out" dot delta_"in") / 2$ fraction of errors in $cal(C) = cal(C)_"out" diamond cal(C)_"in"$ in time polynomial in $n$.
+We would like to correct $e < (delta_"out" dot delta_"in") / 2$ fraction of errors in $cal(C) = cal(C)_"out" diamond.stroked.small.small cal(C)_"in"$ in time polynomial in $n$.
 
 Assume $d(cal(C)_"out") = D$ and $d(cal(C)_"in") = d$, the inner code has length $n'$. A naive solution is to first decode inner code blocks and then decode the outer code, but it can only correct up to $(D dot d) / 4$ errors.
 
@@ -218,3 +218,218 @@ $ abs(V_c) delta_0 r <= abs(E(V_c, V_c)) <= (r abs(V_c)^2) / v + lambda r abs(V_
 abs(V_c) >= (delta_0 - lambda) v. $
 
 This implies $delta >= (delta_0 - lambda) delta_0.$
+
+We can also view $G'$ as a bipartite graph: let $L = R = V$, for $(u,v) in G$, add $(u_L, v_R)$ nad $(v_L, u_R)$ to the bipartite graph. Such bipartite graph is called the *double cover* of $G'$. Equivalently, we replace 
+an undirected edge in $G'$ with 2 directed edges. We still have $R >= 2 R_0 - 1$ and $delta = (delta_0 - lambda) delta_0.$
+
+=== Decoding Tanner Codes
+
+*Zemor's Algorithm.* We try to decode locally first: for each vertex, decode its adjacent edges. The algorithm works in several stages. In each stage, we decode first the left side of the bipartite graph, then the right side.
+
+*Theorem.* In $O_epsilon (log n)$ rounds, the algorithm corrects $(1-epsilon) delta_0 / 2 (delta_0 / 2 - lambda)$ fraction of errors.
+
+_Proof._ Let $c^*$ be the unique code that we want to decode to. Let $ S_i = {u in L | y|_(E(u)) != c^*|_(E(u)) "after round" i "of left-side decoding"}. $
+
+Define similarily $T_i$ for $u in R$. Let $e := delta_0 / 2 (delta_0 / 2 - lambda) (1 - epsilon) n r$ be the bound on number of errors.
+
+*Claim.* $ abs(S_1) <= e / (delta_0 r \/ 2) = (delta_0 / 2 - lambda) (1 - epsilon) n. $
+
+This is because each $u in S_1$ contributes to at least $(delta_0 r) / 2$ errors.
+
+Assume that ${e : y_e != c_e^*} != emptyset$ after the first right-side decoding. Then every node in $T_1$ must have $>= (delta_0 r)/2$ errors before the right-side decoding step. Those erroneous edges are incident to $S_1$. Thus
+
+$ abs(E(S_1, T_1)) >= (delta_0 r) / 2 abs(T_1). $
+
+Plug in the expander mixing lemma,
+
+$ (delta_0 r) / 2 abs(T_1) <= (r abs(S_1) abs(T_1)) / v + lambda r sqrt(abs(S_1) abs(T_1)),\
+abs(T_1) <= abs(S_1) / (1 + epsilon (delta_0 / lambda - 2)). $
+
+Pick a small enough $lambda$ so that $T_1$ decay geometrically. similarily, we can bound $S_(i+1)$ with $T_i$ and bound $T_i$ with $S_i$. Thus in logarithmic number of rounds $S_i = T_i = emptyset. qed$ 
+
+The algorithm can be made into linear time. We only need to consider neighbours of $S_i$ or $T_i$, so the total complexity is $O(sum_i (abs(S_i) + abs(T_i))) = O(n)$.
+
+=== Distance Amplification
+
+*Definition. (Distance Amplification Code)* Given a binary code $cal(C)$ and an $r$-biregular bipartite graph $G = (L,R,E)$. Define a new code $G(cal(C)) subset ({0,1}^r)^n$, where 
+$ G(c)_j = (c_(N_1 (j)), dots.c, c_(N_r (j))) $
+
+We have $R(G(cal(C))) = R(cal(C)) / r$.
+
+*Lemma.* If $delta(cal(C)) = delta$, $G$ is $sqrt(gamma delta)$-mixing, then $delta(G(cal(C))) >= 1-gamma$.
+
+_Proof._ Take $c != 0$ in $cal(C)$ and embed it in $L$. At least a $delta$ fraction of vertices in $L$ are assigned to 1. Let $S = {i : c_i = 1}$.
+
+For every vertex adjacent to $S$, $G(c)_j != 0$. Thus the weight of $G(c)$ is $abs(N(S))$. Let $T = R without N(S)$, then $abs(E(S,T)) = 0$. If $G$ is $epsilon$-mixing, then
+
+$ 0 = abs(E(S,T)) >= (r abs(S) abs(T)) / n - epsilon r sqrt(abs(S) abs(T)),\
+abs(T) <= (epsilon^2 n^2) / abs(S) <= (epsilon^2 n) / delta. $
+
+Then $abs(T) <= gamma n$ if $epsilon <= sqrt(gamma delta)$. $qed$
+
+When $lambda = O(1/sqrt(r))$ (near Ramanujan graph), $delta(G(cal(C))) >= 1 - gamma$ and $abs(Sigma) = 2^(O(1\/gamma))$.
+
+*Decoding distance-amplified Tanner codes.* The algorithm decodes up to $(1-gamma)/2$ fraction of errors. For codeword $y in Sigma_2^n$, $z in FF_2^n$ take the majority of the $r$ neighbours for each $z_i$. Decode $z$ to some codeword $c$ if there exists one within $tau n approx (delta_0 n)/4$.
+
+Let $S$ be the set of errors on the left side and $T$ be the correct tuples on the right set. Assume $abs(T) >= (1+gamma)/2 n$. If $u in S$, then $u$ has at most $r/2$ neighbours in $T$.
+
+$ (r abs(S)) / 2 >= abs(E(S,T)) >= (r abs(S) abs(T)) / n - epsilon r sqrt(abs(S) abs(T)) \
+abs(S) <= (4 epsilon^2) / gamma^2 n <= tau n $
+when $epsilon^2 <= 1/4 tau gamma^2$. (We need $r = Omega(1/gamma^2)$ here.)
+
+== Locally Decodable Codes
+
+*Definition. (LDC)* Code with encoder $"Enc" : {0,1}^k -> {0, 1}^n$ is $(q,delta,gamma)$-locally decodable if there is a decoder $"Dec"$ that probes the noisy message $q$ times, and $forall m in {0, 1}^k$, $forall i in [k]$, $"Dec"^y (i) = m_i$ w.p. $>= 1/2 + gamma$ when $d(y, "Enc"(m)) <= delta n$.
+
+e.g. For $q = 2$, the Hadamard code has $n = 2^k$ and decodes correctly w.p. $1 - 2 delta$.
+
+Typical settings of length: 
+1. $q = O(1)$ and $n = exp(k^(1/(q-1)))$;
+2. $q = n^epsilon$ and $n = exp(1/epsilon) k$;
+3. $q = log n$ and $n = "poly"(k)$.
+
+There exists LDCs with $q approx 2^sqrt(log n)$ with rate $1-epsilon$. For small $q$'s,
+
+#table(columns: 3, align: center,
+      table.header([$q$], [Lower bound on $n$], [Upper bound on $n$]),
+      [2], [$2^(Omega(k))$], [$2^k$],
+      [3], [$k^2$], [$approx exp(2^(sqrt(log k)))$],
+      [$O(1)$, even], [$k^(q/(q-2))$], [$exp(k^(o(1)))$],
+      [$O(1)$, odd], [$k^((q+1)/(q-1))$], [$exp(k^(o(1)))$])
+
+*Theorem. (Normal (linear) form for LDCs)* LDC properties implies $exists$ $q$-uniform hypergraphs $H_1, H_2, dots.c, H_k$ on $[n]$ s.t. (i) each $H_i$ is a matching with $Omega(n)$ hyperedges; (ii) for each $i$ and each hyperedge $E in H_i$, $m_i = plus.big.o_(j in E) C(m)_j.$ The reverse holds similar to the hypergraph code.
+
+== List Decoding
+
+*Definition.* $cal(C) subset Sigma^n$ is $(rho,L)$-list decodable if $forall y subset Sigma^n$, $abs(B_q (y, rho n)) <= L$.
+
+*Theorem. (Upper bound of list decoding capacity)* Let $q >= 2$, $0 < rho < 1 - 1/q$, $epsilon > 0$. For all large enough $n$, if $cal(C)$ is a $q$-ary code of block size $n$ and $R = 1 - h_q (rho) + epsilon$, then $cal(C)$ is not $(rho,L)$-list decodable for $L <= q^(epsilon n \/ 2)$.
+
+_Proof._ On average, $ EE_y [abs(B_q (y, rho n) inter cal(C))] = (abs(cal(C)) abs(B_q (0, rho n))) / q^n >= q^(epsilon n - o(n)) > q^(epsilon n \/ 2). qed $
+
+*Theorem. (Lower bound of list decoding capacity)* For $rho < 1 - 1/q$, there exists $(rho,L)$-list decodable code with $R >= 1 - h_q (rho) - 1/(L+1)$.
+
+_Proof._ Pick $M$ distinct random codewords. The probability that $(L+1)$ codewords lie in a fixed Hamming ball $B_q (y, rho n)$ is $<= (abs(B_q (y,rho n) \/ q^n))^(L+1)$, so the probability that it isn't $(rho,L)$-list decodable is at most
+
+$ binom(M,L+1) q^n q^(-(L+1)(1-h_q (rho)) n). $
+
+When $M = q^(1 - h_q (rho) - 1\/(L+1))$ the probability $<1$. $qed$
+
+The capacity can also be reached by linear codes. 
+
+*Theorem.* There exists $(rho,L)$-list decodable code with $R>=1 - h_q (rho) - 1 / (log_q (L+1))$.
+
+_Proof._ Suppose $abs(B_q (y,rho n) inter cal(C)) >= L+1$. The linear subspace this set generates has rank $r >= log_q (L+1)$.
+
+Let $x_1, x_2, dots.c, x_r$ be linear independent. We have 
+$ Pr_h [chevron.l h,x_1 chevron.r = chevron.l h,x_2 chevron.r = dots.c = chevron.l h,h_r chevron.r = 0] = q^(-r). $
+
+Thus $Pr[(x_i) subset cal(C)] = q^(-(n-k) r) = q^(-(1-R) n r)$.
+
+Summing over $binom(B_q (y,rho n),[r])$ we have the probability is at most 
+$ q^n q^(n r h_q (rho) + o(n)) q^(-(1-R) n r), $
+when $R < 1 - h_q (rho) - 1 / (log_q L)$ the probability $<1$. $qed$
+
+Recall the Johnson bound $J_q (delta) >= 1 - sqrt(1 - delta) = 1 - sqrt(R)$ for codes on the singleton bound, and we can list decode up to $rho = 1 - sqrt(R)$. This is better than $(1-R)/2$.
+
+*Theorem. (Goldreich-Levin)* Given $f : FF_2^k -> FF_2$, $epsilon > 0$, there is probabilistic algorithm runs in $"poly"(n,1/epsilon)$ and outputs a list $L$ s.t. 
+
+$ Pr_(x ~ FF_2^k) [chevron.l a,x chevron.r = f(x)] >= 1/2 + epsilon => Pr[a in L] >= 1/2. $
+
+In other word, Hadamard code can be list to $rho = 1/2 - epsilon$ error.
+
+=== List Decoding RS Codes up to the Johnson Radius
+
+The list decoding algorithm generalizes the Welsh-Berlekamp algorithm. Specifically, it replaces $Q(X,Y) = A_0 (X) + Y A_1 (Y)$ with
+
+$ Q(X,Y) = sum_(i=0)^L A_i (X) Y^i. $
+
+The goal is to make $Y - f(X)$ a factor of $Q(X,Y)$, or equivalently $Q(X,f(X)) = 0$. The previous method is to bound $deg R(X)$, $R(X) = Q(X,f(X))$, and show that when $y_i = f(a_i)$, $R(a_i) = Q(a_i,y_i) = 0$.
+
+Here we find a $Q(X,Y) != 0$ s.t. $Q(a_i,y_i) = 0 forall i in [n]$ and $deg A_j (X) <= D - j k$. Then find every $f(X)$ s.t. $(Y - f(X)) divides Q(X,Y)$ and output those which satisfies $deg f <= k$ and $f(a_i) = y_i$ for at least $t$ values of $i in [n]$.
+
+For a nonzero $Q$ to exists, the first step requires
+$ sum_(j=0)^L (D - j k + 1) > n \ D >= n / (L+1) + (k L) / 2. $
+
+*Claim.* If $deg f <= k$ and $f(a_i) = y_i$ for $>=t$ values of $i$, then $(Y - f(X)) divides Q(X,Y)$.
+
+_Proof._ By the construction of $Q$, $deg R <= D$. Hence $R(X)$ has $>= t$ roots. *When $t > D$*, $R(X) = 0$, thus $Q(X,f(X)) = 0$. Polynomial division shows that $(Y - f(X)) divides Q(X,Y)$. $qed$
+
+*Claim.* The second step outputs $<= L$ polynomials in polynomial time.
+
+_Proof._ $Q(X,Y) in (FF_q [X])[Y]$ has at most $t$ roots since $FF_q [X]$ is an integral domain. So it has at most $L$ factors of the form $Y - f(X)$.
+
+We can embed $FF_q [X]$ into a field $F = FF_q [X]/(E(X))$. Factor in $F[X]$ can be done using Berlekamp's algorithm.
+
+To minimize $D = n / L + (k L) / 2$, we have $D >= 2 sqrt(n k)$ when $L = ceil(sqrt(2 n \/ k))$, and $t approx sqrt(2 n k) approx sqrt(2 R) n$. The error fraction is $1 - sqrt(2 R)$.
+
+*Method of Multiplicities.* We will remove the factor $sqrt(2)$. Note that the above claim doesn't work when $t <= D$. We address to this issue by raising the *multiplicities* of $(a_i, y_i)$.
+
+*Definition.* $Q(X,Y)$ is said to have a zero of multiplicity $r >= 1$ at $(alpha,beta) in FF^2$ if $Q(X + alpha, Y + beta)$ has no monomial of degree $< r$ with nonzero coefficient.
+
+*Lemma.* Let $Q(X,Y)$ be a polynomial with $(1,k)$-weighted degree (i.e., consists of $X^i Y^j$ s.t. $i + j k <= D$). If $(a_i, y_i)$ is a zero of multiplicity $r$ for every $i in [n]$, $deg f <= k$, then $Q(X,f(X)) = 0$ given $f$ passes $t > D\/r$ points of $(a_i, y_i)$.
+
+_Proof._ Let $R(X) = Q(X,f(X))$, then $deg R <= D$. Let $Q_i (X,Y) = Q(X + a_i, Y + y_i)$, then for $y_i = f(a_i)$
+
+$ R(X) = Q(X, f(X)) = Q_i (X - a_i, f(X) - y_i) = Q_i (X - a_i, f(X) - f(a_i)). $
+
+Since $(X - a_i) divides (f(X) - f(a_i))$, $(X - a_i)^r divides R(X)$. Summing over $i$ gives $deg R(X) <= r t$, contradiction. $qed$
+
+There are $n binom(r+1, 2)$ linear constraints. We need
+
+$ (D+1)(L+1) - k L(L+1) \/ 2 > n binom(r+1,2),\
+D >= (n r (r+1)) / (2 L) + (k L) / 2. $
+
+For $r t > D$, $ t > (n(r+1)) / (2 L) + (k L) / (2 r). $
+
+Let $L approx sqrt((n r (r+1)) / k)$, we can take
+
+$ t > sqrt((n k (r+1))/r) = sqrt(n k + 1/r). $
+
+So we can achieve $rho = 1 - sqrt((1 + epsilon) R)$ with list size $L = O(epsilon^(-1) \/ sqrt(R))$.
+
+=== Folded RS Codes
+
+Recall that a RS code $"RS"_(FF,FF^times) [n,k]$ maps
+
+$ f(X) mapsto (f(1), f(gamma), dots.c, f(gamma^(n-1))) $
+
+where $n = q-1$, $FF^times = chevron.l gamma chevron.r$.
+
+*Folded Reed-Solomon code* $"FRS"_FF^(m) [k]$ is the $m$-folded version where $Sigma = FF^m$:
+
+$ f(X) mapsto vec(mat(delim:"[", f(1);f(gamma);dots.v;f(gamma^(m-1))), mat(delim:"[", f(gamma^m), f(gamma^(m+1)), dots.v, f(gamma^(2m-1))), dots.c, mat(delim:"[", f(gamma^(n-m)), f(gamma^(n-m+1)), dots.v, f(gamma^(n-1)))) $
+
+For some $1<=s<=m$, We extend $Q$ to $(s+1)$-variate $(1,k,dots.c,k)$-weighted degree polynomial $Q(X,Y_1,dots.c,Y_s)$ with similar parameters $t$, $D$. The main goal is to reduce $D$.
+
+Assume $Q$ has zero multiplicity $r$ at $(gamma^i, y_i, y_(i+1), dots.c, y_(i+s-1))$.
+
+*Lemma.* If $(D^(s+1))/((s+1)! k^s) > n binom(r+s,s+1)$, a nonzero polynomial $Q$ with the above properties exists.
+
+This is based on counting constraints and variables.
+
+*Lemma.* Suppose $r t (m-s+1) > D$. Then for every $f(X) in FF[X]$, $deg f <= k$, whose encoding agree with the received word on at least $t$ locations, $f$ satisfies 
+$ Q(X,f(X),f(gamma X), dots.c, f(gamma^(s-1) X)) = 0. $
+
+_Proof._ If we have $f(gamma^(i+j)) = y_(i+j) (0<=j<=s-1)$, let $Q_i (X,Y_1,dots.c,Y_s) = Q(gamma^i + X, f(gamma^i) + Y_1, dots.c, f(gamma^(i+s-1)) + Y_s)$, then
+
+$ Q(X,Y_1,dots.c,Y_s) = Q_i (X - gamma^i, Y_1 - f(gamma^i), dots.c, Y_s - f(gamma^(i+s-1))) = Q_i (X - gamma^i, Y_1 - y_i, dots.c, Y_s - y_(i+s-1)). $
+
+Let $Y_j = f(gamma^(j-1) X)$, then $(X - gamma^i) divides (f(gamma^(j-1) X) - f(gamma^(i+j-1)))$, resulting in $(X - gamma^i)^r divides R(X)$. Note that $i$ can take $t(m-s+1)$ values (from $m p$ to $m (p+1) - s - 1$ where $p$ is an agreement). The lemma follows from the degree of $R$. $qed$
+
+Now we can choose 
+$ D = (k^s n r (r+1) dots.c (r+s))^(1\/(s+1)) + 1 $ to interpolate $Q$.
+
+We need find every $deg f = k$ s.t. $Q(X,f(X),f(gamma X), dots.c, f(gamma^(s-1) X)) = 0$. 
+
+Let $h(X) = X^(q-1) - gamma$, then $h(X)$ is irreducible. (Let $h(alpha) = 0$ in the splitting field. One can observe that $"ord"(alpha) = (q-1)^2$. If $d = [FF_q [alpha] : FF_q] < q-1$, then $"ord"(q) = (q-1)^2 divides (q^d - 1)$, which gives contradiction.)
+Also, $f(gamma X) = f(X)^q mod h(X)$. Let $tilde(FF) = FF[X]/(h(X))$. The above problem is equivalent to finding roots in $tilde(FF)$ of $P(Y_1) = T(Y_1,Y_1^q,dots.c,Y_1^(q^(s-1)))$, where $T$ is $Q$ regarded as a polynomial in $tilde(F)$. 
+Note that there is a bijection between terms in $T$ and monomials in $Q$, since the total degree in $Q$ is at most $D\/k <= (r + s) (n\/k)^(1\/(s+1)) << q$.
+
+Roots in $P(Y_1)$ can be found in $q^(O(s))$ time, which is still polynomial.
+
+The algorithm works for $t > D / ((m-s+1)r)$, $L <= q^s$, and $rho$ approaches
+
+$ 1 - (1+s/r) (m/(m-s+1)) R^(s\/(s+1)) > 1 - (1 + zeta) R^(s\/(s+1)). $
+
+Finally, when $rho = 1 - R - epsilon$, the alphabet size is $(N\/epsilon^2)^(O(1\/epsilon^2))$.
