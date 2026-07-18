@@ -277,28 +277,6 @@ $ (r abs(S)) / 2 >= abs(E(S,T)) >= (r abs(S) abs(T)) / n - epsilon r sqrt(abs(S)
 abs(S) <= (4 epsilon^2) / gamma^2 n <= tau n $
 when $epsilon^2 <= 1/4 tau gamma^2$. (We need $r = Omega(1/gamma^2)$ here.)
 
-== Locally Decodable Codes
-
-*Definition. (LDC)* Code with encoder $"Enc" : {0,1}^k -> {0, 1}^n$ is $(q,delta,gamma)$-locally decodable if there is a decoder $"Dec"$ that probes the noisy message $q$ times, and $forall m in {0, 1}^k$, $forall i in [k]$, $"Dec"^y (i) = m_i$ w.p. $>= 1/2 + gamma$ when $d(y, "Enc"(m)) <= delta n$.
-
-e.g. For $q = 2$, the Hadamard code has $n = 2^k$ and decodes correctly w.p. $1 - 2 delta$.
-
-Typical settings of length: 
-1. $q = O(1)$ and $n = exp(k^(1/(q-1)))$;
-2. $q = n^epsilon$ and $n = exp(1/epsilon) k$;
-3. $q = log n$ and $n = "poly"(k)$.
-
-There exists LDCs with $q approx 2^sqrt(log n)$ with rate $1-epsilon$. For small $q$'s,
-
-#table(columns: 3, align: center,
-      table.header([$q$], [Lower bound on $n$], [Upper bound on $n$]),
-      [2], [$2^(Omega(k))$], [$2^k$],
-      [3], [$k^2$], [$approx exp(2^(sqrt(log k)))$],
-      [$O(1)$, even], [$k^(q/(q-2))$], [$exp(k^(o(1)))$],
-      [$O(1)$, odd], [$k^((q+1)/(q-1))$], [$exp(k^(o(1)))$])
-
-*Theorem. (Normal (linear) form for LDCs)* LDC properties implies $exists$ $q$-uniform hypergraphs $H_1, H_2, dots.c, H_k$ on $[n]$ s.t. (i) each $H_i$ is a matching with $Omega(n)$ hyperedges; (ii) for each $i$ and each hyperedge $E in H_i$, $m_i = plus.big.o_(j in E) C(m)_j.$ The reverse holds similar to the hypergraph code.
-
 == List Decoding
 
 *Definition.* $cal(C) subset Sigma^n$ is $(rho,L)$-list decodable if $forall y subset Sigma^n$, $abs(B_q (y, rho n)) <= L$.
@@ -398,7 +376,7 @@ where $n = q-1$, $FF^times = chevron.l gamma chevron.r$.
 
 *Folded Reed-Solomon code* $"FRS"_FF^(m) [k]$ is the $m$-folded version where $Sigma = FF^m$:
 
-$ f(X) mapsto vec(mat(delim:"[", f(1);f(gamma);dots.v;f(gamma^(m-1))), mat(delim:"[", f(gamma^m), f(gamma^(m+1)), dots.v, f(gamma^(2m-1))), dots.c, mat(delim:"[", f(gamma^(n-m)), f(gamma^(n-m+1)), dots.v, f(gamma^(n-1)))) $
+$ f(X) mapsto (vec(delim:"[", f(1),f(gamma),dots.v,f(gamma^(m-1))), vec(delim:"[", f(gamma^m), f(gamma^(m+1)), dots.v, f(gamma^(2m-1))), dots.c, vec(delim:"[", f(gamma^(n-m)), f(gamma^(n-m+1)), dots.v, f(gamma^(n-1)))) $
 
 For some $1<=s<=m$, We extend $Q$ to $(s+1)$-variate $(1,k,dots.c,k)$-weighted degree polynomial $Q(X,Y_1,dots.c,Y_s)$ with similar parameters $t$, $D$. The main goal is to reduce $D$.
 
@@ -433,3 +411,42 @@ The algorithm works for $t > D / ((m-s+1)r)$, $L <= q^s$, and $rho$ approaches
 $ 1 - (1+s/r) (m/(m-s+1)) R^(s\/(s+1)) > 1 - (1 + zeta) R^(s\/(s+1)). $
 
 Finally, when $rho = 1 - R - epsilon$, the alphabet size is $(N\/epsilon^2)^(O(1\/epsilon^2))$.
+
+== Locally Decodable Codes
+
+*Definition. (LDC)* Code with encoder $"Enc" : {0,1}^k -> {0, 1}^n$ is $(q,delta,gamma)$-locally decodable if there is a decoder $"Dec"$ that probes the noisy message $q$ times, and $forall m in {0, 1}^k$, $forall i in [k]$, $"Dec"^y (i) = m_i$ w.p. $>= 1/2 + gamma$ when $d(y, "Enc"(m)) <= delta n$. 
+A $(q,delta,gamma)$-locally correctable code reads $q$ locations and outputs $"Enc"(m)_i$ w.p. $>= 1/2 + gamma$.
+
+Since a linear code can always be made systematic, a linear LCC is also a linear LDC. In general, it is proven that a LCC is a LDC with a constant blowup in $q$.
+
+e.g. For $q = 2$, the Hadamard code has $n = 2^k$ and decodes correctly w.p. $1 - 2 delta$.
+
+Typical settings of length: 
+1. $q = O(1)$ and $n = exp(k^(1/(q-1)))$;
+2. $q = n^epsilon$ and $n = exp(1/epsilon) k$;
+3. $q = log n$ and $n = "poly"(k)$.
+
+There exists LDCs with $q approx 2^sqrt(log n)$ with rate $1-epsilon$. For small $q$'s,
+
+#table(columns: 3, align: center,
+      table.header([$q$], [Lower bound on $n$], [Upper bound on $n$]),
+      [2], [$2^(Omega(k))$], [$2^k$],
+      [3], [$k^2$], [$approx exp(2^(sqrt(log k)))$],
+      [$O(1)$, even], [$k^(q/(q-2))$], [$exp(k^(o(1)))$],
+      [$O(1)$, odd], [$k^((q+1)/(q-1))$], [$exp(k^(o(1)))$])
+
+*Definition. (Reed-Muller codes)* Let $q > d$, Reed-Muller code $"RM"[q,m,d]$ maps an $m$-variable degree $d$ polynomial $f in FF_q [X_1,dots.c,X_m]$ to its evaluation on *all* points.
+
+We have $n = q^m$, $k = binom(m+d,m)$, $delta = 1 - d/q$ (from Schwartz-Zippel Lemma).
+
+*Theorem.* $"RM"[q,m,d]$ is a $[d+1,delta,1-(d+1)delta]$-locally correctable code.
+
+_Proof._ Given $arrow(a) in FF_q^m$, we would like to find $f(arrow(a))$. $f(arrow(a) + X arrow(b)) in FF_q [X]$ is a univariate polynomial with degree $<= d$. Randomly select $arrow(b) != 0$ and $lambda_1, lambda_2, dots.c, lambda_(d+1)$. Then $ Pr[f(arrow(a) + lambda_i arrow(b)) != y_(arrow(a) + lambda_i arrow(b))] <= delta, $ by union bound w.p. $1 - (d+1)delta$ $f(arrow(a) + X arrow(b))$ can be correctly interpolated. Return its value at $X = 0$. $qed$
+
+#table(columns: 2, align: (center, center), [$q=$ number of queries], [$n$], 
+      [$O(1)$], [$exp(O(k^(1\/(q-1))))$],
+      [$log n$], [$k^(O(log log k))$],
+      [$log^t n, t > 1$], [$k^(1+1/(t-1)+o(1))$],
+      [$n^(1\/t), t>=1$], [$t^(t+o(t)) dot k$])
+
+*Theorem. (Normal (linear) form for LDCs)* LDC properties implies $exists$ $q$-uniform hypergraphs $H_1, H_2, dots.c, H_k$ on $[n]$ s.t. (i) each $H_i$ is a matching with $Omega(n)$ hyperedges; (ii) for each $i$ and each hyperedge $E in H_i$, $m_i = plus.big.o_(j in E) C(m)_j.$ The reverse holds similar to the hypergraph code.

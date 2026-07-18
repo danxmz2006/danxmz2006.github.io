@@ -591,7 +591,7 @@ The following goal is to construct $I_i subset [ell]$ that $I_i inter I_j$ are s
 
 *Definition. (Combinatorial Design)* $(I_i)$ is called a *combinatorial design* if (i) $forall i in [n], abs(S_i) = m$ (ii) $forall i != j, abs(S_i inter S_j) <= log n.$
 
-*Theorem.* There exists a combinatorial design with $ell = O(m^2 / log n)$ that can be found in $O(n^2 2^ell)$ time.
+*Theorem.* There exists a combinatorial design with $ell = O(m^2 / (log n))$ that can be found in $O(n^2 2^ell)$ time.
 
 _Proof._ We apply the probabilistic method. For each $i$, select $I_i$ randomly by having each $x in I_i$ w.p. $2m \/ ell$. Then $Pr[I_i <= m] <= e^(-m/4)$, and $EE[abs(I_i inter I_j)] = (4 m^2) / ell$. Let $(4 m^2) / ell <= 1/100 log n$ then 
 $ Pr[abs(I_i inter I_j) >= log n] <= (e/100)^(log n) << 1/n^3. $
