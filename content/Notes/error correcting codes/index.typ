@@ -337,7 +337,7 @@ _Proof._ By the construction of $Q$, $deg R <= D$. Hence $R(X)$ has $>= t$ roots
 
 _Proof._ $Q(X,Y) in (FF_q [X])[Y]$ has at most $t$ roots since $FF_q [X]$ is an integral domain. So it has at most $L$ factors of the form $Y - f(X)$.
 
-We can embed $FF_q [X]$ into a field $F = FF_q [X]/(E(X))$. Factor in $F[X]$ can be done using Berlekamp's algorithm.
+We can embed $FF_q [X]$ into a field $F = FF_q [X]\/(E(X))$. Factor in $F[X]$ can be done using Berlekamp's algorithm.
 
 To minimize $D = n / L + (k L) / 2$, we have $D >= 2 sqrt(n k)$ when $L = ceil(sqrt(2 n \/ k))$, and $t approx sqrt(2 n k) approx sqrt(2 R) n$. The error fraction is $1 - sqrt(2 R)$.
 
@@ -449,4 +449,4 @@ _Proof._ Given $arrow(a) in FF_q^m$, we would like to find $f(arrow(a))$. $f(arr
       [$log^t n, t > 1$], [$k^(1+1/(t-1)+o(1))$],
       [$n^(1\/t), t>=1$], [$t^(t+o(t)) dot k$])
 
-*Theorem. (Normal (linear) form for LDCs)* LDC properties implies $exists$ $q$-uniform hypergraphs $H_1, H_2, dots.c, H_k$ on $[n]$ s.t. (i) each $H_i$ is a matching with $Omega(n)$ hyperedges; (ii) for each $i$ and each hyperedge $E in H_i$, $m_i = plus.big.o_(j in E) C(m)_j.$ The reverse holds similar to the hypergraph code.
+*Theorem. (Normal (linear) form for LDCs)* Linear LDC properties implies $exists$ $q$-uniform hypergraphs $H_1, H_2, dots.c, H_k$ on $[n]$ s.t. (i) each $H_i$ is a matching with $Omega(n)$ hyperedges; (ii) for each $i$ and each hyperedge $E in H_i$, $m_i = plus.big.o_(j in E) C(m)_j.$ The reverse holds similar to the Hadamard code.
