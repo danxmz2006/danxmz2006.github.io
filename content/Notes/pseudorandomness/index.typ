@@ -471,7 +471,7 @@ Now we would like to reduce general sources to block sources. The main benefit i
 *Definition. (Conditional min-entropy)* Let $X,A$ be jointly distributed, then
 $ H_infinity [X | A] = - log(EE_(a~A) [max_x Pr[X = x | A = a]]). $
 
-*Lemma. (Chain rule)* If the support of $A$ is at most $w$, then $ H_infinity [X | A] >= H_infinity[X,A] - log w >= H_infinity [X] - log w. $
+*Lemma. (Chain rule)* If the support of $A$ is at most $w$, then $ H_infinity [X | A] >= H_infinity [X,A] - log w >= H_infinity [X] - log w. $
 
 *Corollary.* Assume $(X,A)$ is a $k$-source, $abs(A) <= 2^ell$. Then w.p. at least $1-epsilon$ over $a ~ A$, $X |_(A = a)$ is a $(k - ell - log(1/epsilon))$-source.
 
