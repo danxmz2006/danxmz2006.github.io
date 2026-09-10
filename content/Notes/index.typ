@@ -25,3 +25,9 @@
 == 2026 Summer
 
 #link("error correcting codes/")[Error Correcting Codes]
+
+== 2026 Fall
+
+#link("2026-Fall-ComputerNetwork/")[计算机网络]
+
+#link("2026-Fall-Cryptography/")[crypto]
