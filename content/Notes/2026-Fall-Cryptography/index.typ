@@ -19,7 +19,7 @@ $ Pi = (cal(M), cal(C), cal(K), Gen, Enc, Dec). $
 
 Here $Gen$ is an randomized algorithm that determines the distribution of $k in cal(K)$; $Enc : cal(K) times cal(M) -> cal(C)$ and $Dec : cal(K) times cal(C) -> cal(M)$ are *encryption* and *decryption* algorithms. We require that the scheme is *correct*, that is $Dec(k, Enc(k, m)) = m$, $forall k,m$.
 
-*Definition 1.2. (Perfect Secrecy)* $Pi$ has *perfect secrecy* if for any $m_0 != m_1$, $Enc(K,m_0)$ and $Enc(K,m_1)$ are equidistributed, where $K <- Gen$. (Equivalently, $c$ reveals no information of $m$ and $Pr[M = m | C = c]$.) #tufted.margin-note[This is also known as Shannon security.]
+*Definition 1.2. (Perfect Secrecy)* $Pi$ has *perfect secrecy* if for any $m_0 != m_1$, $Enc(K,m_0)$ and $Enc(K,m_1)$ are equidistributed, where $K <- Gen$. (Equivalently, $c$ reveals no information of $m$.) #tufted.margin-note[This is also known as Shannon security.]
 
 *Definition 1.3. ("Semantic Security")* $Pi$ has *"semantic security"* if for any function $f$ on $cal(M)$, any distribution $M$ on $cal(M)$, and any adversary $A$ which is defined on $cal(C)$ with any possible side information $g(M)$, there is some algorithm $S(g(M))$ s.t. $ Pr[A(c,g(M)) = f(M)] <= Pr[S(g(M)) = f(M)]. $
 
@@ -42,7 +42,7 @@ So the above definition isn't useful. If we allow some error (total variance) we
 
 #tufted.margin-note(image("imgs/distinguish.png"))
 
-*Definition 1.8. (Computational Indistinguishability)* A scheme $Pi$ is *computationally indistinguishable* if for any $m_0 != m_1 in cal(M)_lambda$ (selected by the p.p.t. adversary) and probabilistic polynomial time distinguisher $D : cal(C) -> {0,1}$, $Pr[D(Enc(K, m_b)) = b] <= 1/2 + negl(lambda)$. Here $b in {0,1}$ is selected by the challenger. 
+*Definition 1.8. (Computational Indistinguishability)* A scheme $Pi$ is *computationally indistinguishable* if for any $m_0 != m_1 in cal(M)_lambda$ (selected by the p.p.t. adversary) and probabilistic polynomial time distinguisher $D : cal(C) -> {0,1}$, $Pr[D(Enc(K, m_b)) = b] <= 1/2 + negl(lambda)$. Here $b in {0,1}$ is selected randomly by the challenger. 
 
 *Definition 1.9. (Semantic Security)* $Pi$ has *semantic security* if for every ... and every p.p.t. A, there exists a p.p.t. $S$, such that
 $ Pr[A(Enc(K,M), g(M)) = f(M)] <= Pr[S(g(M)) = f(M)] + negl(lambda). $
@@ -71,4 +71,32 @@ $x_(i+1) dots.c x_n$ can be computed from $s_i$, so we get $P'(s_i)=x_i$ w.p. $1
 
 $ Enc(k,m) = G(k) plus.o m, Dec(k,c) = G(k) plus.o c. $
 
-_Proof._ Suppose for $m_0,m_1$ there is a distinguisher $D:cal(C)->{0,1}$ s.t. $Pr[D(Enc(K,m_b)) = b] >= 1/2 + 1/poly(n)$, $b = 0,1$. Let $A(x)$ be a distinguisher as follows: uniformly select $b in {0,1}$, return $[D(x plus.o m_b) = b]$. When $x$ is sampled from a uniform distribution $EE[A(x)] = 1/2$, where as when $x <- G(k)$ $EE[A(x)] >= 1/2 + 1/poly(n)$. $qed$
+_Proof._ Suppose for $m_0,m_1$ there is a distinguisher $D:cal(C)->{0,1}$ s.t. $Pr[D(Enc(K,m_b)) = b] >= 1/2 + 1/poly(n)$, $b = 0,1$. Let $A(x)$ be a distinguisher as follows: uniformly select $b in {0,1}$, return $[D(x plus.o m_b) = b]$. When $x$ is sampled from a uniform distribution $EE[A(x)] = 1/2$, whereas when $x <- G(k)$ $EE[A(x)] >= 1/2 + 1/poly(n)$. $qed$
+
+== lec02
+
+The PRG in Proposition 1.12 can be made to generate unlimited amount of pseudorandom bits. The infinite string then can be used to encrypt multiple messages. Such a scheme is called a *stream cipher*.
+
+We define several candidates for multi-message security.
+
+*Definition 2.1. (Multi-message Indistinguishability Game)* The challenger sends $lambda$ to the adversary. Then the adversary sends $m_([l])^0, m_([l])^1$ to the challenger, who samples $b <- {0,1}, k <- Gen(1^lambda)$ then responds with $(c_i = Enc(k,m_i^b))$. The adversary outputs $b' in {0,1}$ and wins if $b' = b$. Notice that we allow $m_i^0 = m_i^1$.
+
+The problem with this definition is that it doesn't handle _adaptive queries_, and $Enc$ might be weak against this type of attacks.
+
+*Definition 2.2. (Chosen Plaintext Attack)* The CPA game allows the adversary to query polynomially many instances $Enc(k,m_i)$ before and after the distinguishing process. ($k$ is fixed in advance.) It is only required to distinguish a single pair of messages $m^b, b <- {0,1}$.
+
+*Definition 2.3. (Multi-message CPA)* The adversary now queries a polynomially long sequence of $(m_i^0, m_i^1)$, and the challenger responds with $Enc(k,m_i^b)$ *instantly after each query*. 
+
+*Proposition 2.4.* CPA and multi-message CPA are equivalent.
+
+_Proof Sketch._ It is evident that multi-message CPA security implies CPA security. The opposite direction is proven with a hybrid argument: consider letting the challenger respond with $Enc(k,m_i^0)$ in the first $j$ queries and respond with $Enc(k,m_i^1)$ in the last $l-j$ queries. 
+
+One can see that a deterministic encryption scheme cannot be CPA secure since we allow $m_i^0 = m_i^1$.
+
+To construct a scheme which handles multiple messages while satisfying the CPA security, we need to use *pseudorandom functions*. 
+
+*Definition 2.5 (PRF)* A PRF $F:{0,1}^lambda times {0,1}^(n(lambda)) -> {0,1}^(m(lambda))$ (i) is computable in polynomial time; (ii) is indistinguishable in p.p.t. from a truly random oracle.
+
+There is a classic PRF construction from PRG (see #link("../pseudorandomness", [_Pseudorandomness_])) called the _GGM tree_. Constructing PRG from PRF is trivial.
+
+Now we construct a CPA-secure *randomized* encryption scheme. #tufted.margin-note[An alternative approach is to use a *stated* encryption.] When encrypting $m$, let $r_m$ be sampled from ${0,1}^lambda$ and let $Enc(k,m) = r_m || F(k,r_m) plus.o m$. With high probability in $r$, ${r_m}$ won't collide. Under this condition, if the CPA game gives large advantage then it is a distinguisher between $F$ and a random oracle.
