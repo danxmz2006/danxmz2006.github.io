@@ -44,7 +44,7 @@ So the above definition isn't useful. If we allow some error (total variance) we
 
 *Definition 1.8. (Computational Indistinguishability)* A scheme $Pi$ is *computationally indistinguishable* if for any $m_0 != m_1 in cal(M)_lambda$ (selected by the p.p.t. adversary) and probabilistic polynomial time distinguisher $D : cal(C) -> {0,1}$, $Pr[D(Enc(K, m_b)) = b] <= 1/2 + negl(lambda)$. Here $b in {0,1}$ is selected randomly by the challenger. 
 
-*Definition 1.9. (Semantic Security)* $Pi$ has *semantic security* if for every ... and every p.p.t. A, there exists a p.p.t. $S$, such that
+*Definition 1.9. (Semantic Security)* $Pi$ has *semantic security* if for every ... and every p.p.t. $A$, there exists a p.p.t. $S$, such that
 $ Pr[A(Enc(K,M), g(M)) = f(M)] <= Pr[S(g(M)) = f(M)] + negl(lambda). $
 
 *Proposition 1.10. (Goldwasser-Micali)* The above two definitions are equivalent. 
@@ -95,8 +95,106 @@ One can see that a deterministic encryption scheme cannot be CPA secure since we
 
 To construct a scheme which handles multiple messages while satisfying the CPA security, we need to use *pseudorandom functions*. 
 
-*Definition 2.5 (PRF)* A PRF $F:{0,1}^lambda times {0,1}^(n(lambda)) -> {0,1}^(m(lambda))$ (i) is computable in polynomial time; (ii) is indistinguishable in p.p.t. from a truly random oracle.
+*Definition 2.5. (PRF)* A PRF $F:{0,1}^lambda times {0,1}^(n(lambda)) -> {0,1}^(m(lambda))$ (i) is computable in polynomial time; (ii) is indistinguishable in p.p.t. from a truly random oracle.
 
 There is a classic PRF construction from PRG (see #link("../pseudorandomness", [_Pseudorandomness_])) called the _GGM tree_. Constructing PRG from PRF is trivial.
 
 Now we construct a CPA-secure *randomized* encryption scheme. #tufted.margin-note[An alternative approach is to use a *stated* encryption.] When encrypting $m$, let $r_m$ be sampled from ${0,1}^lambda$ and let $Enc(k,m) = r_m || F(k,r_m) plus.o m$. With high probability in $r$, ${r_m}$ won't collide. Under this condition, if the CPA game gives large advantage then it is a distinguisher between $F$ and a random oracle.
+
+*Definition 2.6. (OWF)* $f:{0,1}^* -> {0,1}^*$ is called a *one-way function* if (i) $f$ can be evaluated by a polynomial algorithm; (ii) for every p.p.t. $A$,
+
+$ Pr[A(f(U_n), 1^n) in f^(-1) (f(U_n))] = negl(n). $
+
+*Proposition 2.6.* A PRG $G:{0,1}^ell -> {0,1}^n$ where $n >= 2 ell$ is always an OWF. 
+
+_Proof._ Assume $Pr[G(A(G(U_ell),1^ell)) = G(U_ell)] >= 1/n^c.$ We can construct a distinguisher $D$ as follows. On input $x$, if $G(A(x,1^ell)) = x$, output $1$; otherwise, output ${0,1}$ w.p. $1/2$ each. If $x <- G(U_ell)$, $Pr[D(x) = 1] >= 1/2 + 1/n^c$; if $x <- U_n$, since $abs(G(A({0,1}^ell, 1^ell))) <= 2^ell$, $Pr[D(x) = 1] <= 1/2 + 2^(ell - n)$. This contradicts the definition of a PRG. $qed$
+
+*Proposition 2.7.* A CPA-secure encryption scheme implies an OWF.
+
+_Proof._ Let $f(x) = Enc(Gen(1^lambda,x), 0^lambda)$. ($Gen$ should output a distribution of keys based on a uniform distribution.) The security clearly implies that $f$ is an OWF. $qed$
+
+An OWF can be made *length-preserving* by padding the output with `100...` and possibly truncating part of the input. However, inadequete padding may cause the resulting function to lose the OWF property. Consider padding with only 0. Let $F:{0,1}^n -> {0,1}^(n/2)$ be an OWF. Consider the following function: 
+
+$ F^prime (x) = cases(x "if" x = x^prime || 0^(n/2), F(x) "otherwise"). $
+
+It's easy to see that $F^prime$ is still an OWF. However, once it is padded to length $n$, we always have $F^prime (F^prime (x)) = F^prime (x)$, so it's no longer an OWF.
+
+== lec03
+
+*Definition 3.1. (Weak OWF, OWP)* A *weak one-way function* is an efficiently computable function that for some fixed polynomial $q(n)$, any p.p.t. $A$ can invert it on at most $1 - 1/(q(n))$ portion for suffiently large $n$. A *one-way permutation* is an OWF that is also a permutation.
+
+*Definition 3.2.* A *hardcore predicate for $f$* is a function $h:{0,1}^* -> {0,1}$ is a function s.t. for every p.p.t. $A$, 
+$ Pr_(x<-{0,1}^lambda) [A(1^lambda, f(x)) = h(x)] <= 1/2 + negl(lambda). $
+
+*Proposition 3.3. (Goldreich-Levin) * If OWF exists, then some OWF has a hardcore predicate.
+
+_Proof._ For any OWF $f$, construct another OWF $f_"GL" (x,y) = (f(x),y)$ ($abs(y) = abs(f(x)) = abs(x)$). Consider the Hadamard encoding of $x$ ($h(x,y) = chevron.l x,y chevron.r$). If $h$ is not a hardcore predicate, then there is a p.p.t. $A$ that can compute $h$ based on $f_"GL" (x,y)$, and the local list-decoding of the Hardmard code gives a way to compute $x$.
+
+Specifically, assume a p.p.t. $A_"GL"$ satisfies that $ Pr_(x,y) [A_"GL" (f_"GL" (x,y)) = chevron.l x,y chevron.r] >= 1/2 + 1/(p(lambda)). $
+
+Then for a noticeable portion of $x$, $Pr_y [A_"GL" (f_"GL" (x,y)) = chevron.l x,y chevron.r] >= 1/2 + 1/(q(lambda)).$
+
+We present the local list-decoding algorithm here. Assume we have a binary function $g:{0,1}^n->{0,1}$ which is $1/2 - epsilon$ close to some linear function $chevron.l a,dot.c chevron.r$. That is, for at least $1/2 + epsilon$ fraction of $x$, $g(x) = chevron.l a,x chevron.r$.
+
+We have $a_i = chevron.l a,x chevron.r plus.o chevron.l a,x plus.o e_i chevron.r$. Pick a random $<=t$-dimensional subspace $V <= FF_2^n$. If we have the correct values of $chevron.l a,dot.c chevron.r$ *on the entire subspace*, then by taking majority of $g(x plus.o e_i) plus.o chevron.l a,x chevron.r (x in V)$, we can raise the success by concentration inequality.
+
+Note that by linearity, the linear function is correctly evaluated on $V$ as long as is it is correctly evaluated on $r_1,r_2,dots.c,r_t$ which generate $V$. The probability is $2^(-t)$ (random guessing). Let $r_S = plus.o.big_(i in S) r_i$. Since $r_i <- U_n$, $(r_S)$ are pairwise independent. Thus by Chernoff bound,
+$ Pr[op("Maj")_(S != emptyset) (g(r_S plus.o e_i) plus.o chevron.l a, r_S chevron.r != chevron.l a,e_i chevron.r] <= 1/((2^t - 1) epsilon^2). $ 
+
+So $a_i$ is computed correctly w.p. $>= 1/(2^t (2^t - 1) epsilon^2)$. When $t = O(log(n/epsilon))$ we can recover $a$ with noticeable probability.
+
+Now we can recover $x$ based on $f_"GL" (x,y)$. $qed$ #tufted.margin-note[Local list-decoding of Reed-Muller codes up to minimum distance is much harder (it is done in 2023).]
+
+*Corollary 3.4.* OWP $p$ + hardcore predicate $h$ implies PRG.
+
+_Proof._ Let $G(x) = p(x) || h(x)$. $qed$
+
+*Definition 3.5. (Universal OWF)* A function $f$ is a universal OWF if it is polynomial time computable, and it is always an OWF if any OWF exists.
+
+*Proposition. 3.6.* Universal OWF exists.
+
+_Proof._ Let $"TM"_i$ be an enumeration of Turing machines. Let the input $x$ be partitioned into $x_1 || x_2 || dots.c$ where $abs(x_i) = 1/2^i abs(x)$ (we truncate $i > log_2 abs(x)$). Define 
+$ f(x) = "TM"_1 (x_1) || "TM"_2 (x_2) || dots.c $
+
+Since some $"TM"_i$ computes an OWF, $f(x)$ is an OWF. (By a padding argument, we can prove something like "If OWF exists, then $f$ is an OWF which runs in time $O(n^2)$.")
+
+*Definition. (PRP)* A *pseudorandom permutation* $P:{0,1}^lambda times {0,1}^(n(lambda)) -> {0,1}^(n(lambda))$ has to be correct (we require that $P,P^(-1)$ are efficiently computable). We say $P$ is *secure* if $P$ is also a PRF; we say $P$ is *strongly secure* if there is no distinguisher under oracles to both $P$ and $P^(-1)$.
+
+PRP is sometime referred to as *block cipher*.
+
+*Proposition 3.7. (Feistel Network)* PRF implies (strong) PRP. 
+
+_Proof_. Assume the input $abs(x) = 2n$. The construction is called *Feistel network*. Let $x = x_0 || x_1$ and $ x_(i+2) = F(k_(i+1),x_(i+1)) plus.o x_i. $
+Let $x_i || x_(i+1)$ be called the output of the $i$-round Feistel network. We claim that (i) 3-round Feistel network computes a secure PRP; (ii) 4-round Feistel network computes a strong PRP.
+
+WLOG, assume that the adversary would never query the same input again (we can maintain a list of $(x,f(x))$). By a simple hybrid argument we can also replace $F$ with truly random functions ($F(k_i, dot.c) -> f_i$). 
+
+Let $q = q(n)$ be the upper bound on the number of queries made by a distinguisher $D$. Let $x_j^i$ be the intermediate value $x_j$ in the $i$th query.
+
+We say there is a _collision_ at $x_2$ if for $i!=j$, $x_2^i = x_2^j$. We show that this happens with negligible probability. If $x_1^i = x_1^j$ then $x_0^i != x_0^j$ and $ x_2^i = x_0^i plus.o f_1 (x_1^i) != x_0^j plus.o f_1 (x_1^i) = x_2^j. $
+So $x_1^i != x_1^j$ and the collision probability is $2^(-n)$. Taking union bound we have that a collision won't happen w.h.p. 
+
+Conditioned on there is no collision, since $x_3 = x_1 plus.o f_2 (x_2)$, $x_3^i$ are uniformly and independently distributed. Similarly, conditioned on $(x_0,x_1,x_3)$, w.h.p. $x_4^i$ are also w.h.p. uniformly and independently distributed (conditioned on there is no collision between $x_3^i$). So when querying $F^((3))$, except with negligible probability, the output is uniformly distributed.
+#tufted.margin-note([This proof omits some technical details. A more rigorous (and lengthy) way is to proceed by "locally replacing" the challenger step by step.])
+
+3-round Feistel network is not a strong PRP. Let $r <- {0,1}^n$, consider the following 3-round game. 
+$ 
+ (x_3^0, x_4^0) = F(x_0^0, x_1^0) \
+ (x_3^1, x_4^1) = F(x_0^0 plus.o r, x_1^0) \
+ (x_0^2, x_1^2) = F^(-1) (x_3^0, x_4^0 plus.o r)
+$
+It can be shown that $x_3^1 plus.o x_1^0 = x_1^2 plus.o x_3^0 = f_2 (x_2 plus.o r)$. For strong PRPs, however, this happens with negligible probability.
+
+The main problem is that $x_2$ can be computed in 2 different directions. For $i<j$, there is no obstacle preventing events like $x_0^i plus.o f_1 (x_1^i) = x_4^j plus.o f_3 (x_3^j)$, so $x_2$ might collide with noticeable probability.
+
+The reason why 4-round Feistel network is a bit involved. The main idea is that, when making a query $P(x_0,x_1)$, we can adjust the challenger program, so that $(x_3,x_4,x_5)$ can be viewed as they are i.i.d. distributed, and check collision after every query is handled. Refer to #link("./pset3.pdf", [pset3]) for a full proof.
+
+*Proposition 3.8. (Yao)* Weak OWF implies OWF.
+
+_Proof Sketch._ Assume $f$ is a weak OWF: inversion succeed w.p. at most $1-1/(q(n))$ for sufficiently large $n$. Take $ f'(x_1 || x_2 || dots.c || x_m) = (f(x_1) || f(x_2) || dots.c || f(x_m)). $
+
+Assume $f'$ is not an OWF. That is, some p.p.t. $A'$ invert it w.p. $>= 1/(p(n))$. We derive contradiction by the following argument. *Here $m = m(n)$ is a polynomial that does not depend on $p$.*
+- If $A'$ succeed, either every $x_i$ is good (easy to invert for $f$ using $A'$ in some sense), or some $x_i$ is bad. However, we can use $A'$ to invert $x_i$, so the second type of event happens with bounded probability. So there is an upper bound on the fraction of bad $x$.
+- We can use multiple repetition to increase the chance to invert a good $x$. 
+
+Check #link("./pset3.pdf", [pset3]) for a detailed proof. #tufted.margin-note([This is an example of the direct product theorems.])

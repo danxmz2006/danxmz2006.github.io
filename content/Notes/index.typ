@@ -31,3 +31,7 @@
 #link("2026-Fall-ComputerNetwork/")[计算机网络]
 
 #link("2026-Fall-Cryptography/")[crypto]
+
+#link("2026-Fall-OS/")[OS]
+
+#link("2026-Fall-Architecture")[Computer Architecture]

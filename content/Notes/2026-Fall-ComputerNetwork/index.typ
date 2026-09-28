@@ -127,5 +127,182 @@ Internet 的 DNS 是一个分布式数据库系统, 由若干个域名服务器�
 
 每个 ISP 都至少有一个*本地 DNS 服务器 (递归服务器)* 距离用户主机较近. 本地 DNS 服务器可能有一层或多层.  
 
-域名解析首先发给本地 DNS 服务器, 然后采取递归查询或者迭代查询
+域名解析首先发给本地 DNS 服务器, 然后采取递归查询 (主机向本地 DNS 服务器查询) 或者迭代查询 (本地 DNS 服务器向更上层服务器).
 
+DNS 报文包括*基础结构* (报文首部), *问题*和*资源记录*. 报文类型包括查询请求和查询响应.
+
+#image("imgs/dns.png")
+
+基础结构包括*事务 ID*, *标志*, *问题计数*, *回答资源记录数*, *权威资源记录数*和*附加资源记录数*. 
+
+标志字段包括 Q/R 状态, Opcode (操作码) (0: 标准查询, 1: 反向查询, 2: 服务器状态查询), AA (权威应答, 在响应报文中生效, 标志是不是权威服务器), TC (表示是否被截断), RD (期望递归), RA (可用递归), Z (保留字段, =0), Rcode (返回码: 表示响应的差错状态).
+
+问题部分包括查询名, 查询类型和查询类.
+
+资源部份只在 DNS 响应报文中出现, 包括回答问题区域字段, 权威名字服务器区域字段, 附加信息区域字段. 这三个字段都采用*资源记录 (RR)* 格式 `NAME + TYPE + class + 生存时间 TTL + 资源数据长度 RDLENGTH + 资源数据 RDATA`.
+
+资源记录类型同问题部分的查询类型相同, 决定了 name 和 value 分别的含义.
+
+域名系统采取高速缓存, 包括域名-IP 映射和顶级域名服务器信息. 缓存项目具有时限.
+
+DNS 协议未多考虑安全问题, 通常基于 UDP 明文传输. DNSSEC 依靠数字签名保证 DNS 报文的真实性和完整性.
+
+=== 电子邮件服务
+
+电子邮件系统体系结构包括 *用户代理 (客户端)*, *传输代理 (邮件服务器)* 和 *协议 (SMTP, POP3, IMAP)*. 待发送的邮件和用户收到的邮件放在邮件队列和邮箱, 位于邮件服务器.
+
+SMTP 定义了如何传输邮件. 邮件需要遵循特定格式:
+```
+首行 (header): From: 首部行 + To: 首部行, 可以包含 Subject: 等可选首部行
+<空行>
+主体 (body)
+```
+
+邮件格式有 RFC 5322 和 MIME. 基本 ASCII 邮件使用 RFC 5322. MIME 为多用途 Internet 邮件拓展 (多媒体拓展). MIME 加入了消息体结构 (定义非 ASCII 消息编码规则).
+
+SMTP 利用 TCP 从客户向服务器传递邮件, 使用端口 25. 实际实现中客户端需要向服务器发送一系列命令, 服务器一一响应.
+
+假设邮件到达了 Bob 的邮箱. 现在需要将邮件的一个副本传送给 Bob 的用户代理.
+
+最终交付协议: 从邮箱中取邮件. e.g. POP3, IMAP, Webmail
+
+POP3 采用端口 110 上的 TCP 连接, 分为认证, 事务处理和更新三个阶段. POP3 包含 `user, pass, list, retr, dele, quit` 等命令.
+
+IMAP 是 POP3 的改进版, 邮件服务器运行侦听端口 143 的 IMAP 服务器, 用户代理运行 IMAP 客户端. 最大区别是邮件存在服务器上不要求用户取走.
+
+Webmail 基于 Web, 通过 HTTP 进行.
+
+=== 套接字编程
+
+应用需*显示*地创建, 使用和释放套接字.
+
+Linux 系统中程序通过访问*套接字描述符*进行通信. 用文件读写的方式发送,接收数据.
+
+```c
+#include <unistd.h>
+
+int read(int fd, void *buf, size_t count);
+int write(int fd, void *buf, size_t count);
+```
+
+进程标识包括主机地址和与该进程关联的端口号. 使用 `socket()` 创建本地套接字.
+
+```c 
+#include <sys/socket.h>
+
+int socket(
+  int domain, /* AF_UNIX, AF_INET, etc. Network layer address family. */
+  int type, /* SOCK_STREAM, SOCK_DGRAM */
+  int protocal); /* usually 0 */
+  // return fd if success, -1 on error
+```
+
+使用 `bind()` 将本地套接字地址和描述符绑定. *通常在服务器端调用.*
+
+```c 
+#include <sys/socket.h>
+int bind(
+    int socket_fd,
+    const struct sockaddr *sa,
+    socklen_t sa_len);
+ /* Returns 0 if OK or -1 on error (sets errno) */
+
+struct sockaddr {
+  u_short sa_family;        /* type of address，2 bytes, UNIX field / IPv4 / IPv6 */
+  char    sa_data[14];      /* value of address，14 bytes */
+}
+```
+
+`struct sockaddr_in` 用于描述 IPv4 套接字地址, 是 `struct sockaddr` 的一个子类.
+
+```c 
+struct sockaddr_in {  //struct to hold an address
+    sa_family_t sin_family;  //always AF_INET, 2 bytes
+    in_port_t sin_port; //protocol port number: uint16_t, 2 bytes
+    struct in_addr sin_addr; //IP address, 4 bytes
+    char sin_zero[8];   //unused(set to zero), 8 bytes
+};
+
+struct in_addr {
+  in_addr_t s_addr; // IPv4 address (uint32_t)
+};
+```
+
+客户和服务器调用 `close()` 关闭套接字. 如果 fd 为 TCP 描述符则会向远程进程发送关闭连接的信息.
+
+```c 
+#include <unistd.h>
+
+int close(int fd);
+/* Return 0 if ok or -1 if error */
+```
+
+UDP 在设置完 fd 后可以直接用 fd 收发数据.
+
+```c 
+#include <sys/socket.h>
+ssize_t sendto(
+        int socket_fd,
+        const void *buff,
+        size_t nbytes,
+        int flags, /* usually 0 */
+        const struct sockaddr *to, 
+        socklen_t *addrlen,
+        );
+/*Return number of bytes written if OK or -1 on error*/
+
+ssize_t recvfrom(
+        int socket_fd,
+        void *buff,
+        size_t nbytes,
+        int flags, /* usually 0*/
+        struct sockaddr *from, 
+        socklen_t *addrlen,
+        );
+/*Return number of bytes read if OK or -1 on error*/
+```
+
+#image("imgs/udp.png") 
+
+使用 TCP 时, 需要建立连接. 服务器维护多个套接字, 包括一个监听套接字和多个连接套接字. 服务器在监听套接字上等待客户的连接请求, 直到客户端调用 `connect()` 发起连接请求. 之后系统自动创建一个临时套接字 (连接套接字) 与客户进程通信. 
+
+```c 
+#include <sys/socket.h>
+
+int connect(
+  int socket_fd,
+  const struct sockaddr *servaddr, 
+  socklen_t *addrlen);
+/* Return 0 or -1 on error */
+
+int listen( // turn a socket into a passive socket, entering the listening state
+  int socket_fd,
+  int backlog); // maximum connection queue length
+/* Returns 0 if OK or -1 on error */
+
+int accept(
+  int socket_fd,
+  struct sockaddr *cliaddr,
+  socklen_t *addrlen);
+/* Return fd or -1 on error */
+```
+
+=== P2P
+
+P2P 中每个实体都是对等实体 (peer). P2P 架构的上传 + 下载耗时低于 C/S 架构, 因为每个节点都提供了上传能力.
+
+资源索引: 给定资源查询拥有资源的 peer.
+
+中心化索引: 建立一个中心化服务器帮助检索. 每个 peer 需要连接中心化服务器告知自身 IP 地址和拥有内容. 每个 peer 进行查询时先查询中心化服务器. 中心化索引会带来单点故障问题和性能瓶颈.
+
+解决方案: Query Flood (洪泛请求). 每个 peer 建立索引记录*自己*拥有的资源, peer 之间通过 TCP 连接形成一个图, 满足点度小于 10. 查询时采取 BFS.
+
+混合方法: 建立超级节点, 超级节点之间使用去中心化索引, 普通节点和超级节点之间使用中心化索引.
+
+Gnutella: 纯 P2P 的文件分发协议.
+
+BitTorrent: 正在交换某个文件的 peer 组成一个 torrent (种子). 追踪器 (Tracker) 为一个独立服务器, 维护一个正在主动上传和下载该内容的所有其它对等用户列表. Peer 可以通过 Tracker 找到其它 peers. 文件被分为大小为 256Kb 的块. 一个 peer 加入 torrent 时向追踪器注册, 然后逐渐从其它 peers 获取文件块. 下载时 peers 彼此交换各自拥有的块清单 (同时交换邻居列表).
+
+Skype: 基于 P2P 的即时通讯. 基于层次化结构的混合方法. 层次化结构可以避免普通节点之间无法直接进行连接.
+
+区块链: 每个 peer 存储一部分数据并记录在区块上. 具有频繁写操作. 比特币协议每周期内产生一个区块, 由最早解决某个计算问题 (通常为对单向函数求逆) 获得写权力. 对于几乎同时产生的区块看各自获得认可 peers 人数.
