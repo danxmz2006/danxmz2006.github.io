@@ -58,6 +58,34 @@ System calls: used for a user program to do something priviledged. ISA provides 
 
 == Processes
 
+Buzz words: _Process, execution state, address space, context switch, process control block (PCB)._
+
+The process in the OS is an abstraction for execution (sometimes called job/task/sequential process).
+
+A process has an *execution state* that indicates what is it currently doing: running/ready/waiting.
+
+Each process has its own *address space*. The kernel is usually in the high memory.
+
+#image("imgs/addrspace.png")
+
+=== Process Data Structures
+
+The kernel represents a process by a *process control block (PCB)*. It contains all the info about a process.
+
+The OS maintains a queue for each state, each containing PCBs.
+
+A *context switch* happens with two stages: the OS stops running a process and save its current hardware states into PCB; the OS is ready to start running a process and loads the hardware registers from the value stored in PCB.
+
+=== Working on Processes
+
+The `exec()` call stops the current process and load `prog` into the process' address space. It initializes hardware context and args for the new program, and places the PCB onto the ready queue. It does not create a new process.
+
+`fork()` creates a child process.
+
+`exit()` is used to end a process. (The OS does the cleanup process.)
+
+`wait()` suspends the current process until a child process ends. `waitpid()` specifies the child process PID.
+
 == Threads
 
 Buzz words: _Threads, multithreading, sharing, scheduling._
@@ -66,4 +94,10 @@ The *thread* defines a sequential execution stream within a process (PC, SP, reg
 
 The thread model includes shared information and private states. In special, each thread has its own execution stack (must not overlap).
 
+Web servers create a new thread for each request.
+
 OS-managed threads are called *kernel-level threads* or *lightweight processes*. *User-level threads* are managed entirely by the run-time system and are small and fast.
+
+A thread is represented by a PC, registers, stack, and small *thread control block (TCB)*. Manipulating threads is done via procedure call.
+
+User-level threads are invisible to the OS, so it might make poor decisions when scheduling. Solving this requires communication between the kernel and the user-level thread manager.
