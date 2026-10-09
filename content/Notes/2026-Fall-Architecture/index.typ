@@ -275,3 +275,54 @@ This can be fixed by stalling (add 3 stalls before correct execution).
 
 It is possible to move branch decisions earlier in pipe, to the ID stage. In this case forwarding from EX/MEM to ID comparison is required. If the *previous* instruction produces one of the branch source operands, a stall is needed.
 
+== Branch Prediction
+
+We dub whether a branch is taken or not _direction_ and the target address if it is taken _target_.
+
+For conditional branches, predicting direction is difficult while computing target is easy; for indirect jumps and function returns the direction is always taken while predicting target is difficult.
+
+*Static* direction prediction predicts the branch direction at compile time. Early predictors used always-not-taken strategies, and had about 30-40% accuracy. Always-taken has 60-70% accuracy.
+
+BTFNT (backward taken, forward not taken) has advantage in loops. It has about 65% accuracy. Compiler directed prediction (running using test data) has about 75% accuracy.
+
+*Dynamic* direction prediction. Branch history table (BHT) keeps a record of the previous branch behavior, allowing it to improve its predictions over time. It has 80% accuracy.
+
+To handle short and frequently executed loops better, we can use 2-bit BHT instead (this makes the predicted direction more stable). Achieves around 90% accuracy.
+
+It is possible to further improve branch prediction using branch correlation (to 96%) and hybrid predictors (to 97%).
+
+A branch target buffer (BTB) caches the branch target address in the IF stage. 
+
+Function returns are frequent and the address is difficult to predict with BTB. The return address stack solves this issue by saving the return address in a stack at call time.
+
+== Multi-Issue Processor
+
+The optimal number of stages is around 15.
+
+A *dynamic multiple issue machine (superscalar)* consists of a number of pipelines that are working in parallel. Multi-port, multi-ALUs and multi-mux are needed.
+
+If the instructions are dependent, super-scalar degenerates to pipelining. So the precessor must look ahead for independent instructions. The policy of issue and completion can be either in-order or out-of-order.
+
+In-order: dependent on how the code is written.
+
+Out-of-order: must remove true dependencies.
+
+#image("imgs/superscalar.png")
+
+*VLIW (very long instruction word)* is a static multiple-issue architecture (the decision is made by the complier). The sequential ISA is replaced with a new ISA where instruction-level parallelism is encoded. Sub-instructions within a long instruction are independent. There is a slot in a VLIW instruction for each specific functional unit.
+
+#image("imgs/vliw.png")
+
+The main difficulties are in the software side. Compiling techniques include loop unrolling and predicated execution (i.e. conditional move).
+
+=== Static Scheduling
+
+To reduce dependence stalls, reduce IC and CPI.
+
+Register renaming & scheduling: eliminate false dependencies and dead codes.
+
+Loop unrolling.
+
+Function inlining.
+
+Tree height reduction.

@@ -101,3 +101,9 @@ OS-managed threads are called *kernel-level threads* or *lightweight processes*.
 A thread is represented by a PC, registers, stack, and small *thread control block (TCB)*. Manipulating threads is done via procedure call.
 
 User-level threads are invisible to the OS, so it might make poor decisions when scheduling. Solving this requires communication between the kernel and the user-level thread manager.
+
+=== Implementing Threads
+
+We focus on user-level threads.
+
+We use *non-preemptive scheduling* when threads voluntarily give up the CPU with `thread_yield`.
