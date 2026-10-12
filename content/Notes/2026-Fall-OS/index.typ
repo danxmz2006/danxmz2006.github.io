@@ -107,3 +107,52 @@ User-level threads are invisible to the OS, so it might make poor decisions when
 We focus on user-level threads.
 
 We use *non-preemptive scheduling* when threads voluntarily give up the CPU with `thread_yield`.
+
+== Memory Management
+
+Buzz words: _Address space, physical/virtual address, relocation, internal fragmentation, external fragmentation, compaction, swapping._
+
+Memory manager is the part of the operating system that manages the memory hierarchy. The goal of memory management is to provide a convenient abstraction for programming and to allocate scarce memory resources among competing processes to maximize performance with minimal overhead.
+
+The OS provides virtual memory for managing memory.
+
+=== Memory Abstraction
+
+An (virtual) *address space* is the set of addresses that a process can use to address memory. Each process has its own address space (with some exceptions such as shared memory).
+
+*Relocation* maps logical address to physical address. Static relocation converts to physical address for all memory accesses during loading. Dynamic relocation converts to physical addresses when an instruction is executed. 
+
+Dynamic relocation is supported by the hardware named MMU (memory management unit). It has two special registers `base` and `limit`. If physical address is greater than `base + limit`, then protection fault is triggered.
+
+When memory is full then swapping (between disk) is performed.
+
+Memory management can be implemented with bitmaps or linked lists.
+
+There are several memory allocation algorithms. (X-fit)
+
+Memory compaction: merge with neighbors when is finished.
+
+Buddy System: all free segments are in size of power in 2, find the smallest hole larger than the requested size.
+
+Memory overlaying: different functions can reuse the same memory space if they are not dependent on each other. Virtual memory can be served as a replacement of the splitting procedure.
+
+== Virtual Memory
+
+Buzz words: _Paging, page table, segmentation, multi-level page tables, translation lookaside buffer (TLB)._
+
+(Virtual) Pages are fixed-size units in the virtual address space. Page frames are the corresponding units in the physical memory. Paging solves the external fragmentation problem by using fixed sized units in both physical and virtual memory.
+
+Virtual address has two parts: virtual page number (VPN) and offset. *Page tables* maps VPN to page frame number (PFN). A PA includes PFN and offset.
+
+Page table includes a set of page table entries (PTEs). A PTE contains page frame and other information.
+
+#image("imgs/pte.png")
+
+To reduce page table size, use multiple levels. 32-bit address is divided into 10 + 10 + 12 bits. Each page table (master or secondary) takes up exactly one page.
+
+*Segmentation* partitions memory into logically related data units. Each segment has an independent base-limit pair, the pairs are stored in the segment table.
+
+Translation can be made more efficient 
+
+#image("imgs/tlb.png")
+
