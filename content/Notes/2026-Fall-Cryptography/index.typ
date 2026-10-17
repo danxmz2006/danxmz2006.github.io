@@ -269,3 +269,59 @@ There are other MAC variants.
 *Example 4.15. (PMAC)* Let $c_i = F_k (m_i plus.o L_i)$, $c = F_(k') (plus.big.o c_i)$.
 
 *Example 4.16. (Ascon MAC)* Let $S_(i+1) = p_k (S_i plus.o M_i)$.
+
+== lec05
+
+*Definition 5.1 (Keyed Hash Function)* A *keyed hash function* is a pair $(Gen, H)$. $Gen(1^lambda)$ outputs $abs(k) = lambda$, and $H$ maps $(k,x)$ to a digest. We say $H$ is collision-resistant if for any p.p.t. $A$, $Pr[H(k,m_0) = H(k,m_1) : A(1^lambda) -> m_0 != m_1] = negl(lambda)$.
+
+*Example 5.2. (Universal Hash Function)* Consider $k in FF_(2^lambda)$, $H(k,p) = p(k)$ (here $p in FF_(2^lambda) [X]$). This is collision-resistant.
+
+Definition 5.1 naturally extends to *keyless* computational CRHF. 
+
+*Proposition 5.3.* A CRHF is an OWF.
+
+_Proof._ If a random input $x$ is inverted to some $x'$ that $H(x) = H(x')$, then w.h.p. $x' != x$ and there is a collision. $qed$
+
+However, it is proven that OWF cannot imply CRHF in a blackbox way. So instead we consider building an arbitrarily long CRHF based on a fixed-length CRHF.
+
+*Example 5.4. (Merkle-Damgård)* Suppose $H:{0,1}^(2 lambda) -> {0,1}^lambda$ is a CRHF. Let $d_i = H(d_(i-1), m_i)$, $d_0 = I V$ is some fixed value. To avoid problems caused by messages of the same length (which is the only issue), we can reveal the length in the last message.
+
+*Example 5.5. (Merkle tree)* Let $H:{0,1}^(2 lambda) -> {0,1}^lambda$ be a CRHF. Construct a binary tree where at each parent $x_p = H(x_l,x_r)$. The length problem can be fixed with the same trick.
+
+There are weaker types of security specified by stronger requirements on the attacker: second preimage attack receives a random $x$ and is asked to find $x' != x$, $f(x) = f(x')$; preimage attack receives a random $y$ and is asked to find 
+
+Now we consider constructing keyed hash function based on CRHF. (The primitive is no longer collsion resistence.)
+
+*Example 5.6.* Consider the Merkle-Damgård transform. $H'(k,m) = H(k||m)$ would be weak under length-variant attack. $H'(k,m) = H(m||k)$ would collide when a collsion is found for $m!=m'$, regardless of the key.
+
+Hash-and-MAC scheme. Let $k' = (k,s)$ be the key of the scheme, then $sans("Mac")'(k', m) = sans("Mac")_k (H^s (m))$. Here $sans("Mac")$ is a fixed-length MAC, $H$ is a seeded hash function.
+
+2-nested HMAC. The key is applied again after the prepend method.
+
+In reality we need to build compression functions. An approach would be using the block cipher as the hash function and plugging it into the Merkle-Damgård paradigm. 
+
+However this is unsafe. Block cipher is weak under preimage attack.
+
+The *Davies-Meyer compression function* uses $H(x,y) = Enc(y,x) plus.o x$. Once again, this is not secure under conventional PRP assumption, since it doesn't give any requirement when the adversary has control of the key. Thus we introduce the following model.
+
+*Idealized model.* We often design schemes that use some keyless hash function $H$ which has some particular property. However, whether $H$ is good enough for our purpose is hard to decide (we often choose not to prove that in practice). A weaker notion of safety *on the scheme* is that it is safe when using a random oracle against adversaries which have access to the same oracle.
+
+*Proposition 5.7.* A random oracle $H$ is a PRG againsts any adversary $A^H$. In fact, we don't need to limit the computational power of $A$, as long as it queries $H$ for polynomial times. Formally, $ abs(Pr[A^H (y) -> 1] - Pr[A^H (H(x)) -> 1]) = negl(lambda). $
+
+_Proof._ In the real world, given $y = H(x)$, w.h.p. $x$ is never queried by $A$. In this case the real world degenerates to the ideal world. $qed$
+
+*Proposition 5.8.* A random oracle is collision resistant. That is, $A^H$ finds a collision pair $x != x'$, $H(x) = H(x')$ with only negligible probability.
+
+_Proof._ We can assume that the adversary doesn't make repeated query. Furthermore, the pair that it outputs is part of the queries. Then collision probability is bounded like non-adaptive queries. $qed$
+
+*Proposition 5.9.* Let $cal(E)$ be an ideal cipher. Then the Davies-Meyer compression function is collision-resistant under $cal(E)$.
+
+_Proof._ Suppose an adversary $A$ makes $q$ queries and outputs $(x,y) != (x',y')$. We assume that $A$ have made either $Enc(y,x)$ or $Dec(y,dot.c)$ that yields $x$. We make the similar assumption on $(x',y')$. We also assume that $A$ makes no extraneous queries so the triples $(k,m,c)$ don't repeat.
+
+For $i<j$, $Pr[m_i plus.o c_i = m_j plus.o c_j] <= 1/(2^n - j + 1)$ since the randomness is fixed *after* the $j$th query has been made. So from union bound a collision happens with negligible probability. $qed$
+
+We need stronger notion of "indistinguishability" when constructing an oracle $C^F$ from a primitive $F$, because the adversary often has access to $F$. 
+
+*Definition 5.10. (Indifferentiability)* $C^F$ is *indifferentiable* from $P$ if there is a similator $S$ that for any adversary $A$, $ abs(EE[A^(C^F,F)] - EE[A^(P,S^P)]) = negl(n). $
+
+For example, 5-round Feistel network is not indifferentiable from an ideal permutation; higher round number (10) suffices.

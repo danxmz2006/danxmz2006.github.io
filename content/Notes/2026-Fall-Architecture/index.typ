@@ -315,9 +315,9 @@ Out-of-order: must remove true dependencies.
 
 The main difficulties are in the software side. Compiling techniques include loop unrolling and predicated execution (i.e. conditional move).
 
-=== Static Scheduling
+=== Conventional Optimization Techniques
 
-To reduce dependence stalls, reduce IC and CPI.
+Focus on reducing IC.
 
 Register renaming & scheduling: eliminate false dependencies and dead codes.
 
@@ -325,4 +325,48 @@ Loop unrolling.
 
 Function inlining.
 
-Tree height reduction.
+Tree height reduction. Shorten critical path using associative law.
+
+=== Optimization Techniques for ILP
+
+To reduce CPI.
+
+A basic block is a sequence of instructions with no branches into or out of the block. For general computation it is not big enough.
+
+Trace scheduling is a type of global scheduling. It takes the execution trace (a sequence of basic blocks) of the common case and schedules code as if it had no branches. It checks misprediction at some point and goto the fix-up code if necessary.
+
+Software pipelining is another optimization technique. Iterations are overlapped by starting the next iteration before the current iteration in the loop ends.
+
+== Dynamic Scheduling 
+
+Dynamic scheduling means *out-of-order execution*. It can potentially reduce stalls, but may introduce more hazards.
+
+For WAW and WAR, the dependency is on name/location, not on data. So it can be solved by renaming registers (recorded in map-table). Specifically, we can map each data flow to a unique register. The output of each instruction is recorded in a new register, and each reference to its orginal output is then redirected to this new register. One can see that renaming can proceed in a streaming fashion. O3 works by fetching, renaming then scheduling.
+
+_Scoreboard._ 5 pipeline stages: Dispatch, Issue, Rdop, Execute, WB. It doesn't use forwarding and simply stalls at WAW and WAR. 
+
+#image("imgs/scorepipe.png")
+
+The scoreboard (SB) is a control unit. It records the instruction status, FU status and reg status.
+
+#image("imgs/scoreboard.png")
+
+During each cycle, the SB checks the hazard (data & structural), and decides whether each instruction should proceed.
+
+_Tomasulo Scheduling._ Remove false dependencies by register renaming; add forwarding. 3 stages: Issue, Exec. Comp., Write Result.
+
+In the Tomasulo algorithm the new registers are named with the corresponding instructions. The *FP registers (FLR)* is a table with entries containing either a running instruction or the actual data. Each FU has a buffer (*Reservation station*), containing instructions with unresolved symbols. L&S instructions have something similar called *L&S buffers*. 
+
+Whenever an execution (loading included) is finished, the data is transferred to *Common Data Bus (CDB)* and is forwarded to each RS/LSB. The data finally arrives at FLS at the write back stage.
+
+#image("imgs/tomasulo.png")
+
+_Re-Order Buffer._  Tomasulo does not handle exception and branch misprediction. Also, the RS cannot be freed until the instruction is finished, while its information is only needed before the instruction begins to execute.
+
+FP registers are split into register alias table (RAT), re-order buffer (ROB) and architected register file (ARF). ARF is similar to the conventional register file, and appears to be updated in-order. Each RAT entry either points to a ROB entry or an ARF entry. ROB is the result of register renaming. Each ROB entry marks the original ARF before register renaming and the instruction who will update this ROB. ROB has a tail and a head.
+
+Tomasulo with ROB has 4 stages: Issue, Execution, Write result and Commit. In the commit stage, if the ready bit is set in the ROB entry, the result is written to the ARF, and the RAT is redirected to the ARF.
+
+#image("imgs/rob.png")
+
+In Tomasulo with ROB, issue and commit are in-order while computation is out-of-order. Therefore, on branch misprediction or exception we can simply flush the instructions beyond this point, and no state is altered. Store instruction writes to memory after the instruction is committed so there is no need of a store buffer. 
