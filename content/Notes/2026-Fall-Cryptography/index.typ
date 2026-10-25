@@ -325,3 +325,96 @@ We need stronger notion of "indistinguishability" when constructing an oracle $C
 *Definition 5.10. (Indifferentiability)* $C^F$ is *indifferentiable* from $P$ if there is a similator $S$ that for any adversary $A$, $ abs(EE[A^(C^F,F)] - EE[A^(P,S^P)]) = negl(n). $
 
 For example, 5-round Feistel network is not indifferentiable from an ideal permutation; higher round number (10) suffices.
+
+== lec06
+
+An premise of private-key encryption is that the sender and receiver can share the same key. This is nontrivial in scenarios like the server-client model.
+
+*Definition 6.1. (Key Agreement)* The *key agreement* is a pair of algorithms $(A(1^lambda), B(1^lambda))$ that can communicate between each other. We require that it is correct (the outputs of $A$ and $B$ are identical) and passively secure ($(T,k)$ is indistinguishable from $(T,k')$ where $T$ is the communication transcript, $k$ is the output, and $k'$ is uniformly random). This implies that it's hard to find $k$ given $T$. Sometimes, we only require the latter weaker condition. 
+
+*Example 6.2. (Merkle's KA)* 
++ Alice generates $N$ pairs $(r_i, k_i)$ and encode each of them in a puzzle. Each puzzle takes about $Theta(N)$ time to solve. The puzzles are sent to Bob.
++ Bob selects a random puzzle, solves it in $O(N)$ time, and send $r_i$ to Alice.
++ Alice and Bob shares $k_i$. However, the eavesdropper takes $Theta(N^2)$ time to solve all the puzzles.
+
+*Definition 6.3. (Public-key Encryption)* A *public-key encryption scheme* is a tuple $Pi = (Gen, Enc, Dec)$. 
+- $Gen(1^lambda) -> (p k, s k)$. 
+- $Enc(p k, m) -> c$.
+- $Dec(s k, c) -> m$. $Dec$ is actually deterministic since we require $Dec(s k, Enc(p k, m)) = m$.
+
+*Definition 6.4. (CPA-security)* A public-key encryption scheme is said to be *CPA-secure* if the adversary cannot win the following game with a noticeable advantage.
++ Challenger sends $p k$ to $A$.
++ $A$ sends $m_0, m_1$ of the same length to challenger.
++ Challenger selects a random $b <- {0,1}$, sends $c <- Enc(p k, m_b)$ to $A$.
++ $A$ outputs $b' in {0,1}$ and wins if $b' = b$.
+Since $p k$ is made public, $A$ doesn't need to ask the challenger for encryption like in the private-key setting.
+
+If we have a public-key encryption scheme, we can establish a key agreement:
++ Bob runs $(p k, s k) <- Gen(1^lambda)$ and sends $p k$ to Alice via a public channel.
++ Alice sends $c <- Enc(p k, k)$ to Bob where $k$ is the selected private key.
++ Bob decodes $k = Dec(s k, c)$.
+
+#let Encaps = math.op(math.sans("Encaps"))
+#let Decaps = math.op(math.sans("Decaps"))
+
+We often use another primitive that combines the key ($k$) generation and public encryption.
+*Definition 6.5. (Key Encapsulation, secure KEM)* A *key-encapsulation mechanism* is a tuple $(Gen, Encaps, Decaps)$.
+- $Gen(1^lambda) -> (p k, s k)$.
+- $Encaps(p k) -> (k, c(k))$. 
+- $Decaps(s k, c(k)) -> k$. We require that $Decaps(s k, c(k)) = k$.
+
+We say this scheme is secure if any p.p.t. adversary cannot distinguish $k$ from an independent random variable, when $p k$ and $c(k)$ are given.
+
+#let Inv = math.op(math.sans("Inv"))
+
+*Definition 6.6. (Trapdoor Function)* A *trapdoor function* is a tuple $(Gen, F, Inv)$. 
+- $Gen(1^lambda) -> (f, sans("tp"))$. Here $f = F_sans("pp")$ is an injective function and $sans("tp")$ is called a _trapdoor_. $f$ is specified with a _public parameter_ $sans("pp")$. 
+- $Inv$ is an algorithm that inverts $f$ given $sans("tp")$. We require that $Inv(sans("pp"), sans("tp"), f(x)) = x$.
+- $f$ is one-way without $sans("tp")$. That is, for any p.p.t. adversary $A$, $Pr[A(f, f(x)) = x] = negl(lambda)$.
+
+*Example 6.7. (OWF from RSA)* $Gen(1^lambda)$ generates $N = p q$ ($p,q$ are prime numbers), $e,d$ s.t. $e d equiv 1 (mod phi(N))$, $sans("pp") = (N,e)$, $sans("tp") = d$. Here $F_sans("pp") (x) = x^e mod N$, $Inv(sans("pp"), sans("tp"), y) = y^d mod N$, $x$ lies inside $ZZ_N^times$.
+
+*Definition 6.8. (Key Agreement from Trapdoor Function)*
++ Alice runs $Gen$ and sends $sans("pp")$ to Bob.
++ Bob samples $x$ from the domain of $f$ and sends $y = f(x)$ to Alice.
++ Alice outputs $h(Inv(sans("pp"), sans("tp"), y))$ while Bob outputs $h(x)$.
+
+The purpose of $h$ in the last step is that we can easily distinguish $x$ from a random key given $f(x)$, so only the weaker sense of security in key agreement is satisfied. However, we need the key to be pseudorandom during public encryption. 
+
+A simple solution is to choose $h$ to be a random oracle. 
+
+*Proposition 6.9.* 
+
+Another solution is to use $h$ as a hardcore predicate of $f$. In this case, there is one bit of pseudo-entropy in $h(x)$ given $f(x)$. With enough independent samples of $x$ we are able to extract enough randomness for a key using extractors. _This is only handwaving._
+
+The third solution, which is the one we focus on, is to use different assumptions.
+
+0. RSA assumption.
+1. RSA assumption for fixed $e$: pick $d$ s.t. $e d equiv 1 (mod phi(N))$.
+2. Strong RSA: on random $y$, the adversary finds $(x,e)$ and wins if $y equiv x^e, e != plus.minus 1$.
+3. $lambda$-bit safe primes $p,q$. A safe prime $p = 2 p' + 1$ is one such that $p'$ is also a prime. 
+4. Factorization is hard.
+5. Discrete logarithm assumption. Given a cyclic group $G$, a generator $g$ and a random element $g^x$, it's hard to find $x$ given only $g^x$.
+6. Computational Diffie-Hellman assumption. Given $g,g^x,g^y$, it's hard to find $g^(x y)$. This induces a natural key agreement protocal: let Alice and Bob send $g^x,g^y$ to the other party respectively, use $h(g^(x y))$ as the key.
+7. Decisional Diffie-Hellman assumption. Hard to distinguish $g^(x y)$ from a random $g^z$. In this case $h$ is no longer required.
+
+We have $7 -> 6 -> 5$; $2 -> 0$; $2 -> 1$.
+
+*Definition 6.10. (El Gamel Encryption)*
+- $Gen(1^lambda) -> p k = (G, g, g^x)$, $s k = x$.
+- $Enc(k, m) -> (g^y, g^(x y) m)$ (under DDH); $Enc(k, m) -> (g^y, H(g^(x y)) plus.o m)$ (under CDH).
+- $Dec(k, (t, c)) = t^(-x) c$ (under  DDH); $Dec(k, (t, c)) = c plus.o H(t^x)$ (under CDH).
+
+Some assumptions admit *worst-case to average-case reduction*. 
+
+*Proposition 6.11.* If the RSA assumption for fixed $N,e$ holds, then it also holds for random input $x$. This fact is also true for discrete logarithm.
+
+_Proof._ Let $tilde(x) = x r$, $r$ is random. Then $tilde(x)$ is random. If $A(tilde(x)) -> tilde(x)$, then $x = r^(-1) tilde(x)$ is found. Discrete logarithm is handled similarly. $qed$
+
+_A new keyed CRHF._ Let $abs(G) = p$ be a prime number, $g in G$, $h = g^s$ be random elements. Let $H(x,y) = g^x h^y$. If we find a collision then $s$ is recovered.
+
+Such group can be constructed from safe primes. Let $p = 2 p' + 1$, then the quadratic residues of $FF_p$ is a cyclic group of order $p'$. This group is named $QQ RR_p$.
+
+*Definition 6.12. (Homomorphic Encryption)* Given $c_1 = Enc(x_1), c_2 = Enc(x_2)$, if $c = Enc(f(x_1,x_2))$ where $c$ can be directly computed from $c_1,c_2$ then this scheme is a *homomorphic encryption*.
+
+A homomorphic encryption is not CCA-secure.

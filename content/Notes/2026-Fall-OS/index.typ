@@ -152,7 +152,64 @@ To reduce page table size, use multiple levels. 32-bit address is divided into 1
 
 *Segmentation* partitions memory into logically related data units. Each segment has an independent base-limit pair, the pairs are stored in the segment table.
 
-Translation can be made more efficient 
+Translation can be made more efficient using *translation lookaside buffer (TLB)*. The hardware checks TLB before going to the real page table. If a match is found in the TLB, the PTE is retrieved directly. If there is a miss, a page is evicted out of TLB and is replaced with the new entry.
 
 #image("imgs/tlb.png")
 
+== Page Replacement
+
+Buzz words: _Page replacement, Demand paging, Temporal/spatial locality, Least recently used (LRU), Working Set, Copy on write, Shared memory, Mapped files._ 
+
+The process that pages are moved between memory and disk (swapping) is called *demand paging*. The main memory is like a page cache of all the data allocated by processes in the system.
+
+In the common case, the PTE is found in the TLB, the physical frame is combined with the offset into a physical address, which the MMU reads from. The process is done by the hardware.
+
+If TLB does not have the mapping, either MMU loads PTE from the page table in memory (OS not involved), or a trap is triggered (software managed TLB).
+
+When TLB has PTE, the uncommon case is that TLB faults again on PTE because of PTE protection bits. It is either an invalid reference (OS sends fault to process) or a page fault. If no free page frame exists, one page frame is chosen to evict (write back to disk if the victim page is dirty). The user process is suspended to map address into disk block and fetch disk block into page frame. When disk read is finished, VM mapping is added for page frame. The process is restarted if necessary. Dirty pages write to the _swap space_ on external memory.
+
+Reduce fault rate requires exploiting the locality of programs.
+
+Eviction picks the least useful page; only dirty pages are written back (each frame has a dirty bit), to the swap space.
+
+A page fault may also occur on a page that is being paged out, in which case the page is "in the air".
+
+=== Replacement Algorithms
+
+*Optimal (Belady)* evicts the page used farthest in the future, and serves only as a benchmark (random is the lower bound).
+
+*NRU* uses the `R` and `M` bits to sort pages into four classes (clearing `R` periodically) and evicts from the lowest class.
+
+*FIFO* evicts the oldest page and suffers from *Belady's anomaly*: for A B C D A B E A B C D E, 9 faults with 3 frames but 10 with 4 (optimal 7, LRU 10 and 8); the anomaly is in fact unbounded.
+
+*SCR* gives the oldest page with `R = 1` a second chance, and *clock* keeps the frames on a circular list with a hand instead of moving list entries.
+
+*LRU* evicts the page unused for the longest time in the past, which needs a counter or stack per page and hardware support, so *NFU* counts references per clock tick and *aging* shifts the counters right before adding `R`.
+
+=== Thrashing and Working Set
+
+When faults rise, processes queue on the disk and throughput plunges (*thrashing*): starting new jobs only reduces the frames per process.
+
+Fixed-space (*local*) allocation caps each process's pages, while variable-space (*global*) allocation adjusts them dynamically, with PFF as an indicator.
+
+The working set $"WS"(t)$ is the set of pages referenced in the last $k$ references, i.e. in the interval $(t_k, t)$; Denning's rule is to not run a process unless its working set is in memory.
+
+It is approximated with a window $tau$ of virtual time and the `R` bit, and *WSClock* combines it with the clock: claim clean pages older than $tau$, schedule writes for dirty ones, and keep looking if a write was scheduled.
+
+=== Design and Implementation Issues
+
+*Load control* swaps processes out when the working sets are too big.
+
+Instructions and data may live in separate *I-space* and *D-space*.
+
+*Shared memory* maps the same frame in several page tables, all of which must be updated on invalidation (mapping at the same virtual address keeps shared pointers valid).
+
+*Copy on write* shares the parent's pages read-only in the child and copies on a write protection fault, which makes `fork()` cheap.
+
+*Mapped files* (`mmap()`) use the file as backing store and write back only dirty pages; VM without a file is *anonymous VM*, backed by a zero page.
+
+A *paging daemon* with a two-hand clock (the front hand writes, the back hand evicts) keeps free frames clean, and pages used for DMA must be *pinned* in memory.
+
+Policy and mechanism are separated into the MMU handler, the page fault handler and an external pager.
+
+#image("imgs/pgfault.png")

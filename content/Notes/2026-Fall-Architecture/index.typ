@@ -370,3 +370,38 @@ Tomasulo with ROB has 4 stages: Issue, Execution, Write result and Commit. In th
 #image("imgs/rob.png")
 
 In Tomasulo with ROB, issue and commit are in-order while computation is out-of-order. Therefore, on branch misprediction or exception we can simply flush the instructions beyond this point, and no state is altered. Store instruction writes to memory after the instruction is committed so there is no need of a store buffer. 
+
+== Cache
+
+(Hardware) memory hierarchy technologies for *random access* include DRAM (high density, low power, cheap, slow) and SRAM (low density, high power, expensive, fast). Both DRAM and SRAM are volatile.
+
+A conventional SRAM cell contains 6 transisters. #tufted.margin-note(image("imgs/sram2.png")) Wordline is used for cell selection; bitline is used for cell read or write.
+
+Each DRAM cell consists of a transistor and a capacitor.
+
+#image("imgs/dramcell.png")
+
+A RAM is usually organized as a grid, consisting of word (row) lines and bit (data) lines. Each intersection is a DRAM/SRAM cell. Row decoder and column selector are used to locate the lines. Sometimes a buffer is used to store a row and reduce access time.
+
+Two types of locality: temporal locality and spatial locality.
+
+Larger memory hardwares are in general slower. So all memory is divided into several hierarchies.
++ Register file. Managed by compiler.
++ Instruction and data cache.
++ Second level cache (SRAM).
++ Main memory (DRAM). 
++ Secondary memory.
+
+The first 3 levels are on chip. Cache and main memory are managed by hardware. The secondary memory is managed by OS, user and etc..
+
+During each access the cache either hits or misses. Parameters include hit/miss rate, hit time and miss penalty.
+
+=== Cache designs
+
+_Direct mapped cache._ The address is divided into `tag + index + block offset + byte offset` (from high to low). Block offset is omitted when we use singleword blocks. When block size increases, the miss rate first goes down (more references to the same block) then goes up (less blocks in a cache).
+
+_Set-Associative Cache._ Has multiple ways in a single set. The miss rate decreases as the number of ways goes up, but the return diminishes.
+
+When a capacity miss happens, a cacheline is evicted from cache. There are several cache replacement policies.
+
+_Least recently used._ Evict block with longest reuse distance. Difficult when more than 2 ways.
