@@ -213,3 +213,130 @@ A *paging daemon* with a two-hand clock (the front hand writes, the back hand ev
 Policy and mechanism are separated into the MMU handler, the page fault handler and an external pager.
 
 #image("imgs/pgfault.png")
+
+== Windows Virtual Memory
+
+Buzz words: _Protected mode, segment selector/descriptor, PDE/PTE, virtual address descriptor (VAD), self-map entry, hard/soft fault, working set, PFN database._
+
+=== Address Modes for x86
+
+*Real mode* (8086) uses physical addresses directly, for DOS. *Protected mode* (80286) is the protected virtual address mode: it supports virtual memory, paging and safe multi-tasking, with both 16- and 32-bit code. The *8086 virtual mode* (80386) provides hardware virtualization, running real mode inside protected mode.
+
+=== Protected Mode
+
+A *segment selector* indexes a *segment descriptor*, which gives the base and limit of the segment. *Segmentation* turns a logical address into a linear address, and *paging* turns the linear address into a physical one.
+
+=== Paging on i386
+
+Two levels: a *PDE* points to a page table, a *PTE* points to the page frame. Both carry a PFN plus flags (`P` present, `R/W`, `U/S`, `PWT`, `PCD`, `A` accessed, `D` dirty, `PS` page size, `G` global). With 4KB pages the linear address is split into 10 + 10 + 12 bits.
+
+=== Windows MM
+
+The MM lives in `Ntoskrnl.exe`. On x86 each process gets a 4GB 32-bit address space, split into 2GB kernel and 2GB user; on x86-64 the space is large enough not to worry. Paging is *demand paging* with 4KB pages (2MB pages are also used).
+
+Each virtual page is in one of three states:
+
+- *Invalid*: not mapped to a section object, so a reference causes a page fault.
+- *Committed*: code or data is mapped onto the page.
+- *Reserved*: invalid, but the MM never allocates those addresses for another purpose, so they work as *guard pages* that stop the stack from growing too far.
+
+The MM keeps a *VAD (virtual address descriptor)* per process, listing the mapped address range, the backing section/file and offset, and the permissions. VADs form a *balanced tree*, and the address space is completely defined by the list of VADs.
+
+=== Page Faults
+
+Five types: the page is not committed; access violates the permissions; a shared copy-on-write page is about to be modified; the stack needs to grow; the page is committed but not mapped in.
+
+A *hard fault* must read the page from disk. A *soft fault* is satisfied from memory instead: the page is already mapped in another process, only a new zero page is needed, it was trimmed from the working set but is requested again before reuse, or it was compressed to enlarge physical memory.
+
+=== Self-Map Entries
+
+The self-map entries map the physical pages of the page tables and page directory into kernel virtual addresses, so the MM can address a PTE directly:
+
+```
+MiGetPdeAddress(va) = ((((ULONG)va) >> 22) << 2) + PDE_BASE
+MiGetPteAddress(va) = ((((ULONG)va) >> 12) << 2) + PTE_BASE
+```
+
+=== Working Set and Physical Memory
+
+Each process's working set has a minimum and a maximum size (default 20-50 and 45-345 pages). The working-set manager runs every second and throttles its own work to keep from overloading the system.
+
+Physical memory is tracked by the *PFN database*, one entry per frame. Every page is either referenced by a valid PTE or on one of five lists: *free*, *standby*, *modified*, *zeroed* and *bad* (frames with hardware errors).
+
+#figure(image("imgs/pfn.png"), caption: [PFN Database])
+
+A page evicted from all working sets goes to the modified list if dirty (the modified page writer sends it back to disk) or to standby if clean; a process exit deallocates pages to the free list, and the zero-page thread turns free pages into zeroed ones. A fault on a standby page brings it straight back into a working set, a soft fault.
+
+#figure(image("imgs/pagelists.png"), caption: [Transitions between page lists])
+
+== Scheduling
+
+Buzz words: _Short-/long-term scheduler, dispatcher, preemptive scheduling, throughput, turnaround/waiting/response time, starvation, priority inversion, priority inheritance, MLFQ._
+
+=== Overview
+
+Multiprogramming overlaps I/O and CPU to raise CPU utilization and job throughput. The mechanisms (context switch, process queues, process states) are known; *scheduling* is the policy: which process or thread runs, and for how long. The schedulable entity is called a *job*.
+
+- The *long-term (job) scheduler* selects processes spooled on mass storage and loads them into memory (batch systems).
+- The *short-term (CPU) scheduler* selects among the ready processes and allocates the CPU to one of them.
+- The *dispatcher* gives the CPU to that process: switch context, switch to user mode, jump to the right place in the program. Dispatch latency (stopping one process and starting another) is pure overhead and must be fast.
+
+Scheduling happens when a new process starts, when the running one exits or blocks, on an I/O interrupt that makes processes ready, and on a clock interrupt (e.g. every 10 ms).
+
+*Non-preemptive*: the running process keeps the CPU until it exits or blocks (only transitions 1 and 4). *Preemptive*: it can be interrupted and forced to release the CPU.
+
+=== Objectives and Criteria
+
+Objectives: performance, fairness, priority, encouraging good behavior, supporting heavy loads, adapting to different environments (interactive, real-time, multimedia).
+
+Criteria: *efficiency* (keep resources busy), *throughput* (processes completed per unit time), *turnaround time* (submission to completion), *waiting time* (sum of the time spent in the ready queue), *response time* (submission to the first response), predictability with low variance, and meeting deadlines.
+
+Batch systems maximize throughput, minimize turnaround and maximize CPU utilization; interactive systems minimize response time; real-time systems need predictability and deadlines. All of them care about fairness, policy enforcement and resource balance.
+
+Program behavior matters: I/O bound or CPU bound, batch or interactive, urgency, priority, page fault rate, preemption frequency, the execution time already received, and the time still needed.
+
+=== Batch Scheduling
+
+*FCFS (first come first serve, FIFO)*: non-preemptive; a new process enters the tail of the queue and the scheduler takes the head. For P1(24), P2(3), P3(4) all arriving at 0, the waiting times are 0, 24 and 27, so AWT is 17. It is not optimal: short jobs wait behind long ones (a basket stuck behind a full shopping cart), which the "express lane" idea fixes.
+
+*SJF (shortest job first)*: run the shortest job first. The lengths must be known in advance. It is optimal for the AWT if all jobs are available simultaneously. The same jobs run as P4(3), P1(6), P3(7), P2(8), with waiting times 0, 3, 9, 16 and AWT 7 (FCFS: 10.25) for the same total time of 24.
+
+SJF is not optimal when jobs arrive later: P1(10) arrives at 0 and P2(2) at 2. SJF runs P1 first, AWT 4; leaving the CPU idle for 2 units to catch P2 gives AWT 2, but wastes 2 units of CPU.
+
+*Preemptive SJF* is *shortest remaining time first*: P1 runs for 2, P2 for 2, then P1 for the remaining 8, so the waiting times are 2 and 0 and AWT is 1, with no CPU wasted.
+
+A problem is *starvation*: a 1-hour job arriving at 0 never runs if a 2-minute job keeps arriving every minute.
+
+=== Interactive Scheduling
+
+Interactive schedulers are usually preemptive: time is sliced into a *quantum* and a scheduling decision is also made at the start of each quantum. Response time dominates, though AWT still matters.
+
+*Round robin (RR)*: one of the oldest, simplest and most used algorithms; processes take turns from the ready queue, differing from FIFO exactly by preemption. With quantum 1, P1(3), P2(4) and P3(3) give waiting times 4, 6, 6 and AWT 5.33. Problems: it ignores priority and pays context-switch overhead.
+
+The quantum is a tradeoff: too large gives FIFO behavior and poor response time, too small gives too many context switches and wasted CPU. Heuristic: 70-80% of jobs should block within their quantum, with a typical quantum of 10 to 100 ms. A 1 ms context switch is about 1% overhead with a 100 ms quantum but about 9% with a 10 ms quantum.
+
+*Priority scheduling*: each job has a priority, FCFS/RR applies within a level, and the highest priority job runs (higher priorities are more mission-critical, e.g. a video player over sending mail). Priorities may be static or dynamic, based on the cost to the user, the importance of the user, aging, or the percentage of CPU used recently. With priorities 4, 1, 3, 2 the order is P2, P4, P3, P1, giving waiting times 0, 8, 11, 18 and AWT 9.25, worse than SJF. Problems: it may not give the best AWT, and it may starve a process forever; *aging* fixes the latter.
+
+=== Priority Inversion
+
+A low-priority job L holds a lock that a high-priority job H needs; medium-priority jobs M preempt L, so H waits for M as well, and the inversion is unbounded unless all resources are shared under a suitable protocol.
+
+*Priority inheritance*: a job holding a resource inherits the priority of any higher-priority job waiting for it, so it runs at high priority and releases the lock quickly (Sha, Rajkumar, Lehoczky, IEEE Transactions on Computers 39:9, 1990; implemented in VxWorks).
+
+This rescued the *Mars Pathfinder* (1997). The software design assumed a timing constraint, $T_1 < T_2$; when it was violated the watchdog fired and the probe rebooted. The low-priority weather thread W locked the pipe to read data; the high-priority "Distribute Data" thread blocked while writing; an interrupt made medium-priority tasks runnable and they preempted W, so W held the lock far too long. The probe rebooted several times (July 5, 10, 11 and 14); enabling priority inheritance in VxWorks fixed it.
+
+=== MLFQ
+
+Algorithms can be combined: several queues, a different algorithm per queue, and processes moved between queues. *Multiple-level feedback queues (MLFQ)* use queues for different job types (interactive, CPU-bound, batch, system) with different priorities; jobs in the same queue are scheduled RR and move between queues according to execution history (feedback).
+
+A job starts in the highest-priority queue. If its time slice expires, its priority drops one level; if it blocks before the slice expires (e.g. on I/O), its priority rises one level, up to the top. So CPU-bound jobs drop like a rock while I/O-bound jobs stay high.
+
+The canonical Unix scheduler is MLFQ: 3-4 classes spanning about 170 priority levels (timesharing: the first 60; system: the next 40; real-time: the next 60; interrupt: the last 10 in Solaris). It schedules by priority across queues and RR within a queue, and priorities change dynamically: they rise if a process blocks before the end of its quantum and fall if it uses the whole quantum. The idea is to reward interactive processes (shell, editor: short CPU bursts that often do not finish the quantum) over CPU hogs so that response time is minimized; delaying CPU-bound jobs is acceptable.
+
+#align(center, table(columns: (auto, auto, auto),
+  [*Algorithm*], [*Preemptive*], [*Tradeoff*],
+  [FCFS], [no], [simple; large AWT behind long jobs],
+  [SJF / SRTF], [SRTF only], [optimal AWT if lengths known; starvation],
+  [Round robin], [yes], [response time vs. quantum overhead],
+  [Priority], [either], [priority; starvation, fixed by aging],
+  [MLFQ], [yes], [feedback combining the above]))

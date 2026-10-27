@@ -62,10 +62,10 @@ The difference $l(lambda) - lambda$ is called the *stretch* of the PRG.
 
 *Proposition 1.12.* A 1-stretch cryptographic PRG $G:{0,1}^lambda -> {0,1}^(lambda+1)$ can be extended to a $poly(lambda)$ stretch cryptographic PRG $G'$.
 
-_Proof._ (See #link("../pseudorandomness", [_Pseudorandomness_]).)Let $n = l(lambda)$. Let $s_0 = s$, $G(s_i) = x_i s_(i+1)$. $G'(s) = x_1 x_2 dots.c x_n$. Assume $G'$ is not a PRG, by a hybrid argument there is a previous-bit predictor $P$,
-$ Pr_s [P(x_(i+1), x_(i+2), dots.c, x_n) = x_i] >= 1/2 + 1/("poly"(n)). $
+_Proof._ (See #link("../pseudorandomness", [_Pseudorandomness_]).) Let $n = l(lambda)$. Let $s_0 = s$, $G(s_i) = x_i s_(i+1)$. $G'(s) = x_1 x_2 dots.c x_n$. Assume $G'$ is not a PRG, by a hybrid argument there is a previous-bit predictor $P$,
+$ Pr_s [P(x_i, x_(i+2), dots.c, x_n) = x_(i-1)] >= 1/2 + 1/("poly"(n)). $
 
-$x_(i+1) dots.c x_n$ can be computed from $s_i$, so we get $P'(s_i)=x_i$ w.p. $1/2 + 1/("poly"(n)).$ $P'$ is a next-bit predictor of $G(s_(i-1))$. Since $s_(i-1)$ is indistinguishable from uniform, this gives contradiction. $qed$
+$x_i dots.c x_n$ can be computed from $s_i$, so we get $P'(s_i)=x_(i-1)$ w.p. $1/2 + 1/("poly"(n)).$ $P'$ is a next-bit predictor of $G(s_(i-1))$. Since $s_(i-1)$ is indistinguishable from uniform, this gives contradiction. $qed$
 
 *Proposition 1.13.* Assume $G$ is a cryptographic PRG. Then the following scheme is computationally secure: 
 
@@ -138,10 +138,10 @@ We present the local list-decoding algorithm here. Assume we have a binary funct
 
 We have $a_i = chevron.l a,x chevron.r plus.o chevron.l a,x plus.o e_i chevron.r$. Pick a random $<=t$-dimensional subspace $V <= FF_2^n$. If we have the correct values of $chevron.l a,dot.c chevron.r$ *on the entire subspace*, then by taking majority of $g(x plus.o e_i) plus.o chevron.l a,x chevron.r (x in V)$, we can raise the success by concentration inequality.
 
-Note that by linearity, the linear function is correctly evaluated on $V$ as long as is it is correctly evaluated on $r_1,r_2,dots.c,r_t$ which generate $V$. The probability is $2^(-t)$ (random guessing). Let $r_S = plus.o.big_(i in S) r_i$. Since $r_i <- U_n$, $(r_S)$ are pairwise independent. Thus by Chernoff bound,
-$ Pr[op("Maj")_(S != emptyset) (g(r_S plus.o e_i) plus.o chevron.l a, r_S chevron.r != chevron.l a,e_i chevron.r] <= 1/((2^t - 1) epsilon^2). $ 
+Note that by linearity, the linear function is correctly evaluated on $V$ as long as is it is correctly evaluated on $r_1,r_2,dots.c,r_t$ which generate $V$. The probability is $2^(-t)$ (random guessing). Let $r_S = plus.o.big_(i in S) r_i$. Since $r_i <- U_n$, $(r_S)$ are pairwise independent. Thus by Chebychev inequality,
+$ Pr[op("Maj")_(S != emptyset) (g(r_S plus.o e_i) plus.o chevron.l a, r_S chevron.r) != chevron.l a,e_i chevron.r] <= 1/((2^t - 1) epsilon^2). $ 
 
-So $a_i$ is computed correctly w.p. $>= 1/(2^t (2^t - 1) epsilon^2)$. When $t = O(log(n/epsilon))$ we can recover $a$ with noticeable probability.
+So $a$ is computed correctly w.p. $>= 1/(2^t) (1-n/((2^t - 1) epsilon^2))$. When $t = log(2n\/epsilon^2)$ we can recover $a$ with noticeable probability.
 
 Now we can recover $x$ based on $f_"GL" (x,y)$. $qed$ #tufted.margin-note[Local list-decoding of Reed-Muller codes up to minimum distance is much harder (it is done in 2023).]
 
@@ -246,7 +246,7 @@ There are several paths towards *authenticated encryption*.
 
 *Proposition 4.10.* Authenticated encryption implies CCA-security.
 
-_Proof._ From the unforgeability we can assume that the adversary never queries some $c in.not {Enc(k,m): m "queried"}$. Therefore the decryption oracle can be removed, what's left is a CPA game. $qed$
+_Proof._ From the unforgeability we can assume that the adversary never queries some $c in.not {Enc(k,m): m "not queried"}$. Therefore the decryption oracle can be removed, what's left is a CPA game. $qed$
 
 *Proposition 4.11.* If $Enc$ is CPA-secure and $sans("Mac")$ is unforgeable under CMA game, then encrypt-then-MAC is an authenticated encryption.
 
@@ -358,6 +358,7 @@ If we have a public-key encryption scheme, we can establish a key agreement:
 #let Decaps = math.op(math.sans("Decaps"))
 
 We often use another primitive that combines the key ($k$) generation and public encryption.
+
 *Definition 6.5. (Key Encapsulation, secure KEM)* A *key-encapsulation mechanism* is a tuple $(Gen, Encaps, Decaps)$.
 - $Gen(1^lambda) -> (p k, s k)$.
 - $Encaps(p k) -> (k, c(k))$. 
@@ -367,25 +368,32 @@ We say this scheme is secure if any p.p.t. adversary cannot distinguish $k$ from
 
 #let Inv = math.op(math.sans("Inv"))
 
-*Definition 6.6. (Trapdoor Function)* A *trapdoor function* is a tuple $(Gen, F, Inv)$. 
+*Definition 6.6. (Trapdoor permutation)* A *trapdoor permutation* is a tuple $(Gen, F, Inv)$. 
 - $Gen(1^lambda) -> (f, sans("tp"))$. Here $f = F_sans("pp")$ is an injective function and $sans("tp")$ is called a _trapdoor_. $f$ is specified with a _public parameter_ $sans("pp")$. 
 - $Inv$ is an algorithm that inverts $f$ given $sans("tp")$. We require that $Inv(sans("pp"), sans("tp"), f(x)) = x$.
 - $f$ is one-way without $sans("tp")$. That is, for any p.p.t. adversary $A$, $Pr[A(f, f(x)) = x] = negl(lambda)$.
 
 *Example 6.7. (OWF from RSA)* $Gen(1^lambda)$ generates $N = p q$ ($p,q$ are prime numbers), $e,d$ s.t. $e d equiv 1 (mod phi(N))$, $sans("pp") = (N,e)$, $sans("tp") = d$. Here $F_sans("pp") (x) = x^e mod N$, $Inv(sans("pp"), sans("tp"), y) = y^d mod N$, $x$ lies inside $ZZ_N^times$.
 
-*Definition 6.8. (Key Agreement from Trapdoor Function)*
+*Definition 6.8. (Key Agreement from Trapdoor Permutation)* #tufted.margin-note([This can be viewed equivalently as a key encapsulation scheme.])
 + Alice runs $Gen$ and sends $sans("pp")$ to Bob.
 + Bob samples $x$ from the domain of $f$ and sends $y = f(x)$ to Alice.
 + Alice outputs $h(Inv(sans("pp"), sans("tp"), y))$ while Bob outputs $h(x)$.
 
 The purpose of $h$ in the last step is that we can easily distinguish $x$ from a random key given $f(x)$, so only the weaker sense of security in key agreement is satisfied. However, we need the key to be pseudorandom during public encryption. 
 
-A simple solution is to choose $h$ to be a random oracle. 
-
-*Proposition 6.9.* 
+A simple solution is to choose $h$ to be a random oracle. The adversary either has made query to $x$ (which happens with neglible probability even with a random oracle), or fails to distinguish $h(x)$ from random (since they are equally distributed).
 
 Another solution is to use $h$ as a hardcore predicate of $f$. In this case, there is one bit of pseudo-entropy in $h(x)$ given $f(x)$. With enough independent samples of $x$ we are able to extract enough randomness for a key using extractors. _This is only handwaving._
+
+Here is a simplified version when we only encode $m in {0,1}$.
+
+*Proposition 6.9.* The following is a (strongly) secure key agreement. Let $h(x,r)$ be the hardcore predicate constructed for $(f(x),r)$.
++ Alice runs $Gen$ and sends $sans("pp")$ to Bob.
++ Bob samples $x$ from the domain of $f$, samples unformly random $r$, and sends $y=f(x), r$ to Alice.
++ Alice outputs $h(Inv(sans("pp"), sans("tp"), y), r)$ while Bob outputs $h(x,r)$.
+
+_Proof._ Suppose there is an adversary $A$ that distinguishes $h(x,r)$ from random with probability $epsilon$. Then $A$ can be used to invert $f$: given $y$, sample $r$, run $A$ on $(y,r)$ and compare with $h(x,r)$. This is a contradiction. $qed$
 
 The third solution, which is the one we focus on, is to use different assumptions.
 
@@ -400,7 +408,7 @@ The third solution, which is the one we focus on, is to use different assumption
 
 We have $7 -> 6 -> 5$; $2 -> 0$; $2 -> 1$.
 
-*Definition 6.10. (El Gamel Encryption)*
+*Definition 6.10. (El-Gamal Encryption)*
 - $Gen(1^lambda) -> p k = (G, g, g^x)$, $s k = x$.
 - $Enc(k, m) -> (g^y, g^(x y) m)$ (under DDH); $Enc(k, m) -> (g^y, H(g^(x y)) plus.o m)$ (under CDH).
 - $Dec(k, (t, c)) = t^(-x) c$ (under  DDH); $Dec(k, (t, c)) = c plus.o H(t^x)$ (under CDH).
