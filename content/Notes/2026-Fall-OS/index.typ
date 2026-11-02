@@ -340,3 +340,113 @@ The canonical Unix scheduler is MLFQ: 3-4 classes spanning about 170 priority le
   [Round robin], [yes], [response time vs. quantum overhead],
   [Priority], [either], [priority; starvation, fixed by aging],
   [MLFQ], [yes], [feedback combining the above]))
+
+== Multiprocessor Scheduling
+
+Buzz words: _Loosely/tightly coupled multiprocessor, static/dynamic assignment, master/slave, peer, load sharing, gang scheduling, dedicated processor assignment._
+
+=== Classifications
+
+A *loosely coupled* multiprocessor gives each processor its own memory and I/O channels, like a cluster. A *functionally specialized* system has dedicated processors (e.g. an I/O processor) controlled by a master. A *tightly coupled* multiprocessor shares main memory and is controlled by one OS; this is the model considered here.
+
+=== Assigning Processes to Processors
+
+The simplest policy treats the processors as a pooled resource and assigns processes on demand. The assignment may be *static* (a process is bound to a processor, with a dedicated short-term queue) or *dynamic* (threads move between the per-processor queues, as in Linux).
+
+Static assignment has less overhead and permits group or *gang* scheduling, but one processor may idle while another has a backlog; a common queue fixes this. Dynamic assignment balances load but pays for migration (cache pollution, TLB shootdowns).
+
+Two ways to organize the kernel itself:
+
+#table(columns: (auto, auto),
+  [*Master/slave*], [*Peer*],
+  [kernel functions pinned to one processor; the master schedules and slaves send it requests], [kernel executes on any processor; each processor self-schedules from the pool],
+  [simple, but the master is a single point of failure and a bottleneck], [no bottleneck, but the OS must prevent two processors from taking the same process and synchronize competing claims])
+
+Usually processes are not dedicated to processors: one global queue, or several queues by priority, feeds the common pool, so the system is a *multiserver queuing architecture*.
+
+=== Thread Scheduling
+
+Threads execute separately from the rest of the process, so an application becomes a set of cooperating threads in one address space; on a multiprocessor this exposes true parallelism and can give dramatic speedups. Four general approaches exist:
+
+#table(columns: (auto, auto, auto),
+  [*Approach*], [*Mechanism*], [*Tradeoff*],
+  [Load sharing], [global ready queue; an idle processor takes a thread], [queue contention, poor cache affinity, related threads may not run together],
+  [Gang scheduling], [a set of related threads runs on a set of processors simultaneously], [less synchronization blocking and switching; needs coordination],
+  [Dedicated], [each thread of an application is bound to a processor], [no time-multiplexing, but no switching cost],
+  [Dynamic], [the application changes its thread count; the OS adjusts], [good utilization, depends on application cooperation])
+
+*Load sharing* is the simplest: no centralized scheduler is needed, but the global queue needs mutual exclusion and becomes a bottleneck when many processors look for work. A preempted thread is also unlikely to resume on the same processor, which hurts the cache, and all threads of one program are unlikely to run at once, so synchronization may block them.
+
+*Gang scheduling* addresses the last problem: a single decision schedules a set of related threads on a set of processors at the same time. *Dedicated processor assignment* goes further and gives each thread its own processor for the application's lifetime; some processors may sit idle, but in a highly parallel system effectiveness matters more than utilization, and avoiding process switching speeds up the program. *Dynamic scheduling* lets the application change the number of threads so that the OS can adjust the load.
+
+=== Case Study: openEuler and Multicore
+
+openEuler keeps CFS (the Completely Fair Scheduler inherited from Linux, 2007) as its standard time-sharing policy. Each task accumulates a weighted *virtual runtime* (`vruntime`); the scheduler picks the task with the smallest `vruntime` from a red-black tree, so CPU time is shared in proportion to weight and ordinary processes get fairness.
+
+Multicore scheduling faces cache coherence, cache affinity, inter-core data sharing and load balance. A single global queue causes lock contention and cache misses, so openEuler uses per-CPU queues (multi-queue scheduling) and *migration threads* named `migration/CPUID`. Each migration thread has a stop-machine work queue: to move a process from CPU1 to CPU0, CPU0 enqueues a work function on CPU1's queue and wakes its migration thread, which cannot be preempted and performs the move immediately, balancing the load.
+
+== Real-Time Scheduling
+
+Buzz words: _Hard/soft real-time task, periodic/aperiodic task, deadline scheduling, laxity, rate monotonic scheduling (RMS), earliest deadline first (EDF), least laxity first (LLF)._
+
+=== Real-Time Tasks
+
+*Real-time computing* means that correctness depends not only on the logical result but also on the time at which it is produced. Tasks control or react to events in the outside world and must keep up with them.
+
+A *hard real-time task* must meet its deadline; otherwise it causes unacceptable damage or a fatal error. A *soft real-time task* has a deadline that is desirable but not mandatory: it still makes sense to run the task after the deadline has passed.
+
+*Periodic* tasks require "once per period $T$" or "exactly $T$ units apart"; *aperiodic* tasks have constraints on their deadline or start time but no period. Real-time systems control laboratory experiments, industrial processes, air traffic, telecommunications, military command and control, and robots.
+
+=== Real-Time OS
+
+A real-time OS needs fast process/thread switching, a small size, quick response to external interrupts, and multitasking with IPC tools such as semaphores, signals and events. It also provides special alarms and timeouts, sequential files that accumulate data quickly, preemptive priority scheduling, minimal intervals with interrupts disabled, and a way to delay a task for a fixed amount of time.
+
+Pure round-robin preemptive scheduling and priority-driven *non-preemptive* scheduling are both unacceptable. The usable design combines priorities with clock-based interrupts and *immediate preemption*: a higher-priority task preempts the running one as soon as it becomes ready.
+
+=== Classes of Algorithms
+
+#table(columns: (auto, auto),
+  [*Class*], [*How it works*],
+  [Static table-driven], [offline feasibility analysis produces a dispatch table; a task's start time is looked up at run time],
+  [Static priority-driven preemptive], [offline analysis only; a fixed-priority preemptive scheduler dispatches at run time],
+  [Dynamic planning-based], [feasibility is checked at run time; a task is admitted only if its deadline can still be met],
+  [Dynamic best effort], [no admission control; the system tries to meet deadlines and aborts tasks that miss them])
+
+=== Deadline Scheduling and Laxity
+
+Real-time applications care less about sheer speed than about completing or starting a task at the most valuable time, neither too early nor too late, despite dynamic resource demands, overloads and faults. "Priority" is a crude tool for this.
+
+Deadline scheduling uses the ready time, starting deadline, completion deadline, processing time, resource requirements, priority and subtask scheduler, for both periodic and aperiodic tasks.
+
+The *laxity* of a task is $L_i = d_i - (t + r_i)$, where $d_i$ is its deadline, $t$ the current time and $r_i$ the remaining computation time. It is how much later than now the task can start and still finish by $d_i$; $L_i = 0$ means it must run now. *Least laxity first (LLF)* runs the task with the smallest laxity.
+
+=== Rate Monotonic Scheduling
+
+Assumptions: all tasks are periodic (no aperiodic or sporadic ones), a job's deadline is the end of its period, there are no resource constraints, and tasks are preemptable.
+
+*RMS* assigns fixed priorities by period: the shortest period gets the highest priority, and at any time the highest-priority ready task runs. It is an optimal preemptive algorithm among *fixed-priority* algorithms (all jobs of a task share one priority).
+
+The offline schedulability test is the utilization bound
+
+$ U = sum_(i=1)^n c_i / p_i <= n (root(n, 2) - 1) $
+
+where $c_i$ is the computation time and $p_i$ the period. The bound $n (root(n, 2) - 1)$ falls from $0.828$ for $n = 2$ to $ln 2 approx 0.69$ as $n -> infinity$. It is sufficient but not necessary.
+
+For $T_1 = (2, 4)$ and $T_2 = (1, 8)$, $U = 2/4 + 1/8 = 0.625 <= 0.828$, so the set is schedulable. For $T_1 = (2, 4)$ and $T_2 = (4, 8)$, $U = 1.0 > 0.828$, yet RMS still meets every deadline; the example shows why an exact analysis (response-time analysis) is needed in addition to the bound.
+
+=== Earliest Deadline First
+
+*EDF* assigns priorities dynamically: the task with the smallest deadline (or, for LLF, the smallest laxity) gets the highest priority, and the highest-priority ready task runs. EDF and LLF are optimal preemptive algorithms among *dynamic-priority* algorithms, since different jobs of one task may get different priorities.
+
+The offline test is $U = sum_i c_i / p_i <= 1$, which is both necessary and sufficient. For $T_1 = (1, 3, 3)$ and $T_2 = (4, 6, 6)$, $U = 1/3 + 4/6 = 1$, so the set is schedulable. Unlike the RMS bound, this test is exact: EDF can schedule a task set if and only if it passes.
+
+#table(columns: (auto, auto, auto),
+  [], [*RMS*], [*EDF / LLF*],
+  [Priority], [fixed, by period], [dynamic, by deadline/laxity],
+  [Schedulability], [$U <= n (root(n, 2) - 1)$ sufficient], [$U <= 1$ necessary and sufficient],
+  [Optimality], [optimal fixed-priority], [optimal dynamic-priority],
+  [Practice], [analyzable, widely used], [higher schedulability, harder to implement])
+
+=== Aperiodic Scheduling
+
+Aperiodic tasks have deadlines but no period, so the schedule is built from the ready times and deadlines rather than from periods. The lecture works through a non-preemptive schedule of five aperiodic tasks and shows how the ordering must be chosen so that every completion deadline is met.
