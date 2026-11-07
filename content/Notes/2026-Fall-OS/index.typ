@@ -29,11 +29,11 @@ In Linux/Unix, the user space includes application and libraries; the kernel spa
 
 == Hardware Features for the OS
 
-Buzz words: _Protection, protected/priviledged instruction, event, fault, system call, interrupt._
+Buzz words: _Protection, protected/privileged instruction, event, fault, system call, interrupt._
 
 === Protections 
 
-*Protected/priviledged instructions*: some instructions of every CPU is restricted to use only by the OS. E.g., directly access I/O devices, manipulate memory management state, manipulate protected control registers, execute machine halt instruction.
+*Protected/privileged instructions*: some instructions of every CPU is restricted to use only by the OS. E.g., directly access I/O devices, manipulate memory management state, manipulate protected control registers, execute machine halt instruction.
 
 The architecture must support *kernel mode* and *user mode*. OS executes in kernel mode. 
 
@@ -54,7 +54,7 @@ Events are categorized into *interrupts* (caused by an external event) and *exce
 
 Faults: detected and reported by *hardware*. Upon exceptional conditions, hardware faults and saves state. Some faults are handled by fixing the condition (e.g. page faults). Some faults are handled by notifying the process. Faults in the kernel cause the OS to crash.
 
-System calls: used for a user program to do something priviledged. ISA provides a system call instruction that causes an exception. The caller state is saved.
+System calls: used for a user program to do something privileged. ISA provides a system call instruction that causes an exception. The caller state is saved.
 
 == Processes
 

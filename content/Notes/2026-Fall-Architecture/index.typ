@@ -405,3 +405,99 @@ _Set-Associative Cache._ Has multiple ways in a single set. The miss rate decrea
 When a capacity miss happens, a cacheline is evicted from cache. There are several cache replacement policies.
 
 _Least recently used._ Evict block with longest reuse distance. Difficult when more than 2 ways.
+
+=== Cache optimization
+
+Average memory access time summarizes the three knobs:
+$ "AMAT" = "hit time" + "miss rate" times "miss penalty". $
+
+*Reducing the miss rate.* Hardware prefetching watches the access stream and fetches blocks before they are demanded. The simplest form is sequential prefetching with a _stream buffer_, a FIFO of the next $N$ lines, each with a tag. Real processors combine several prefetchers (stride and PC-localized predictors, adjacent-line prefetch, L2 stream buffers), usually close to the core where access patterns are visible; prefetching at the LLC is harder because the cache is banked and hashed.
+
+Compiler techniques reshape data access:
+- _Merging arrays_: turn two arrays `val[]` and `key[]` into one array of compound elements, so one cache line serves both fields (spatial locality).
+- _Loop interchange_: swap the loop order so the array is traversed in storage order rather than by column (spatial locality).
+- _Loop fusion_: combine two loops over the same data, so the second pass hits in cache (temporal locality).
+
+*Reducing the hit time.* A _virtually indexed cache_ uses the page offset of the virtual address to index the cache, overlapping address translation with the cache lookup; the tag must still be physical. Context switches would otherwise require flushing, which PID tags avoid; aliasing (two virtual addresses mapping to one physical address) is handled by anti-aliasing hardware or page coloring. A _trace cache_ stores already-decoded micro-operations along a dynamic instruction trace, so fetch follows taken branches without re-fetching and re-decoding; Pentium 4 used one.
+
+== DRAM
+
+Last-level cache misses are served by main memory, so DRAM latency and bandwidth set the miss penalty. Main memory is *DRAM*: one transistor and one capacitor per cell (1T1C). The capacitor holds the bit, the wordline turns the transistor on, and the bitline reads or writes the charge. DRAM is dense and cheap but much slower than SRAM. The capacitor is physically a _trench cell_ to keep the cell small.
+
+Two consequences of analog storage:
+- *Destructive read.* Accessing the cell shares charge with the bitline and leaves the cell near $V_"dd" / 2$. A sense amplifier detects the small difference and immediately writes the value back.
+- *Leakage.* The capacitor discharges even when idle, so DRAM is _dynamic_: all rows must be refreshed periodically (the usual retention window is 64 ms). Refresh consumes bandwidth.
+
+=== MAT, bank, chip, rank, channel
+
+A _MAT_ is a two-dimensional cell array with a row decoder, a column decoder and sense amplifiers. A row access copies an entire row into the sense amplifiers, which act as the _row buffer_; a column access then selects data from that buffer. This is why a DRAM address is a (row, column) pair.
+
+#image("imgs/mat.png")
+
+A _bank_ combines several MATs with global sense amps and shared peripheral logic; it is the basic unit that can be busy independently. A _chip_ contains several banks plus the I/O interface. A _rank_ is a group of chips that together provide the full bus width and are selected together by the chip-select signal. A _channel_ is a set of DIMMs (ranks) on one memory bus attached to a memory controller.
+
+#image("imgs/bank.png")
+
+#image("imgs/dramchip.png")
+
+The hierarchy is a compromise. One huge array would share peripherals and be area-efficient, but long bitlines are slow and skew grows across the array; splitting into smaller MATs keeps sensing margins and access times manageable at the cost of more peripheral circuits. For example, a 512 Mb chip can be four 128 Mb banks, each bank a grid of MATs of a few hundred wordlines by a few hundred bitlines.
+
+=== Timing and generations
+
+Three commands define an access:
++ *Activate* (RAS): open a row and move it into the row buffer.
++ *Read/Write* (CAS): select a column in the open row.
++ *Precharge* (PRE): close the row and prepare the bank for another row.
+
+Important delays:
+- $t_"RCD"$: activate to column command (row to sense amp).
+- $t_"RAS"$: minimum time a row stays active, so data can be restored.
+- $t_"CAS"$: column command to data on the bus.
+- $t_"CCD"$: minimum column-to-column spacing.
+- $t_"BURST"$: duration of the data burst.
+- $t_"RP"$: precharge time.
+- $t_"RC" = t_"RAS" + t_"RP"$: full row cycle within one bank.
+
+#image("imgs/readcyc.png")
+
+Interface generations:
+- _Asynchronous DRAM_ uses RAS/CAS strobes and no clock, so timing is open-loop.
+- _Fast page mode (FPM)_ keeps the row open and issues several CAS accesses to it.
+- _EDO_ puts a buffer between the sense amps and the data line, overlapping column-address capture with data output.
+- _Burst EDO_ increments the column address internally, so a burst needs only one address.
+- _SDRAM_ adds a clock; commands are sampled on the rising edge.
+- _DDR_ transfers on both edges, doubling bandwidth. It also decouples the slow cell core from the fast I/O: a $2n$-bit internal prefetch is serialized onto the bus (DDR1 $2n$, DDR2 $4n$, DDR3 $8n$). This is why data rates can grow while the array core stays at a few hundred MHz.
+
+=== Scaling capacity
+
+To add capacity, stack dies or PCBs, or put more DIMMs on a channel. The problem is the shared bus: address and command lines fan out to every chip on every DIMM, adding capacitance and distance-dependent delay, so the signal is attenuated and skewed. Solutions put a buffer on the DIMM:
+- _RDIMM_ buffers the address/command signals and redistributes them.
+- _FB-DIMM_ buffers all signals, including data, through an advanced memory buffer (AMB), at the cost of heat and money.
+- _LR-DIMM_ buffers all signals without the extra control logic of an AMB.
+
+=== Memory controller
+
+The memory controller (MC) sits between the last-level cache and DRAM. It used to be off-chip in the north bridge, which added wire delay and tied its speed to the front-side bus; modern CPUs integrate it, so it runs at core speed but fixes the memory type (a DDR4 CPU only takes DDR4).
+
+Its roles: accept and buffer requests from cores and I/O, arbitrate, translate physical addresses into {rank, bank, row, column}, queue commands (often per bank), schedule them, drive the signaling interface, and obey all timing constraints.
+
+Two row-buffer policies dominate:
+- _Open-page_: leave the row open after an access, hoping for more hits in the same row. A row-buffer miss then costs a precharge plus an activate, which is expensive.
+- _Closed-page_: precharge immediately; better for sparse or random streams with little row locality.
+
+_Bank-level parallelism_: while one bank precharges or activates, another can transfer data. All banks still share the chip's data pins, so only one transfer happens at a time. Address mapping decides how well this works: physical address bits are partitioned into rank/bank/row/column fields (e.g. RaBaRoCo). Which bits go where trades row locality against bank parallelism; binary invertible matrices give one-to-one mappings, and entropy-based mappings send low-entropy bits to the row and high-entropy bits to the bank.
+
+Scheduling principles:
++ Prioritize row-buffer hits, to maximize bandwidth.
++ Prioritize latency-sensitive applications, to maximize system throughput.
++ Ensure that no application is starved, for fairness.
+
+Multiple channels add bandwidth: lock-step channels act as one wider interface (for example $2 times 64 = 128$ bits), while independent channels have separate controllers and can serve different requests. Across sockets, independent channels give NUMA: local memory is fast, remote memory goes over UPI and is slower.
+
+=== High-speed signaling
+
+As data rates rise, the bus itself becomes the problem:
+- *Power*: DRAM power scales with voltage and frequency. Each DDR generation lowers the core voltage, and the DIMM keying changes (184, 240, 240 and 288 pins) so a module cannot be inserted into the wrong generation.
+- *Clock skew*: a central clock arrives at chips at different times. DDR1–3 use source-synchronous strobes (DQS) sent with the data, so the receiver captures data relative to its own strobe.
+- *Reflection*: a signal reflects at the end of the bus and interferes with later data; termination resistors absorb it.
+- *Noise*: reflections and crosstalk close the eye. DDR2 used a symmetrical T-branch so all chips see a similar delay; DDR3 moved to a fly-by topology with short stubs, which gives a predictable delay that the controller can compensate.

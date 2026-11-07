@@ -373,7 +373,7 @@ We say this scheme is secure if any p.p.t. adversary cannot distinguish $k$ from
 - $Inv$ is an algorithm that inverts $f$ given $sans("tp")$. We require that $Inv(sans("pp"), sans("tp"), f(x)) = x$.
 - $f$ is one-way without $sans("tp")$. That is, for any p.p.t. adversary $A$, $Pr[A(f, f(x)) = x] = negl(lambda)$.
 
-*Example 6.7. (OWF from RSA)* $Gen(1^lambda)$ generates $N = p q$ ($p,q$ are prime numbers), $e,d$ s.t. $e d equiv 1 (mod phi(N))$, $sans("pp") = (N,e)$, $sans("tp") = d$. Here $F_sans("pp") (x) = x^e mod N$, $Inv(sans("pp"), sans("tp"), y) = y^d mod N$, $x$ lies inside $ZZ_N^times$.
+*Example 6.7. (TDP from RSA)* $Gen(1^lambda)$ generates $N = p q$ ($p,q$ are prime numbers), $e,d$ s.t. $e d equiv 1 (mod phi(N))$, $sans("pp") = (N,e)$, $sans("tp") = d$. Here $F_sans("pp") (x) = x^e mod N$, $Inv(sans("pp"), sans("tp"), y) = y^d mod N$, $x$ lies inside $ZZ_N^times$.
 
 *Definition 6.8. (Key Agreement from Trapdoor Permutation)* #tufted.margin-note([This can be viewed equivalently as a key encapsulation scheme.])
 + Alice runs $Gen$ and sends $sans("pp")$ to Bob.
@@ -382,7 +382,7 @@ We say this scheme is secure if any p.p.t. adversary cannot distinguish $k$ from
 
 The purpose of $h$ in the last step is that we can easily distinguish $x$ from a random key given $f(x)$, so only the weaker sense of security in key agreement is satisfied. However, we need the key to be pseudorandom during public encryption. 
 
-A simple solution is to choose $h$ to be a random oracle. The adversary either has made query to $x$ (which happens with neglible probability even with a random oracle), or fails to distinguish $h(x)$ from random (since they are equally distributed).
+A simple solution is to choose $h$ to be a random oracle. The adversary either has made query to $x$ (which happens with negligible probability even with a random oracle), or fails to distinguish $h(x)$ from random (since they are equally distributed).
 
 Another solution is to use $h$ as a hardcore predicate of $f$. In this case, there is one bit of pseudo-entropy in $h(x)$ given $f(x)$. With enough independent samples of $x$ we are able to extract enough randomness for a key using extractors. _This is only handwaving._
 
@@ -403,7 +403,7 @@ The third solution, which is the one we focus on, is to use different assumption
 3. $lambda$-bit safe primes $p,q$. A safe prime $p = 2 p' + 1$ is one such that $p'$ is also a prime. 
 4. Factorization is hard.
 5. Discrete logarithm assumption. Given a cyclic group $G$, a generator $g$ and a random element $g^x$, it's hard to find $x$ given only $g^x$.
-6. Computational Diffie-Hellman assumption. Given $g,g^x,g^y$, it's hard to find $g^(x y)$. This induces a natural key agreement protocal: let Alice and Bob send $g^x,g^y$ to the other party respectively, use $h(g^(x y))$ as the key.
+6. Computational Diffie-Hellman assumption. Given $g,g^x,g^y$, it's hard to find $g^(x y)$. This induces a natural key agreement protocol: let Alice and Bob send $g^x,g^y$ to the other party respectively, use $h(g^(x y))$ as the key.
 7. Decisional Diffie-Hellman assumption. Hard to distinguish $g^(x y)$ from a random $g^z$. In this case $h$ is no longer required.
 
 We have $7 -> 6 -> 5$; $2 -> 0$; $2 -> 1$.
@@ -426,3 +426,126 @@ Such group can be constructed from safe primes. Let $p = 2 p' + 1$, then the qua
 *Definition 6.12. (Homomorphic Encryption)* Given $c_1 = Enc(x_1), c_2 = Enc(x_2)$, if $c = Enc(f(x_1,x_2))$ where $c$ can be directly computed from $c_1,c_2$ then this scheme is a *homomorphic encryption*.
 
 A homomorphic encryption is not CCA-secure.
+
+== lec07
+
+#let Sign = math.op(math.sans("Sign"))
+#let Vrfy = math.op(math.sans("Vrfy"))
+
+*Definition 7.1 (Signature)* A *signature* scheme $Pi = (Gen, Sign, Vrfy)$, where
+- $Gen(1^lambda) -> (p k, s k)$;
+- $Sign(s k, m) -> sigma$;
+- $Vrfy(p k, m, sigma) -> {0,1}$;
+- Correctness: $Vrfy(p k, m, Sign(s k, m)) = 1$.
+
+Security: the challenger sends $p k$ to the adversary. The adversary make queries $m_i$ and asks for $sigma_i$ and wins if it outputs $(m,sigma)$ s.t. $Vrfy(p k, m, sigma) = 1$ and $m != m_i$.
+
+Strong security: requires that $(m,sigma) != (m_i, sigma_i)$.
+
+Similar to public key encryption, signature can be build from trapdoor permutations. #tufted.margin-note([Recall that in PKE, $p k = f$ which maps plaintext to ciphertext, $s k$ is the trapdoor.]) 
+
+Let $f$ be a TDP, $p k = f$, $s k = sans("tp")$. Then $Sign(s k, m) = f^(-1)(m)$, $Vrfy(p k, m, sigma) = [f(sigma) = m]$. A problem with this scheme is that the adversary can simply output $(f(sigma), sigma)$ without making any query. To fix this, we can use a hash function $H$ and sign $H(m)$ instead of $m$.
+
+*Proposition 7.2.* If $f$ is a TDP and $H$ is a random oracle whose codomain is the range of the TDP, then the above scheme is secure.
+
+_Proof._ Suppose $A$ breaks the signature scheme. WLOG assume that if $A$ requests $Sign(s k, m)$ or outputs $(m, sigma)$, then it has queried $m$ to $H$. Let $q$ be the upper bound on the number of queries that $A$ makes. We give an algorithm $B$ that inverts the TDP.
+
+On input $m$, $B$ selects a random $r_m$ and set $H(m) = f(r_m)$ (this simulates the random oracle with equal distribution since $f$ is a permutation). Let $Sign(s k, m) -> r_m$. 
+
+The key is that suppose the output is $(m^*, sigma^*)$, then $A$ comes up with $f^(-1) (H(m^*))$. The goal of $B$ is to invert a uniformly random input $y$ using the power of $A$. $B$ can guess an index $i in [q]$ so that $m^* = m_i$, and set $H(m) <- y$. The multiplicative loss is at most $1/q$. $qed$
+
+*Example 7.3. (Blind Signature)* We would like the party with $s k$ to sign a message $m$ without learning anything from $m$. The homomorphic property of RSA makes it possible. Sample a random $r$ and let $m' = H(m) r^e$. The signer signs $m'$ and sends $sigma' = (m')^d = (H(m))^d r$. The requester then computes $sigma = sigma' r^(-1) = (H(m))^d$.
+
+*Example 7.4. (Threshold Signature)* In RSA, break $d$ into random $d_1, d_2, d_3$ s.t. $d_1 + d_2 + d_3 = d$. Then $sigma = sigma_1 sigma_2 sigma_3$. A malicious party would need to retrieve all $d_i$ to forge a signature.
+
+*Definition 7.5. (Elliptic Curve)* An *elliptic curve* is a set of points $(x,y)$ satisfying $y^2 = x^3 + a x + b$, plus a point at infinity. The points form an abelian group under a geometric addition law. The elliptic curve group on $FF_q$ is denoted as $E(FF_q)$. A theorem of Hasse states that $abs(E(FF_q)) = q + 1 - t$, where $abs(t) <= 2 sqrt(q)$.
+
+*Proposition 7.6. (Bilinear Map / Pairing)* There exists two elliptic curves $G, G_T$ of prime order $p$ and a map $e: G times G -> G_T$ s.t. $e(g^x, g^y) = g_T^(x y)$. An _assymmetric_ pairing uses two isomorphic groups $G_1,G_2$ and $e:G_1 times G_2 -> G_T$ instead. It is required that $e(a^x, b^y) = (e(a,b))^(x y)$. It is also required that $e(g_1,g_2) != 1$.
+
+This implies that DDH doesn't hold on elliptic curves. However, cryptographers are dumb and they are unable to find a similar "trilinear map" that distinguishes $(g,g^x,g^y,g^z, g^(x y z))$ and $(g,g^x,g^y,g^z, g^r)$. So this is used as an assumption (one can see that it implies CDH).
+
+*Example 7.7. (BLS Signature)* Let $s k = x$, $p k = g^x$, $sigma = H(m)^x$. The verifier checks $e(sigma, g) = e(H(m), p k)$. 
+
+This scheme is safe under CDH.
+
+*Definition 7.8. (Identification protocol)* An *identification protocol* is an interactive protocol that allows a party to prove its identity to another party.
+
+*Example 7.9. (Pairing-based Identification protocol)* Let $(g,g^x)$ be public. The prover possesses $x$, and in each turn the verifier samples $y$ and sends $g^y$ to the prover. The prover computes $g^(x y)$ and sends it to the verifier. The verifier checks if $e(g^x, g^y) = g^(x y)$.
+
+Now we present an identification protocol that is based on the hardness of discrete logarithm (which is weaker than DDH, CDH, etc.). We would like the IP to be *honest verifier perfect zero-knowledge*. #tufted.margin-note([The word _honest_ here states that we only need a simulator against *passive* verifiers. In the following example all the verifier does is flipping public coins, so there is no malicious verifier.]) That is, a party with no possession of the secrete can simulate the whole interaction in the same distribution as the interaction with known secret and honest parties, in polynomial time. For example, $cal(P)$ sending $H(s k)$ to $cal(V)$ is not honest verifer perfect zero-knowledge.
+
+*The $Sigma$-protocol.* Suppose the honest prover $cal(P)$ has a private $w$ and $g, h = g^w$ are public. The protocol proceeds in 3 rounds:
+1. $cal(P)$ sends $a$ to $cal(V)$.
+2. $cal(V)$ responds with $e$ chosen via *public* random coin tosses.
+3. $cal(P)$ replies with $z$. $cal(V)$ checks if $(a,e,z)$ is valid.
+
+*Perfect completeness*: if the prover follows this protocol then $cal(V)$ accepts with probability 1.
+
+*Special soundness*: We require that given $cal(V)(a,e,z) = cal(V)(a,e',z') = 1$, $e != e'$, a witness $w$ can be computed in polynomial time s.t. $h = g^w$.
+
+*Knowledge soundness*: If there exists a p.p.t. prover $cal(P)$ that succeeds on the IP with non-negligible probability, then we can use $cal(P)$ (possibly in a non-blackbox way) to extract $w$ with high probability.
+
+*Example 7.10. (Schnorr's $Sigma$-protocol)* Assume $G, g, h = g^w$ are public.
+1. $cal(P)$ sends $a = g^r$ to $cal(V)$ where $r$ is drawn randomly.
+2. $cal(V)$ responds with a random $e in [0, abs(G)-1]$.
+3. $cal(P)$ sends $z = w e + r$ to $cal(V)$, who checks if $a dot.c h^e = g^z$.
+
+Assume $abs(G)$ is prime, completeness and special soundness can be easily verified. A simulator exists by sampling $e, z$ and compute $a = g^z h^(-e)$.
+
+*Proposition 7.11.* $Sigma$-protocol is knowledge sound. (This holds *unconditionally*.)
+
+_Proof._ Assume $cal(P)$ wins the $Sigma$-protocol with probability $epsilon$. Then w.p. $>= epsilon/2$, when the randomness of $cal(P)$ is fixed, $ Pr_e [cal(V)(a,e,z) = 1] >= epsilon/2. $
+Generate two transcripts $(a,e,z)$ and $(a,e^prime, z^prime)$ as follows. Fix the randomness of $cal(P)$ and generate $(a,e,z)$ as usual. Then *rewind* $cal(P)$ to the point after $a$ is sent and uniformly samples $e^prime$. When the randomness of $cal(P)$ is good (in the aformentioned sense), 
+$ Pr[cal(V)(a,e,z) = 1 and cal(V)(a,e^prime,z^prime) = 1] >= (epsilon/2)^2. $
+Thus the extraction succeed w.p. $Omega(epsilon^3)$. $qed$
+
+It is crucial that the randomness in step 2 is public. However, this is hard to achieve in reality. Instead, we would like to use signatures, who can be viewed as a non-interactive prover.
+
+The main issue is that we cannot simply let the prover generate all the randomness (as it can be dishonest). In the general case, the *Fiat-Shamir transformation* uses a random oracle $R$. A new problem is that the prover can learn $R$ on several inputs, so we require that the $i$th random value is evaluated at a point that depends on the first $i$ outputs of the prover, namely $r_i = R(x,g_1,g_2,dots.c,g_i)$ if $g_dot.c$ are the messages $cal(P)$ sends to $cal(V)$. Intuitively, $cal(P)$ cannot learn $r_i$ before determining $g_i$.
+
+In certain cases (e.g. constant round number), Fiat-Shamir transformation is proven to be sound. We prove the soundness when it is applied to $Sigma$-protocols.
+
+*Proposition 7.12.* Applying the Fiat-Shamir transformation to any $Sigma$-protocol yields a non-interactive argument of knowledge (i.e. signature) in the random oracle model.
+
+_Proof._ We present the proof in the context of Schnorr's protocol. Recall that $e = R(h,a)$. Let $cal(Q)$ refer to the non-interactive argument. Let $cal(P)_"FS"$ be a prover for $cal(Q)$ that produces an accepting transcript $(a,e,z) = cal(P)_"FS" (h)$ w.p. $>= epsilon$ (the randomness is over the random oracle and the choices made by $cal(P)_"FS"$). 
+
+Assume that $cal(P)_"FS"$ always makes $T$ distinct queries to $R$, outputs $e = R(h,a)$ and at least one of $cal(P)_"FS"$'s queries was at $(h,a)$. We generate two transcripts in the following way. Fix the internal randomness of $cal(P)_"FS"$ that it outputs some $(a,e,z)$. *Rewind to* the point that it makes query $R(h,a)$. We replace the output with some random $e'$ and let $cal(P)_"FS"$ proceed (again, with freshly generated random responses). It stops with $(a,e^prime,z^prime)$ being the output.
+
+*Claim.* W.p. $Omega(epsilon^4\/T^3)$, $(a,e,z)$ and $(a,e^prime,z^prime)$ are accepting.
+
+Let $X,Y$ be the randomness of $cal(P)_"FS"$ and $R$ respectively. Denote $A(X,Y)$ be the event that $cal(P)_"FS"$ wins. Since $Pr_(X,Y) [A(X,Y)] >= epsilon$, we have $ Pr_X [Pr_Y [A(X,Y) | X] >= epsilon/2] >= epsilon/2. $  
+
+Let $E$ be the event that $Pr_Y [A(X,Y) | X] >= epsilon/2$. The witness extraction succeeds w.p.
+$ >= Pr[E] dot.c Pr["witness extraction succeeds" | E] >= epsilon/2 dot.c Pr["witness extraction succeeds" | E]. $
+
+Assume from now on that $X$ is fixed so that $E$ happens. From union bound, for some $i^ast in [T]$, $ Pr_Y [cal(P)_"FS" "wins" and Q_(i^ast) = (h,a)] >= epsilon/(2T). $
+Here $Q_i$ refers to the $i$th query. Given $i^ast$, from a similar argument #footnote([We have used this argument 3 times in this proposition and the last proposition.]), w.p. $>= epsilon/(4 T)$ over the random oracle on the first $(i^ast - 1)$ arguments, $cal(P)_"FS"$ wins w.p. $>= epsilon/(4 T)$. Therefore, the extraction succeeds w.p. $>= (epsilon/(4T))^3.$
+
+In conclusion, the witness-extraction procedure succeeds w.p. $Omega(epsilon^4\/T^3)$. $qed$
+
+In fact, it is possible to build signature based on classial primitives, e.g. OWF.
+
+*Definition 7.13. (Lamport Signature)* Let $f$ be an OWF. The secret key is $2 n$ random elements $x_(i,b)$. The public key is $y_(i,b) = f(x_(i,b))$. To sign $m$, for each bit $m_i$, reveal $x_(i,m_i)$. *This works if the adversary only makes 1 query.*
+
+*Definition 7.14. (Chain-Based Signatures)* An improvement is to use multiple $(p k_i, s k_i)$. Initially we have $(p k_1, s k_1)$. On message $m_1$, let $sigma_1 = Sign(s k_1, m_1 || p k_2)$, the signature includes $(sigma_1, p k_2)$. Then $s k_2$ is used to sign $m_2 || p k_3$, etc. Each signature includes its predecessors.
+
+This construction is *stateful* (we have to save every $p k_i, s k_i$ to validate each public key). In general, when the state is $s t$, the signer outputs $Sign((s t, s k_i), m_i) -> sigma_i$ and update $s t$ to $s t^prime$.
+
+*Proposition 7.15.* If $Sign$ is one-time secure, then this scheme is secure under the following attack: the adversary makes several queries and the signer's state changes accordingly; it then forges a (probably long) signture.
+
+_Proof Sketch._ We can attack the one-time signature based on simulation of an adversary $A$ which wins the above game with noticeable probability. The crucial step is to guess the first "fork" that $A$ makes, and place the attack we would like to make at that point.
+
+*Definition 7.16. (Tree-Based Signatures)* We would like a stateless scheme. Intuitively, if we randomly generate a pair of $(p k_m, s k_m)$ for each message $m$, then the signer can use $s k_m$ to sign $m$. 
+The tree-based signature provides $sigma_w <- Sign(s k_w, p k_(w 0) || p k_(w 1))$, where each $(p k_w, s k_w)$ is generated independently on node $w$. Finally, $sigma_m <- Sign(s k_m, m)$. The signature includes $(sigma_(m[:i]), p k_(m[:i] 0), p k_(m[:i] 1))$ and $sigma_m$. 
+
+#image("imgs/treebasedsig.png")
+
+*Proposition 7.17.* This scheme is secure as long as $Sign$ is one-time secure.
+
+_Proof Sketch._ Like the last proof, guess the position of the "fork". 
+
+To make the scheme completely stateless, instead of saving each generated pair $(p k_w, s k_w)$, we can use a PRF (whose key is contained in $p k$) and map each node to the random seed used in $Gen$.
+
+*Public-Key Infrastructure.* A client is trying to fetch the public key from a website. The general assumption is that there is some trustworthy *certificate authority*, who generates $(p k, s k)$. The website generates $(p k_1, s k_1)$ and let the CA signs its name and $p k_1$ with $s k$. The client checks the certificate with $p k$. 
+
+In practice there are CAs in different hierarchies. 

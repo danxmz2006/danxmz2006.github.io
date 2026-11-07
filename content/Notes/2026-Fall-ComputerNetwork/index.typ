@@ -73,7 +73,7 @@ C/S 方式可以分为面向连接 (TCP) 的和无连接 (UDP) 的. 服务器可
 
 P2P 方式中每个程序的地位对等, 可以直接通信.
 
-=== Protocals for the Application Layer
+=== Protocols for the Application Layer
 
 *WWW = World Wide Web = 万维网*. WWW 由 HTTP 服务器/客户端, Web 对象和 HTTP 协议构成.
 
@@ -193,7 +193,7 @@ int write(int fd, void *buf, size_t count);
 int socket(
   int domain, /* AF_UNIX, AF_INET, etc. Network layer address family. */
   int type, /* SOCK_STREAM, SOCK_DGRAM */
-  int protocal); /* usually 0 */
+  int protocol); /* usually 0 */
   // return fd if success, -1 on error
 ```
 
@@ -359,7 +359,7 @@ UDP 完成基本的复用和分用.
       +-----------------------------------------------------+
       |            32-bit destination IP address            |
       +---------------------------+-------------------------+
-      | 0 |  8-bit protocal(=17)  | 16-bit UDP total length |
+      | 0 |  8-bit protocol(=17)  | 16-bit UDP total length |
       +------------------------+--+-------------------------+
       |  source port address   |  destination port address  |
       +------------------------+----------------------------+
@@ -640,6 +640,8 @@ QUIC 分离"确认接收"与"向上交付": 包头有单调递增的 *packet num
 ==== IPv4 数据报
 
 IPv4 (RFC 791) 是无连接的数据报协议, 只负责*寻址*和*分片*. 首部固定部分 20 字节 (首部长度字段以 4 字节为单位, 故首部最长为 60 字节), 依次为: 版本, 首部长度, 区分服务 (一般不用), 总长度 (16 bit, 数据报最大 65535 字节), 标识 (每产生一个数据报加 1, 分片后用来识别同一原始报文), 标志 (DF 置 1 禁止分片, MF 置 1 表示后面还有分片), 片偏移 (13 bit, 以 8 字节为单位), 生存时间 TTL (按跳数计, 每经一个路由器减 1), 协议 (上层协议号: ICMP 1, TCP 6, UDP 17), 首部校验和 (只校验首部), 源地址, 目的地址, 以及可变的选项与填充.
+
+#image("imgs/ipv4dg.png")
 
 ==== 分片与重组
 
