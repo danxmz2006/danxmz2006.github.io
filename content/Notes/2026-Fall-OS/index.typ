@@ -450,3 +450,174 @@ The offline test is $U = sum_i c_i / p_i <= 1$, which is both necessary and suff
 === Aperiodic Scheduling
 
 Aperiodic tasks have deadlines but no period, so the schedule is built from the ready times and deadlines rather than from periods. The lecture works through a non-preemptive schedule of five aperiodic tasks and shows how the ordering must be chosen so that every completion deadline is met.
+
+== Synchronization
+
+Buzz words: _Synchronization, race condition, data race, mutual exclusion, critical section, atomic operation, lock, spinlock, semaphore, monitor, condition variable, deadlock, starvation._
+
+=== Why Synchronization?
+
+Threads of one process share an address space. Global and static objects and objects allocated on the heap are shared; each thread's stack, registers and program counter are private. When two threads access the same shared data concurrently and at least one writes, the result depends on the exact interleaving of their instructions; this is a *race condition*, and the special case of conflicting accesses to one memory location is a *data race*.
+
+For example, `x++` and `x--` on a global `x = 0` each consist of a load, a modification and a store. If both threads load before either stores, the final value can be `-1` or `1` instead of `0`. Likewise, two threads withdrawing RMB 1000 from a shared account can both read the old balance and both write back the same new balance, losing one withdrawal. The race occurs even on a uniprocessor, because a context switch can happen between the load and the store; multiple processors only make it more likely.
+
+#figure(image("imgs/sync-race.png"), caption: [Two withdrawals interleaved: both read the old balance before either writes back])
+
+The shared objects may be buffers, queues, lists or hash tables, and the compound operations on them must be made *atomic* — executed as a whole, with no observable intermediate state. Synchronization is the set of mechanisms that provide this atomicity and coordinate the order in which threads access shared resources. It plays the role of traffic signals: threads make progress independently, but must obey rules at intersections.
+
+=== Critical Sections
+
+A *critical section* (critical region) is a piece of code that accesses a shared resource and must not be executed by more than one thread at a time. A thread enters the section, accesses the shared data, and leaves; other threads wait at the entry. The programmer marks the boundaries, and the entry/exit protocol enforces mutual exclusion.
+
+#figure(image("imgs/sync-critical.png"), caption: [Mutual exclusion with critical regions: B waits while A is inside])
+
+A correct critical-section solution has four requirements:
+
+- *Mutual exclusion* (safety): if one thread is in the critical section, no other thread is.
+- *Progress* (liveness): a thread outside the critical section cannot prevent another thread from entering; only threads inside or trying to enter take part in the decision.
+- *Bounded waiting* (liveness): a thread waiting to enter eventually enters, so no thread starves.
+- *Performance*: entering and leaving costs little compared with the work inside.
+
+The model assumes that only word-sized loads and stores are atomic, that a context switch can occur anywhere, and that threads may run at arbitrary speeds; in particular, no assumption is made about the number of CPUs.
+
+The simplest two-thread solution is *alternation*: a shared `turn` says whose turn it is, and a thread spins while `turn` is not its own. It gives mutual exclusion, but fails progress — a thread that stops outside the critical section leaves `turn` pointing at itself and blocks the other forever.
+
+*Peterson's algorithm* fixes the progress problem by adding a `ready` flag per thread:
+
+```
+// thread i, with j = 1 - i
+ready[i] = true;
+turn = j;
+while (turn == j && ready[j]) ;
+// critical section
+ready[i] = false;
+```
+
+If both threads try to enter, both set their flags, and the last write to `turn` loses: that thread sees `turn == j` and spins, while the other enters. If the other thread is outside and not interested, its flag is false, so the interested thread enters. Hence mutual exclusion holds and, because the loser enters as soon as the winner leaves, waiting is bounded. Peterson's algorithm assumes atomic loads/stores and sequential consistency; a compiler or CPU that reorders the flag and `turn` writes can break it unless fences are used.
+
+The mechanisms for building critical sections are atomic read/write instructions, locks, semaphores, monitors and message passing; the rest of this section develops atomic instructions, locks, semaphores and monitors.
+
+=== Locks
+
+A *lock* is an object with `acquire()` and `release()` operations. A thread holds the lock between the pair; `acquire()` does not return until the previous holder releases. A lock whose waiters busy-wait is a *spinlock*; a lock whose waiters block is a *mutex*.
+
+The naive implementation is itself a critical section:
+
+```
+while (lock->held) ;   // check
+lock->held = true;     // then set
+```
+
+Two threads can both observe `held == false` and both acquire the lock. The check and the set must be a single atomic instruction. *Test-and-set* returns the old value and sets the flag:
+
+```
+bool test_and_set(bool *flag) {
+  bool old = *flag;
+  *flag = true;
+  return old;
+}
+
+void acquire(lock) { while (test_and_set(&lock->held)) ; }
+void release(lock) { lock->held = false; }
+```
+
+`swap`/`xchg` provides the same primitive. This works on multiprocessors, but a spinner burns CPU while the holder cannot run; on a uniprocessor it is especially wasteful. A waiter can call `thread_yield()` instead of spinning, but the general fix is to sleep and be woken when the lock is released.
+
+Another way is to *disable interrupts* around the critical section: with interrupts off, no timer or I/O interrupt can cause a context switch. It works on a uniprocessor only, since it does not stop another processor, and it hides or delays important events, so it is used only for short kernel primitives and never around a long critical section.
+
+The usual compromise is a blocking lock with a queue. `acquire()` disables interrupts just long enough to check the lock; if it is held, the thread is put on the lock's queue and blocked with interrupts enabled. `release()` disables interrupts, clears the flag and, if the queue is non-empty, removes and unblocks one waiter; then it re-enables interrupts. Waiting now costs a context switch rather than a full time slice.
+
+=== Semaphores
+
+A *semaphore* is an integer with a wait queue and two atomic operations. `P()` (wait, down) waits until the value is positive and then decrements it; `V()` (signal, up) increments it and wakes one waiter. The value is never negative, and `V()` has *history*: if nobody is waiting, the increment is remembered for the next caller.
+
+A *binary semaphore* (mutex) has values 0 and 1 and provides mutual exclusion. A *counting semaphore* has values 0 to N and represents N identical resources. Mutual exclusion is then:
+
+```
+sem mutex = 1;
+P(&mutex);
+// critical section
+V(&mutex);
+```
+
+Semaphores also express ordering, as in the bounded-buffer producer/consumer:
+
+```
+sem empty = N, full = 0, mutex = 1;
+
+producer: P(&empty); P(&mutex); put(item); V(&mutex); V(&full);
+consumer: P(&full);  P(&mutex); item = get(); V(&mutex); V(&empty);
+```
+
+The resource semaphore must be taken before the mutex. Otherwise a producer holding `mutex` can block on `full` while the consumer cannot enter to drain the buffer, and the two deadlock.
+
+Two semaphores can also deadlock directly. With `S = Q = 1`, if one thread does `P(S); P(Q)` while another does `P(Q); P(S)`, each holds one and waits for the other forever. Because semaphores are untyped global variables, nothing prevents `V()` before the critical section, a missing `V()`, or a second `P()`; all are programmer errors.
+
+The readers-writers problem uses a counting variable and two semaphores:
+
+```
+int readcount = 0;
+sem mutex = 1, w_or_r = 1;
+
+reader:
+  P(&mutex); readcount++;
+  if (readcount == 1) P(&w_or_r);   // first reader locks out writers
+  V(&mutex);
+  read;
+  P(&mutex); readcount--;
+  if (readcount == 0) V(&w_or_r);   // last reader lets writers in
+  V(&mutex);
+
+writer:
+  P(&w_or_r); write; V(&w_or_r);
+```
+
+`w_or_r` excludes writers from readers and writers from one another; `mutex` protects `readcount`. If readers keep arriving while a writer waits, the writer starves; a turnstile that makes new readers wait behind a pending writer fixes this.
+
+=== Monitors and Condition Variables
+
+A *monitor* is a programming-language construct that bundles shared data with the procedures that operate on it. The compiler inserts lock/unlock around every procedure, so only one thread executes inside the monitor at a time and other callers wait in an entry queue. The synchronization is part of the data abstraction and cannot be forgotten by a caller.
+
+#figure(image("imgs/sync-monitor.png"), caption: [Monitor queues: entry queue, condition queues, and the single thread executing inside])
+
+A monitor alone cannot express "wait until the buffer has space". A *condition variable* provides that: `wait(c)` atomically releases the monitor lock, puts the thread on `c`'s queue and sleeps; on wakeup it reacquires the lock. `signal(c)` wakes one waiter and `broadcast(c)` wakes all. Condition variables have no history — a signal with no waiter is lost — and they are not booleans; the thread must recheck the real predicate.
+
+```
+monitor BoundedBuffer {
+  Resource buf[N];
+  int count = 0;
+  Condition not_full, not_empty;
+
+  void put(Resource r) {
+    while (count == N) wait(not_full);
+    buf[count++] = r;
+    signal(not_empty);
+  }
+
+  Resource get() {
+    while (count == 0) wait(not_empty);
+    Resource r = buf[--count];
+    signal(not_full);
+    return r;
+  }
+}
+```
+
+Monitor implementations differ in what `signal()` does:
+
+#table(columns: (auto, auto, auto),
+  [], [*Hoare*], [*Mesa*],
+  [Signal], [switches immediately to the waiter], [puts the waiter on the ready queue; signaler continues],
+  [On return from `wait`], [the condition is guaranteed true], [it is only a hint; the condition may have changed],
+  [Typical wait], [`if (pred) wait(c)`], [`while (pred) wait(c)`],
+  [Tradeoff], [easier to reason about], [fewer context switches, easier to broadcast])
+
+Java uses Mesa semantics, so `while` is mandatory there. Hoare monitors leave less to chance but force an extra context switch on every signal.
+
+#table(columns: (auto, auto, auto, auto),
+  [*Mechanism*], [*Atomicity from*], [*Waiting*], [*Main pitfall*],
+  [Spinlock], [hardware test-and-set/swap], [busy-wait], [wastes CPU; long critical sections],
+  [Disable interrupts], [the CPU], [none], [uniprocessor only; hides I/O],
+  [Blocking lock], [atomic instruction + queue], [block], [context-switch cost],
+  [Semaphore], [atomic `P`/`V`], [block], [deadlock; misuse; no ownership],
+  [Monitor], [compiler/runtime], [block], [signal semantics; lost wakeup])

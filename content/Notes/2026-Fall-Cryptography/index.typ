@@ -408,7 +408,7 @@ The third solution, which is the one we focus on, is to use different assumption
 
 We have $7 -> 6 -> 5$; $2 -> 0$; $2 -> 1$.
 
-*Definition 6.10. (El-Gamal Encryption)*
+*Definition 6.10. (ElGamal Encryption)*
 - $Gen(1^lambda) -> p k = (G, g, g^x)$, $s k = x$.
 - $Enc(k, m) -> (g^y, g^(x y) m)$ (under DDH); $Enc(k, m) -> (g^y, H(g^(x y)) plus.o m)$ (under CDH).
 - $Dec(k, (t, c)) = t^(-x) c$ (under  DDH); $Dec(k, (t, c)) = c plus.o H(t^x)$ (under CDH).
@@ -549,3 +549,72 @@ To make the scheme completely stateless, instead of saving each generated pair $
 *Public-Key Infrastructure.* A client is trying to fetch the public key from a website. The general assumption is that there is some trustworthy *certificate authority*, who generates $(p k, s k)$. The website generates $(p k_1, s k_1)$ and let the CA signs its name and $p k_1$ with $s k$. The client checks the certificate with $p k$. 
 
 In practice there are CAs in different hierarchies. 
+
+== lec08
+
+#let Ext = math.op(math.sans("Ext"))
+
+*Definition 8.1. (Identity-Based Encryption)* An IBE scheme consists of four algorithms: $Gen$, $Ext$, $Enc$, $Dec$.
+
+- $Gen(1^lambda) -> (p k, m s k)$;
+- $Ext(m s k, "id") -> s k_("id")$;
+- $Enc(p k, "id", m) -> c$;
+- $Dec([p k, "id"], s k_("id"), c) -> m$.
+
+We require that $Dec$ is correct.
+
+(IND-ID-CPA) Security: the adversary is given $p k$. It can query in multiple rounds $Ext$, then sends $"id", m_0, m_1$. Then it queries $Ext$ again. Then it sends $b'$ and wins if $b = b'$ and $"id"$ hasn't been queried.
+
+*Example 8.2. (Pairing-Based IBE)* Assume symmetric BDH. The public key includes the two groups $G$ and $G_T$, the bilinear map $e$, and $g, g^alpha$. The master secret key is $alpha$. The identity is mapped to $h_"id" = H_1 ("id") in G$. The secret key is $s k_"id" = h_"id"^alpha$. The encryption is $Enc(g^alpha, "id", m) = (g^r, m plus.o H_2(e(g^alpha, h_"id")^r))$. The decryption is $Dec(s k_"id", (g^r, c)) = c plus.o H_2(e(s k_"id", g^r))$.
+
+*Proposition 8.3.* The scheme is IND-CPA-secure given BDH, when $H_1,H_2$ are modeled as random oracles.
+
+_Proof._ We first convert the IBE to a regular PKE. The PKE only has one public key $(P, p k, Q_0)$ and has access to oracle $H_2$. Here $p k = s P$ is the public key of the IBE ($s$ is the master secret key), $Q_0$ is a random element from $G^*$, $s k = s Q_0$ is the secret key. On $Enc(m)$ we sample a random $r$ and output $c = (r P, m plus.o H_2(e(Q_0, p k)^r))$, for decryption $Dec(U,V) = V plus.o H_2(e(s k,U))$.
+
+We simulate an adversary that attacks the PKE, given an adversary that attacks the IBE. It is required to simulate $H_1$. It can make 2 choices: either set $H_1("id") = b_"id" P$ ($b_"id"$ is a random element) and compute $s k_"id" = s H_1("id") = b_i p k$, or $"id"$ is the challenge identity and $H_1("id") = b^* Q_0$. One can guess the index of the second case.
+
+Given $(P,a P, b P, c P)$, we try to use the CPA adversary for the PKE to compute $a b c P$. Set $p k = a P$, $Q_0 = b P$. Then $s k = a b P$. Maintain the random oracle $H_2$. When the PKE adversary sends $m_0,m_1$, we ought to reply with $c = (c P,m_b plus.o H_2(e(Q_0,p k)^c))$, which is just $m_b plus.o H_2(D)$. Either the adversary computes $D$, or the second part of $c$ is indistinguishable from random, conditioned on $c P$. Hence If the adversary has noticeable IND-CPA advantage it must has queried $H_2(D)$. $qed$
+
+*Definition 8.4. (Attribute-Based Encryption)* This is a generalization over IBE. $Enc$ encrypts $m$ and an "attribute" $x$ into $c$. $Ext(m s k, x) = s k_f$ for some predicate $f$ defined on the space of $x$. $Dec(s k_f, c)$ works if $f(x) = 1$, and outputs $perp$ otherwise.
+
+The following encryption is based on *learning with error (LWE)*.
+
+*Definition 8.5. (LWE)* Let $n, q$ be integers, and $chi$ be a distribution on $ZZ_q$. The LWE problem is to distinguish $(A, A s + e)$ from $(A, u)$, where $A <- ZZ_q^(m times n)$, $s in ZZ_q^n$, $e <- chi^m$, and $u in ZZ_q^m$. Usually each entry of $e$ has scale $O(sqrt(q))$.
+
+LWE can be reduced to the short integer solution (SIS) problem.
+
+*Example 8.6. (Homomorphic Encryption)* An encryption scheme is *homomorphic* if we can compute $Enc(m_1 + m_2)$ from $Enc(m_1)$ and $Enc(m_2)$. Let $s k = bold(s)$, $p k = (q, bold(s) A + e)$. The encryption samples small $bold(r) in {0,1}^n$ and outputs $(A bold(r), (bold(s) A + e) bold(r) + m floor(q/2))$. The decryption computes $c_2 - bold(s) c_1 = e bold(r) + m floor(q/2)$ and rounds.
+
+*Proposition 8.7.* This scheme is CPA-secure under LWE.
+
+_Proof._ $(A,s^top A + e^top)$ and $(A,b^top)$, where $A,b$ are independent and uniform, are indistinguishable. After they are multiplied with $bold(r)$ on the right, the result is indistinguishable from a random vector (by leftover hash lemma). For $m_0,m_1$ the ciphertext distributions are indistinguishable. $qed$
+
+*Definition 8.8. (Fully Homomorphic Encryption)* An encryption scheme is *fully homomorphic* if we can compute $Enc(f(m_1, dots, m_n))$ from $Enc(m_1), dots, Enc(m_n)$ for any arithmetic function $f$. Its public key is divided into encryption key and evaluation key. The evaluation function for addition and multiplication takes the evaluation key as an additional input.
+
+Let $ C = mat(A; bold(s)^top A + e^top) + m I. $
+
+Then $bold(t) = (bold(s)^top || -1)$ is its (approximate) left eigenvector. This scheme is CPA-secure by LWE. We can perform homomorphic addition with simple addition (the error grows a little), but multiplication won't work, since the second matrix might have large entries.
+
+For a matrix $C_(k times k)$, we can compute the binary decomposition of each entry, yielding a $k log q times k$ matrix. Denote this matrix as $G^(-1) (C) in {0,1}^(k log q times k)$. There is a fixed matrix $G$ s.t. $C = G dot.c G^(-1) (C)$. $G$ is called _gadget_.
+
+We replace the encryption scheme with $ C = mat(A; bold(s)^top A + e^top) + m G, $
+here $A$ is a random $(n+1) times n log q$ matrix. Decryption is done similarly. During multiplication, we compute
+
+$ 
+ bold(s)^top dot.c C_1 dot.c G^(-1) (C_2) &= (e_1^top + m_1 bold(s)^top G) dot.c G^(-1) (C_2) \
+ &= e_1^top dot.c G^(-1) (C_2) + m_1 bold(s)^top C_2 \ 
+ &= e_1^top dot.c G^(-1) (C_2) + m_1 (e_2^top + m_2 bold(s)^top G) \
+ &= m_1 m_2 bold(s)^top G + (e_1^top G^(-1) (C_2) + m_1 e_2^top).
+$
+
+The error is now bounded by a fixed polynomial blowup.
+
+Since the noise gradually grows, the depth of the evaluation is limited to sublinear, for instance $d = O(n^(0.99))$. To resolve this issue we use a method called _bootstrapping_. 
+
+Suppose the noise of $c$ is high but it is still decodable. Let 
+
+$ c' = sans("Eval")(e k, Dec, s k, c). $
+
+That is, when the server possesses $Enc(p k, s k)$ #footnote([This require that the scheme is circularily secure.]) and $Enc(p k, c)$, it can compute $Enc(p k, Dec(s k, c))$ which decodes to $m$. Notice that now the error of $c'$ only has to do with the $Dec$ process and has nothing to do with $c$.
+
+Some technical work guarantees that the $Dec$ circuit is shallow enough.

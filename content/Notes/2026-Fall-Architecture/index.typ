@@ -422,15 +422,17 @@ Compiler techniques reshape data access:
 
 == DRAM
 
-Last-level cache misses are served by main memory, so DRAM latency and bandwidth set the miss penalty. Main memory is *DRAM*: one transistor and one capacitor per cell (1T1C). The capacitor holds the bit, the wordline turns the transistor on, and the bitline reads or writes the charge. DRAM is dense and cheap but much slower than SRAM. The capacitor is physically a _trench cell_ to keep the cell small.
+Last-level cache misses are served by main memory, so DRAM latency and bandwidth set the miss penalty. Main memory is *DRAM*: one transistor and one capacitor per cell (1T1C). The capacitor holds the bit, the wordline turns the transistor on, and the bitline reads or writes the charge. DRAM is dense and cheap but much slower than SRAM. The capacitor is physically a _trench cell_ to keep the cell small. An SRAM cell of six transistors holds its value as long as it is powered, so it is faster but far less dense; a DRAM read costs tens of ns (50–100 ns on a row-buffer miss), roughly a hundred L1 hits. Latency is what one miss pays; bandwidth is what a stream of misses can consume.
 
 Two consequences of analog storage:
 - *Destructive read.* Accessing the cell shares charge with the bitline and leaves the cell near $V_"dd" / 2$. A sense amplifier detects the small difference and immediately writes the value back.
 - *Leakage.* The capacitor discharges even when idle, so DRAM is _dynamic_: all rows must be refreshed periodically (the usual retention window is 64 ms). Refresh consumes bandwidth.
 
+Refresh is scheduled by the controller, which commands the chip to read and rewrite every row once per retention window, issuing one refresh every $t_"REFI" = 64 "ms" \/ N_"rows"$ (about 7.8 µs with 8192 rows). An all-bank refresh takes $t_"RFC"$ (hundreds of ns) and blocks the whole chip; LPDDR4 and DDR5 can refresh one bank while the others keep serving. Refresh therefore costs a few percent of bandwidth, and more at high temperature because charge leaks faster. Repeatedly activating one row can also flip its neighbors (_row hammer_), which recent standards mitigate with targeted row refresh and refresh management.
+
 === MAT, bank, chip, rank, channel
 
-A _MAT_ is a two-dimensional cell array with a row decoder, a column decoder and sense amplifiers. A row access copies an entire row into the sense amplifiers, which act as the _row buffer_; a column access then selects data from that buffer. This is why a DRAM address is a (row, column) pair.
+A _MAT_ is a two-dimensional cell array with a row decoder, a column decoder and sense amplifiers. A row access copies an entire row into the sense amplifiers, which act as the _row buffer_; a column access then selects data from that buffer. This is why a DRAM address is a (row, column) pair. A column access that finds its row already open is a _row-buffer hit_; otherwise it is a _row-buffer miss_ and must pay a precharge plus an activate. A row is also called a _page_, which names the open-page and closed-page policies below.
 
 #image("imgs/mat.png")
 
@@ -458,6 +460,8 @@ Important delays:
 - $t_"RP"$: precharge time.
 - $t_"RC" = t_"RAS" + t_"RP"$: full row cycle within one bank.
 
+Module specifications quote the triple `CL-tRCD-tRP` in clock cycles, for example 22-22-22 on DDR4-3200. The clock is then 1600 MHz (0.625 ns per cycle), so 22 cycles is 13.75 ns: a row hit returns the first word after CL (13.75 ns), while a row miss adds $t_"RP" + t_"RCD"$ and costs about 41 ns. Bandwidth is data rate times bus width, so one 64-bit channel at 3200 MT/s peaks at 25.6 GB/s, and a 64 B line is a burst of eight transfers, or four cycles.
+
 #image("imgs/readcyc.png")
 
 Interface generations:
@@ -470,7 +474,9 @@ Interface generations:
 
 === Scaling capacity
 
-To add capacity, stack dies or PCBs, or put more DIMMs on a channel. The problem is the shared bus: address and command lines fan out to every chip on every DIMM, adding capacitance and distance-dependent delay, so the signal is attenuated and skewed. Solutions put a buffer on the DIMM:
+To add capacity, stack dies or PCBs, or put more DIMMs on a channel. Stacking is the denser route: bond several dies on top of each other and connect them with through-silicon vias (TSVs). HBM pushes this to the limit—four to eight DRAM dies stacked beside the processor on an interposer, with a 1024-bit interface per stack. Its pins run slower than DDR, but the wide bus delivers much more bandwidth per watt in a small package, at the cost of capacity per package and price.
+
+The second route, more DIMMs per channel, runs into the shared bus: address and command lines fan out to every chip on every DIMM, adding capacitance and distance-dependent delay, so the signal is attenuated and skewed. Solutions put a buffer on the DIMM:
 - _RDIMM_ buffers the address/command signals and redistributes them.
 - _FB-DIMM_ buffers all signals, including data, through an advanced memory buffer (AMB), at the cost of heat and money.
 - _LR-DIMM_ buffers all signals without the extra control logic of an AMB.
@@ -487,12 +493,28 @@ Two row-buffer policies dominate:
 
 _Bank-level parallelism_: while one bank precharges or activates, another can transfer data. All banks still share the chip's data pins, so only one transfer happens at a time. Address mapping decides how well this works: physical address bits are partitioned into rank/bank/row/column fields (e.g. RaBaRoCo). Which bits go where trades row locality against bank parallelism; binary invertible matrices give one-to-one mappings, and entropy-based mappings send low-entropy bits to the row and high-entropy bits to the bank.
 
+A 32-bit example uses 3 bits of rank, 2 of bank, 14 of row and 10 of column, leaving 3 low bits as the byte offset inside a word that DRAM never sees. Taking bank bits from low addresses spreads consecutive lines over banks (parallelism, less row locality); taking them from high addresses does the opposite. Channel interleaving adds another level that stripes lines across controllers.
+
+#figure(image("imgs/addrmap.png"), caption: [Decoding a physical address into rank, bank, row and column fields])
+
 Scheduling principles:
 + Prioritize row-buffer hits, to maximize bandwidth.
 + Prioritize latency-sensitive applications, to maximize system throughput.
 + Ensure that no application is starved, for fairness.
 
+The classical policy is *FR-FCFS* (first-ready, first-come-first-served): among requests whose bank is ready, serve row-buffer hits first and then the oldest request. It maximizes bandwidth but can starve a stream that keeps missing its row, hence the fairness rule.
+
 Multiple channels add bandwidth: lock-step channels act as one wider interface (for example $2 times 64 = 128$ bits), while independent channels have separate controllers and can serve different requests. Across sockets, independent channels give NUMA: local memory is fast, remote memory goes over UPI and is slower.
+
+=== Access flow
+
+A last-level miss turns into a DRAM transaction in four steps:
++ The controller decodes the physical address into {channel, rank, bank, row, column} and appends the request to that bank's queue.
++ If the wanted row is not open, it precharges the bank (when another row is open) and activates the wanted row ($t_"RP" + t_"RCD"$), copying it into the sense amplifiers.
++ It issues the column command; after $t_"CAS"$ data appears on the bus and the burst delivers the cache line.
++ Depending on the page policy, the row stays open or is precharged for the next access.
+
+Steps within one bank serialize, but the controller overlaps them across banks and channels. Bank-level parallelism is what turns a pile of high-latency requests into high bandwidth.
 
 === High-speed signaling
 
@@ -501,3 +523,132 @@ As data rates rise, the bus itself becomes the problem:
 - *Clock skew*: a central clock arrives at chips at different times. DDR1–3 use source-synchronous strobes (DQS) sent with the data, so the receiver captures data relative to its own strobe.
 - *Reflection*: a signal reflects at the end of the bus and interferes with later data; termination resistors absorb it.
 - *Noise*: reflections and crosstalk close the eye. DDR2 used a symmetrical T-branch so all chips see a similar delay; DDR3 moved to a fly-by topology with short stubs, which gives a predictable delay that the controller can compensate.
+
+High-speed links are calibrated at boot rather than trusted blindly: the controller trains write leveling and read timing per bit, and on-die termination (ODT) absorbs reflections at the receiver. DDR5 moves the voltage regulator onto the DIMM (a PMIC) and adds on-die ECC, since smaller cells and faster signaling make both power delivery and errors harder.
+
+== Multiprocessor
+
+=== Flynn's taxonomy and memory organization
+
+Traditional software assumes serial execution: one CPU runs a program broken into a series of instructions, one instruction at a time. Parallel computing uses multiple compute resources at once: the program is split into subprograms that run concurrently, each subprogram is again a series of instructions, and instructions from different parts execute simultaneously on different resources.
+
+Flynn's taxonomy (1966) classifies machines by the number of instruction streams and data streams:
++ *SISD*: one instruction stream on one data stream, the conventional uniprocessor (UNIVAC 1, IBM 360, CDC 7600).
++ *SIMD*: one instruction operates on many data items; best for regular problems such as array processing, and the model behind GPUs (SIMT is its thread-level variant).
++ *MISD*: several instruction streams on one data stream; almost no real machine of this class has ever existed.
++ *MIMD*: independent instruction streams on independent data, the model of multicore CPUs, Cray X-MP and modern supercomputers. It is the most common form today and the subject of this lecture.
+
+General programs are irregular, so their parallelism cannot be packed into one instruction stream, and replicating cores is how a chip keeps using transistors once ILP and clock scaling stop paying off.
+
+The memory of a multiprocessor can be organized in several ways:
+- *UMA* (uniform memory access): all chips go through one interconnect to one memory, so every core sees the same latency;
+- *NUMA* (non-uniform memory access): memory is distributed between the chips, so a core's local memory is fast while a remote access crosses the interconnect and is slower;
+- a *distributed memory* system, where every node owns its memory and nodes communicate only over the network (a cluster).
+
+#image("imgs/mp-uma-numa.png")
+
+=== Memory consistency
+
+Two different ordering problems arise when processors share memory:
+- *memory consistency* is about the *global* order of all memory operations from different processors, possibly to different locations;
+- *cache coherence* is about the *local* order of operations from different processors to the *same* location (cache block).
+
+#image("imgs/mp-consistency-coherence.png")
+
+Consider `P1: A = 1; Flag = 1;` and `P2: while (Flag == 0) {}; print A;`. If the store to `Flag` becomes visible before the store to `A` — as happens when stores wait in a write buffer — P2 can print `A = 0`. Likewise `P1: A = 1; print B;` and `P2: B = 1; print A;` can both print 0.
+
+A third effect is *diffusion*: even without reordering, a store travels over the interconnect and reaches caches at different times, so with a chain of dependent flags (`A = 1; if (A == 1) B = 1; ...`) a distant processor may see `B = 1` but still read `A = 0`.
+
+A *memory consistency model* specifies the legal ordering of memory events when several processors access shared memory. The hardware is free to reorder only where the model allows.
+
+=== Sequential consistency
+
+*Sequential consistency (SC)*: the result of any execution is the same as if the memory operations of all processors were executed in one sequential order, and the operations of each processor appear in that order in program order. Equivalently, each processor issues operations in program order and there is one total order over all of them.
+
+SC is easy to reason about but restrictive, since it forbids overlapping or buffering memory operations, and therefore slow. It is still strong enough to build mutual exclusion from ordinary loads and stores: Dekker's and Peterson's algorithms use two flags and a `turn` variable so that only one processor can enter the critical section.
+
+=== TSO and relaxed models
+
+*Total store order (TSO)* is the most widely used model (x86). Its hardware implementation is a FIFO write buffer per core: stores queue up and drain to memory in order, so store→store, load→load and load→store remain in program order, but a load can bypass the core's own pending store. Only *store→load* is reordered, which is exactly why the flag example fails.
+
+Under TSO the experiment `X = 1; r1 = Y` on P1 and `Y = 1; r2 = X` on P2 can return `r1 = r2 = 0`; under SC at least one processor must see the other's store.
+
+More relaxed models:
++ *PSO (partial store order)*: like TSO but stores to different addresses may reorder; more flexibility, harder reasoning.
++ *RMO (relaxed memory order)*: load→store, store→store, load→load and store→load may all reorder, and explicit fences are required where order matters.
++ *Weak consistency*: memory is consistent only at synchronization operations; between barriers operations reorder freely.
+
+The ordering rules can be summarized as a matrix of the earlier operation (Op1) against the later one (Op2). `X` means the pair must stay in order, `B` means Op2 may bypass a buffered Op1.
+
+#table(columns: 5, align: center,
+  [*Op1* \ *Op2*], [*Load*], [*Store*], [*RMW*], [*Fence*],
+  [*Load*], [X], [X], [X], [X],
+  [*Store*], [B], [X], [X], [X],
+  [*RMW*], [X], [X], [X], [X],
+  [*Fence*], [X], [X], [X], [X])
+
+The table shows TSO; for SC the `B` becomes `X`.
+
+=== Cache coherence and snooping
+
+Private caches create the coherence problem: a write updates one local copy while other copies, and possibly memory, stay stale. A *bus snooper* watches every transaction on the bus and updates the state of its own copy, so all caches agree on the block.
+
+*Write-through cache.* Every write goes to memory and invalidates the other cached copies, so a block is either V (valid, equal to memory) or I (invalid). On a store the writer's copy becomes V and the other snoopers invalidate their copies; a later read misses and reloads from memory.
+
+*Write-back cache: MESI.* A store does not go to memory, so the protocol needs more states:
+- *M* (modified): dirty, and this is the only cached copy;
+- *E* (exclusive): clean, and this is the only cached copy;
+- *S* (shared): clean, possibly shared with other caches;
+- *I* (invalid).
+
+A snooper issues `BusRd` on a read miss, `BusRdX` to obtain a line for writing, and `BusWB` to write a dirty line back on replacement. It answers another request with `Flush` (data on the bus, taken by both memory and the requester) or `Flush*` (data only to the requester).
+
+#figure(image("imgs/mp-mesi.png"), caption: [MESI transitions for one cache: blue transactions are the local processor's, red ones are snooped from other processors.])
+
+Typical transitions:
+- read miss with no other copy: `PrRd` / `BusRd`, I→E;
+- read hit in E stays E, and a write hit in E goes silently to M;
+- write on a block in S or a write miss: `BusRdX`, invalidating the other copies, then M;
+- snooped `BusRd` on E: supply the data and go to S;
+- snooped `BusRd` on M: flush the dirty data and go to S;
+- snooped `BusRdX`: invalidate (flush first if M), going to I;
+- replacement of an M line: `BusWB`, then I.
+
+Variants of the write-back protocol:
++ *MSI* (RISC-V): no E, so every read miss leaves the block S and the first write to a private copy still needs `BusRdX`.
++ *MEI* (PowerPC 755): no S; a second reader invalidates the first, keeping one cached copy.
++ *MOESI* (AMD Opteron, UltraSPARC): adds *O* (owned, dirty and shared). On `BusRd` the M owner becomes O and supplies the data without updating memory.
++ *MESIF* (Intel Nehalem): adds *F* (forwarding); one sharer is designated to answer requests for the block, removing duplicate transfers.
+
+With multi-level caches, snooping every level is too expensive. Intel uses L2 as a *snoop filter* with an inclusive policy: an L2 eviction forces the L1 line out, and L1 is write-through so that L2 always holds the current data.
+
+#image("imgs/mp-snoopfilter.png")
+
+=== Directory-based coherence
+
+Snooping does not scale, because every cache must watch every request. A *directory* records who has what for each block: one modified bit plus a presence bit per node. A centralized directory is simple but adds a contention point and costs $O(P)$ bits per block.
+
+In a large machine the interconnect is no longer a bus and memory is physically distributed, so the directory is distributed as well: every address has a *home* node, which keeps that block's directory entry next to its memory.
+
+#image("imgs/mp-directory.png")
+
+Read miss, block clean and shared: the requester visits the home; the home returns the data and adds the requester to the presence bits.
+
+Read miss, block dirty: the home returns the owner's ID; the request is forwarded to the owner, which sends the data to both the requester and the home; the block then becomes clean and shared.
+
+Write miss: the home returns the sharers' IDs, updates the directory, and sends invalidations; the sharers acknowledge, the home invalidates its own copy and acknowledges, and only then does the write proceed at the requester. The home serializes requests to its blocks, which yields a total order per location.
+
+=== Case study: Intel server chips
+
+Haswell-EP (Xeon E5 v3) divides the LLC into slices around a bidirectional ring. Each core has L1 I/D and L2 and reaches an L3 slice through a *CBox*, the LLC coherence engine that handles snoops and directory state for the slice.
+
+#image("imgs/mp-mesh.jpg")
+
+Skylake-SP (Xeon Scalable) replaces the ring with a *mesh*: cores, LLC slices and I/O tiles sit on a two-dimensional grid. The CBox is renamed *CHA* (caching and home agent); each CHA owns a slice, acts as the home for the addresses mapped to it, and takes part in coherence — in effect a hardware distributed directory.
+
+=== Design considerations
+
+Three decisions define a coherence design:
++ *cache type*: write-through or write-back, multi-level support and inclusion policy;
++ *mechanism*: bus snooping or directory;
++ *protocol*: invalidation or update on a write, and the state set (MSI, MESI, MOESI, MESIF).
