@@ -453,7 +453,7 @@ Aperiodic tasks have deadlines but no period, so the schedule is built from the 
 
 == Synchronization
 
-Buzz words: _Synchronization, race condition, data race, mutual exclusion, critical section, atomic operation, lock, spinlock, semaphore, monitor, condition variable, deadlock, starvation._
+Buzz words: _Synchronization, race condition, data race, mutual exclusion, critical section, atomic operation, lock, spinlock, semaphore, monitor, condition variable, deadlock, starvation, message passing, barrier, IPC, signal, memory barrier, interlock._
 
 === Why Synchronization?
 
@@ -620,4 +620,176 @@ Java uses Mesa semantics, so `while` is mandatory there. Hoare monitors leave le
   [Disable interrupts], [the CPU], [none], [uniprocessor only; hides I/O],
   [Blocking lock], [atomic instruction + queue], [block], [context-switch cost],
   [Semaphore], [atomic `P`/`V`], [block], [deadlock; misuse; no ownership],
-  [Monitor], [compiler/runtime], [block], [signal semantics; lost wakeup])
+  [Monitor], [compiler/runtime], [block], [signal semantics; lost wakeup],
+  [Message passing], [atomic send/receive], [block or buffer], [lost messages; ordering],
+  [Barrier], [counter and lock], [block until all arrive], [a missing process stalls all])
+
+=== Messages and Barriers
+
+*Message passing* is a synchronization and communication model based on the atomic transfer of data across a channel. The primitives are `send(destination, &message)` and `receive(source, &message)`. Unlike locks and semaphores, it needs no shared memory: the receiver blocks until a message arrives, and the sender may block until the receiver is ready (a rendezvous) or until there is room in the channel.
+
+The model raises issues beyond mutual exclusion: messages and acknowledgements can be lost, so a reliable protocol needs sequence numbers and retransmission; messages can arrive out of order; naming can be direct (process id) or indirect (mailbox); and the receiver may need authentication. Blocking/non-blocking and buffered/unbuffered sends give different semantics.
+
+The producer-consumer problem can be solved with messages alone, using the messages themselves as the buffer. The consumer first sends N empty messages to the producer; the producer waits for an empty message, fills it with an item and sends it back; the consumer receives a full message, consumes the item and returns the empty message.
+
+```
+#define N 100
+
+void producer(void) {
+  message m;
+  while (TRUE) {
+    receive(consumer, &m);              /* wait for an empty message */
+    build_message(&m, produce_item());
+    send(consumer, &m);                 /* hand a full message to consumer */
+  }
+}
+
+void consumer(void) {
+  message m;
+  for (int i = 0; i < N; i++) send(producer, &m);  /* N empty messages */
+  while (TRUE) {
+    receive(producer, &m);              /* get a full message */
+    consume_item(extract_item(&m));
+    send(producer, &m);                 /* return the empty message */
+  }
+}
+```
+
+A *barrier* is a synchronization point at which every process must arrive before any can proceed. Processes approach the barrier; all but the last block; when the last one arrives, all are released. Barriers are natural for iterative parallel algorithms: in a parallel matrix multiplication, each phase of `multiply` and `add` must finish before the next phase reads the updated blocks, so a barrier separates the phases. The lecture's recursive example partitions A, B and C into quadrants, forks eight sub-multiplications (four writing C, four writing a temporary T), joins, then forks the four additions of T into C and joins again; each join acts as a barrier.
+
+#figure(image("imgs/barrier.png"), caption: [Use of a barrier: all processes wait until the last one arrives])
+
+A barrier is implemented with a shared counter, a mutex and a condition variable (or with a sense-reversing flag). Each arriving thread increments the counter; if it is not the last, it waits; the last thread resets the counter and wakes all waiters. `pthread_barrier_wait` is the POSIX interface.
+
+=== Concurrency Mechanisms in Unix and Linux
+
+UNIX provides a variety of interprocess communication (IPC) and synchronization mechanisms:
+
+- *Pipes*: a circular buffer implementing the producer-consumer model as a FIFO, written by one process and read by another. A pipe is either named (`mkfifo my_pipe`, removed with `rm my_pipe`) or unnamed (created by `pipe()` and inherited across `fork`).
+- *Messages*: a message is a block of bytes with an accompanying type. The `msgsnd` and `msgrcv` system calls send and receive messages; each process has a message queue that works like a mailbox, so messages can be selected by type.
+- *Shared memory*: a common block of virtual memory mapped into several processes, with read-only or read-write permission decided per process. The shared-memory facility itself provides no mutual exclusion; the processes must impose it with locks or semaphores.
+- *Semaphores*: System V Release 4 generalizes the `semWait` and `semSignal` primitives; a queue of processes blocked on the semaphore is associated with it.
+- *Signals*: a software mechanism that informs a process of an asynchronous event, similar to a hardware interrupt but without priorities. A signal is delivered by updating a field in the process table; the process handles it with a handler or a default action (ignore, terminate, stop, continue). Examples are `SIGINT` (Ctrl-C), `SIGKILL`, `SIGSEGV`, `SIGALRM` and `SIGCHLD`.
+
+The Linux kernel provides all of the above plus its own mechanisms:
+
+- *Atomic operations*: integer and bitmap operations that execute without interruption or interference, such as `atomic_t` with `atomic_inc`, `atomic_dec_and_test`, and `set_bit`/`test_and_set_bit`. They are the building blocks of locks and reference counts.
+- *Spinlocks*: a lock is an integer; 0 means free. A thread sets it to 1 and enters; another thread keeps checking until it becomes 0. The API is `spin_lock`/`spin_unlock`, with `_irqsave` variants that also disable local interrupts. A spinlock holder must not sleep, and the lock is not recursive.
+- *Semaphores*: binary, counting and reader-writer semaphores. `struct semaphore` uses `down()`/`up()` (and `down_interruptible()`); `struct rw_semaphore` uses `down_read`/`up_read` and `down_write`/`up_write`, admitting many readers or one writer.
+- *Memory barriers*: enforce the order in which loads and stores reach memory and prevent the compiler or CPU from reordering accesses across the barrier. `barrier()` is a compiler barrier; `mb()`, `rmb()` and `wmb()` are full, read and write barriers, with `smp_` variants for multiprocessors.
+
+=== Classic Synchronization Problems
+
+==== Bounded Buffer
+
+A bounded buffer is a set of N slots shared by producer and consumer threads. The producer inserts items and the consumer removes them; the two run at different rates, and the buffer decouples them so that neither waits for an explicit handoff.
+
+The safety condition is that the number of items in the buffer stays between 0 and N. If `n_p` items have been produced and `n_c` consumed, then $0 <= n_p - n_c <= N$; the counting semaphores are `empty = N - (n_p - n_c)` and `full = n_p - n_c`, and a binary `mutex` protects the buffer list.
+
+The producer does `P(empty)`, `P(mutex)`, insert, `V(mutex)`, `V(full)`; the consumer does `P(full)`, `P(mutex)`, remove, `V(mutex)`, `V(empty)`. The `P(empty)`/`P(full)` pair is the *interlock* that carries the count; the mutex only protects the list. The order matters: the resource semaphore must be taken before the mutex. If a producer took the mutex first and then blocked on `empty`, the consumer could not enter the critical section to remove an item, and both would deadlock.
+
+The monitor version keeps `count` and two condition variables, `not_full` and `not_empty`: `put` waits while `count == N`, `get` waits while `count == 0`, and each signals the other after changing `count`. With Hoare semantics an `if` suffices; under Mesa semantics the wait must be in a `while` loop because the condition may change before the thread runs again. (The bounded-buffer code with semaphores and with a monitor appeared in the previous section.)
+
+==== Dining Philosophers
+
+Five philosophers sit around a table with five forks, one between each pair. A philosopher alternates thinking and eating; eating needs both adjacent forks, and a philosopher picks up one fork at a time. The question is how to prevent deadlock and starvation.
+
+#figure(image("imgs/philosophers.png"), caption: [Five philosophers, five forks])
+
+The naive solution — everyone picks up the left fork and then the right — deadlocks: all five can hold their left fork and wait forever for the right one, forming a cycle. This is the "nonsolution" in which each philosopher holds one fork.
+
+Standard fixes:
+
+- allow at most four philosophers at the table, so at least one can always get both forks;
+- pick up both forks atomically under a global mutex (correct, but serializes eating);
+- make the order asymmetric: odd-numbered philosophers take the left fork first, even-numbered take the right fork first, which breaks the circular wait;
+- use a monitor that grants both forks only when both neighbors are not eating.
+
+Tanenbaum's monitor solution keeps `state[i]` in `{THINKING, HUNGRY, EATING}` and one semaphore `s[i]` per philosopher. `take_forks(i)` marks `i` hungry and calls `test(i)`; `test(i)` lets `i` eat (and performs `up(&s[i])`) only if neither neighbor is eating. `put_forks(i)` marks `i` thinking and tests both neighbors. The philosopher then blocks on `down(&s[i])` only if the forks were not granted.
+
+```
+#define N 5
+#define LEFT  (i + N - 1) % N
+#define RIGHT (i + 1) % N
+#define THINKING 0
+#define HUNGRY   1
+#define EATING   2
+
+int state[N];
+semaphore mutex = 1;   /* protects state[] */
+semaphore s[N];        /* one per philosopher, initially 0 */
+
+void philosopher(int i) {
+  while (TRUE) {
+    think();
+    take_forks(i);
+    eat();
+    put_forks(i);
+  }
+}
+
+void take_forks(int i) {
+  down(&mutex);
+  state[i] = HUNGRY;
+  test(i);
+  up(&mutex);
+  down(&s[i]);         /* block if test() did not grant the forks */
+}
+
+void put_forks(int i) {
+  down(&mutex);
+  state[i] = THINKING;
+  test(LEFT);
+  test(RIGHT);
+  up(&mutex);
+}
+
+void test(int i) {
+  if (state[i] == HUNGRY && state[LEFT] != EATING && state[RIGHT] != EATING) {
+    state[i] = EATING;
+    up(&s[i]);
+  }
+}
+```
+
+A philosopher blocks only while a neighbor is eating, and that neighbor will eventually finish, so the solution is deadlock-free. It is not strictly starvation-free under an adversarial scheduler, but it is fair in practice.
+
+==== Sleeping Barber
+
+A barbershop has one barber, one barber chair and N waiting chairs. A customer enters; if a waiting chair is free he sits, otherwise he leaves. The barber sleeps when nobody is waiting, and a customer must wake him.
+
+Three semaphores and one counter are enough: `customers` counts waiting customers (the barber waits on it), `barbers` counts available barbers (the customer waits on it), and `mutex` protects `waiting`. `waiting` counts customers waiting, not the one being cut.
+
+```
+#define CHAIRS 5
+semaphore customers = 0, barbers = 0, mutex = 1;
+int waiting = 0;
+
+void barber(void) {
+  while (TRUE) {
+    down(&customers);      /* sleep if there is no customer */
+    down(&mutex);
+    waiting--;             /* take one waiting customer */
+    up(&barbers);          /* tell the customer the barber is ready */
+    up(&mutex);
+    cut_hair();            /* outside the critical section */
+  }
+}
+
+void customer(void) {
+  down(&mutex);
+  if (waiting < CHAIRS) {  /* a chair is free */
+    waiting++;
+    up(&customers);        /* wake the barber */
+    up(&mutex);
+    down(&barbers);        /* wait until the barber is ready */
+    get_haircut();
+  } else {
+    up(&mutex);            /* shop full: leave */
+  }
+}
+```
+
+Operations on `waiting` are protected by `mutex`; `customers` carries the number of waiting customers and serves as the barber's sleep queue; `barbers` synchronizes the customer with the barber after a chair has been secured. Signalling a semaphore inside the critical section is safe because `up` does not block, and the haircut itself is done outside the lock.
+
+The three classic problems are templates: the bounded buffer combines resource counting with mutual exclusion, the dining philosophers illustrate deadlock avoidance, and the sleeping barber models a server with a limited waiting room.

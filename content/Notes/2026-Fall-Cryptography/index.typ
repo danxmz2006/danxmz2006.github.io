@@ -618,3 +618,76 @@ $ c' = sans("Eval")(e k, Dec, s k, c). $
 That is, when the server possesses $Enc(p k, s k)$ #footnote([This require that the scheme is circularily secure.]) and $Enc(p k, c)$, it can compute $Enc(p k, Dec(s k, c))$ which decodes to $m$. Notice that now the error of $c'$ only has to do with the $Dec$ process and has nothing to do with $c$.
 
 Some technical work guarantees that the $Dec$ circuit is shallow enough.
+
+== lec09
+
+Recall that $cal("IP") = cal("PSPACE")$. The following example is an interactive proof that is also *zero-knowledge*. We will consider provers and verifiers that have limited computational power (polytime).
+
+*Example 9.1.* A prover tries to convince a verifier that $g$ is a quadratic residue. 
++ $cal(P)$ sends $h = b^2$ to $cal(V)$. (It does not reveal $b$.)
++ W.p. $1/2$, $cal(V)$ asks for $sqrt(h)$; w.p. $1/2$, $cal(V)$ asks for $sqrt(g/h)$.
++ $cal(P)$ responds with the requested value. When $g$ is not a quadratic residue, $cal(P)$ has $<=1/2$ chance to succeed.
+
+*Definition 9.2. (ZKP)* We consider the language $L$. The verifier and the prover both runs in p.p.t. on an input $x$. The prover additionally takes a witness $w$ when $x in L$.
+- Completeness: when $x in L$, $chevron.l cal(P)(x,w), cal(V)(x) chevron.r$ accepts.
+- Soundness: for every $cal(P)^*$ with unbounded power, when $x in.not L$, it rejects w.p. $>= 1/2$. If we only consider p.p.t. $cal(P)^*$, the protocal is called an *argument*.
+- *Honest-verifier zero-knowledge*: when $x in L$, there exists a p.p.t. $S(x)$, s.t. the output of $S(x)$ is indistinguishable from $"View"_cal(V) chevron.l cal(P)(x,w), cal(V)(x) chevron.r$. One can choose different types of indistinguishability.
+- *Malicious-verifier zero-knowledge*: a simulator exists for every p.p.t. $cal(V)^ast$.
+
+Example 9.1 is actually MVZK. Though in step 2 $cal(V)^*$ can send either challenge, the simulator can pick a random challenge and rewind if the guess is wrong. Like rejection sampling, the view it outputs is indistinguishable from the real view.
+
+*Definition 9.3. (Proof of Knowledge)* A protocol is a *proof of knowledge* if there exists a p.p.t. extractor $cal(E)$ s.t. for any $cal(P)^*$ with success probability greater than a constant (called the *knowledge error*), $cal(E)$ can extract a witness $w$ from $cal(P)^*$.
+
+*Example 9.4.* Graph isomorphism has a zero-knowledge proof of knowledge.
++ $cal(P)$ samples a random permutation $pi$ and sends $H = pi(G_0)$ to $cal(V)$.
++ $cal(V)$ sends $b in {0,1}$.
++ $cal(P)$ sends $pi'$ s.t. $H = pi'(G_b)$.
+
+We construct an extractor as follows. Suppose there is some prover $cal(P)^*$. We run $cal(P)^*$ twice with the same random tape, and get two different $b$'s. If the prover succeeds in both, we get $pi_0$ and $pi_1$.
+
+If the original protocal accepts w.p. $>= 1/2 + epsilon$, then for each $b$, $cal(P)^*$ succeeds w.p. $>= 2 epsilon$. Thus we extract the isomorphism w.p. $2 epsilon$.
+
+We don't expect that every problem in $cal("NP")$ has a statistical ZKP. In fact, it is proven that $cal("SZK") subset.eq cal("AM") inter cal("coAM")$, so this would imply that the polynomial hierarchy collapses.
+
+However, as we will see, $cal("NP")$ is indeed contained in $cal("CZK")$, assuming OWF exists. 
+
+Very often, we exploit _locality_ of the proof. That is, if the verifier is only allowed to observe a small fraction of $w$, then it is likely that the proof is zero knowledge. However, to guarantee that the prover actually has a proof, it must send a preliminary version of the proof before revealing local parts of it. 
+This goal is achieved using *commitment*.
+
+*Definition 9.5. (Commitment)* A commitment scheme consists of an algorithm $Gen$ and a polynomial time computable function $C$.
++ $Gen(1^lambda)$ outputs public parameter $"pp"$.
++ To commit a bit $b$, the sender samples random $r$ and sends $d = C("pp", b; r)$. To open, the sender receives $(b,r)$, the receiver accepts if $d = C("pp", b; r)$.
+
+A commitment has two properties.
+- *(Computational) hiding*: for $"pp" <- Gen(1^lambda)$ and i.i.d. $r_0,r_1$, $("pp", C("pp",0;r_0))$ and $("pp", C("pp",1;r_1))$ are indistinguishable.
+- *(Statistical) binding*: except with negligible probability over $Gen$, there do not exist $r_0,r_1$ s.t. $C("pp", 0; r_0) = C("pp", 1; r_1)$.
+
+We can commit independently each bit of a message.
+
+*Example 9.6. (Pedersen Commitment)* Assume $G$ is a group of prime order. Randomly select $g,h in G^*$, let $C = g^m h^r$. 
+
+It satisfies perfect hiding. Assume for $m != m'$ we have $g^m h^r = g^(m') h^(r')$, then we can compute $log_g h$. This contradicts the discrete logarithm assumption.
+
+*Example 9.7. (Naor Commitment)* Let $G: {0,1}^n -> {0,1}^(3n)$ be a PRG. Let $r <- {0,1}^n$, $s <- {0,1}^(3n)$. Let $C = G(r) plus.o (s b)$ for $b in {0,1}$. Here $s$ is public.
+
+Computational hiding is guaranteed by the pseudorandomness of the PRG. If $G(r_0) = G(r_1) plus.o s$, then $s = G(r_0) plus.o G(r_1)$. Notice that the RHS can only take $2^(2n)$ values. So it is in fact a statistical binding. 
+
+Communication complexity can be reduced using structures like the Merkle tree.
+
+Take $sans("3COL")$ as an example. The prover chooses a random permutation of a valid coloring and for each vertex $i$ sends $d_i = C("pp", c_i; r_i)$. The verifier then chooses a random edge $(i,j)$ asks the prover to open it.
+
+Statistical binding ensures that the soundness error is at most $1 - 1 / abs(E) + negl(n)$. MVZK follows since $cal(V)$ has only $abs(E)$ choices, and for each edge the pair of colors distributes uniformly.
+
+*Error reduction.* We consider parallel repetition and sequential repetition. One can see that under both scenerios the soundness error reduces exponentially (like in other interactive protocals).
+
+The MVZK holds in sequential repetition: if the guess is incorrect, the simulator can rewind to the beginning of the current round.
+
+HVZK holds in parallel repetition (simply modify the old simulator). However, under certain assumptions, parallel repetition does not preserve MVZK.
+
+Many of the zero-knowledge proofs we've seen are public-coined, so we can try using the Fiat-Shamir transform. 
+
+Consider the graph isomorphism problem. A naive approach is to let $b = R(G')$ and let the prover send an isomorphism $pi(G_b) = G'$. The problem is that in each round the prover has about $1/2$ probability to succeed, and within a few accesses to $R$ it can find a $G'$ which passes the verification. 
+
+Instead, we should use parallel repetition and let $R$ output multiple bits. (Sequential repetition won't work.)
+
+**.
